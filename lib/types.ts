@@ -41,3 +41,14 @@ export type ConditionalPlaceholder = {
   trueText: string
   falseText: string
 }
+
+export type VisibleSubsection = {
+  title: string
+  content: string
+  questions: Question[]
+}
+
+export type VisibleSectionContent = {
+  mainQuestions: Question[]
+  subsections: VisibleSubsection[]
+}

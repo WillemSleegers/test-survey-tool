@@ -2,6 +2,8 @@ export const SAMPLE_TEXT = `
 # Welcome Section
 Welcome to our survey! Please answer all questions honestly.
 
+## Instructions
+
 This survey is about the following:
 - A
 - B
@@ -11,6 +13,7 @@ Q1: What is your primary role?
 - Developer
 - Designer
 - Other
+VARIABLE: role
 `
 
 export const SAMPLE_TEXT2 = `# Welcome Section
