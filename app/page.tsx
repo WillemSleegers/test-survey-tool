@@ -1,103 +1,585 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import React, { useState, useCallback } from "react"
+import { Upload, ChevronLeft, ChevronRight, FileText } from "lucide-react"
+import Markdown from "react-markdown"
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { evaluateCondition, replacePlaceholders } from "@/lib/utils"
+import { Question, Responses, Section, Subsection } from "@/lib/types"
+import { SAMPLE_TEXT } from "@/lib/constants"
+
+export function QuestionnaireApp() {
+  const [questionnaire, setQuestionnaire] = useState<Section[] | null>(null)
+  const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0)
+  const [responses, setResponses] = useState<Responses>({})
+  const [localResponses, setLocalResponses] = useState<Responses>({}) // For questions without variables
+  const [error, setError] = useState<string>("")
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
+
+  // Parse the text format into structured data
+  const parseQuestionnaire = useCallback((text: string): Section[] => {
+    try {
+      const sections: Section[] = []
+      const lines = text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line)
+
+      let currentSection: Section | null = null
+      let currentQuestion: Question | null = null
+      let currentSubsection: Subsection | null = null
+      let i = 0
+
+      while (i < lines.length) {
+        const line = lines[i]
+
+        // Section header (Markdown style)
+        if (line.startsWith("# ")) {
+          if (currentSection) {
+            if (currentQuestion) {
+              if (currentSubsection) {
+                currentSubsection.questions.push(currentQuestion)
+              } else {
+                currentSection.questions.push(currentQuestion)
+              }
+            }
+            if (currentSubsection) {
+              currentSection.subsections.push(currentSubsection)
+            }
+            sections.push(currentSection)
+          }
+          currentSection = {
+            title: line.substring(2).trim(),
+            content: "",
+            questions: [],
+            subsections: [],
+          }
+          currentQuestion = null
+          currentSubsection = null
+        }
+        // Subsection header
+        else if (line.startsWith("## ")) {
+          if (currentQuestion) {
+            if (currentSubsection) {
+              currentSubsection.questions.push(currentQuestion)
+            } else if (currentSection) {
+              currentSection.questions.push(currentQuestion)
+            }
+          }
+          if (currentSubsection && currentSection) {
+            currentSection.subsections.push(currentSubsection)
+          }
+          currentSubsection = {
+            title: line.substring(3).trim(),
+            content: "",
+            questions: [],
+          }
+          currentQuestion = null
+        }
+        // Question
+        else if (line.match(/^Q\d+:/)) {
+          if (currentQuestion) {
+            if (currentSubsection) {
+              currentSubsection.questions.push(currentQuestion)
+            } else if (currentSection) {
+              currentSection.questions.push(currentQuestion)
+            }
+          }
+          const idMatch = line.match(/^Q(\d+):/)
+          currentQuestion = {
+            id: idMatch ? idMatch[1] : "0",
+            text: line.substring(line.indexOf(":") + 1).trim(),
+            type: "multiple_choice",
+            options: [],
+          }
+        }
+        // Multiple choice option - handle both old format (A) Text) and new format (- Text)
+        else if (line.match(/^-\s*([A-Z]\))?(.+)/) || line.match(/^-\s+(.+)/)) {
+          if (currentQuestion) {
+            let optionText: string
+            // Check for old format with letters first
+            const oldFormatMatch = line.match(/^-\s*[A-Z]\)\s*(.+)/)
+            if (oldFormatMatch) {
+              optionText = oldFormatMatch[1]
+            } else {
+              // New format without letters
+              optionText = line.substring(1).trim()
+            }
+
+            currentQuestion.options.push({
+              value: optionText,
+              label: optionText,
+            })
+          }
+        }
+        // Input type
+        else if (line === "TEXT_INPUT") {
+          if (currentQuestion) {
+            currentQuestion.type = "text"
+            currentQuestion.options = []
+          }
+        } else if (line === "NUMBER_INPUT") {
+          if (currentQuestion) {
+            currentQuestion.type = "number"
+            currentQuestion.options = []
+          }
+        }
+        // Variable assignment
+        else if (line.startsWith("VARIABLE:")) {
+          if (currentQuestion) {
+            currentQuestion.variable = line.substring(9).trim()
+          }
+        }
+        // Conditional display
+        else if (line.startsWith("SHOW_IF:")) {
+          if (currentQuestion) {
+            currentQuestion.showIf = line.substring(8).trim()
+          }
+        }
+        // Section content
+        else if (
+          !line.startsWith("Q") &&
+          !line.startsWith("-") &&
+          !line.startsWith("VARIABLE:") &&
+          !line.startsWith("SHOW_IF:") &&
+          !line.includes("_INPUT")
+        ) {
+          if (currentSection && !currentQuestion) {
+            if (currentSubsection) {
+              currentSubsection.content +=
+                (currentSubsection.content ? " " : "") + line
+            } else {
+              currentSection.content +=
+                (currentSection.content ? " " : "") + line
+            }
+          }
+        }
+
+        i++
+      }
+
+      // Add the last section and question
+      if (currentQuestion) {
+        if (currentSubsection) {
+          currentSubsection.questions.push(currentQuestion)
+        } else if (currentSection) {
+          currentSection.questions.push(currentQuestion)
+        }
+      }
+      if (currentSubsection && currentSection) {
+        currentSection.subsections.push(currentSubsection)
+      }
+      if (currentSection) {
+        sections.push(currentSection)
+      }
+
+      return sections
+    } catch (err) {
+      throw new Error(
+        "Failed to parse questionnaire format: " + (err as Error).message
+      )
+    }
+  }, [])
+
+  // Filter visible questions based on conditions
+  const getVisibleQuestions = useCallback(
+    (section: Section): Question[] => {
+      const allQuestions: Question[] = [...section.questions]
+
+      // Add questions from subsections
+      section.subsections?.forEach((subsection) => {
+        allQuestions.push(
+          ...subsection.questions.map((q) => ({
+            ...q,
+            subsectionTitle: subsection.title,
+            subsectionContent: subsection.content,
+          }))
+        )
+      })
+
+      return allQuestions.filter((question) =>
+        evaluateCondition(question.showIf || "", responses)
+      )
+    },
+    [responses]
+  )
+
+  const handleFileUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const content = e.target?.result as string
+
+        try {
+          const parsed = parseQuestionnaire(content)
+          setQuestionnaire(parsed)
+          setCurrentSectionIndex(0)
+          setResponses({})
+          setLocalResponses({})
+          setError("")
+          setIsPreviewMode(true)
+        } catch (err) {
+          setError((err as Error).message)
+        }
+      }
+      reader.readAsText(file)
+    }
+  }
+
+  const loadSample = (): void => {
+    try {
+      const parsed = parseQuestionnaire(SAMPLE_TEXT)
+      console.log(parsed)
+      setQuestionnaire(parsed)
+      setCurrentSectionIndex(0)
+      setResponses({})
+      setLocalResponses({})
+      setError("")
+      setIsPreviewMode(true)
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  const handleResponse = (questionId: string, value: string): void => {
+    const question =
+      questionnaire
+        ?.flatMap((s) => s.questions)
+        .find((q) => q.id === questionId) ||
+      questionnaire
+        ?.flatMap((s) => s.subsections || [])
+        .flatMap((sub) => sub.questions)
+        .find((q) => q.id === questionId)
+
+    if (question) {
+      if (question.variable) {
+        // Store in responses for variables
+        setResponses((prev) => ({
+          ...prev,
+          [question.variable!]: value,
+        }))
+      } else {
+        // Store locally for questions without variables
+        setLocalResponses((prev) => ({
+          ...prev,
+          [questionId]: value,
+        }))
+      }
+    }
+  }
+
+  const nextSection = (): void => {
+    if (questionnaire && currentSectionIndex < questionnaire.length - 1) {
+      setCurrentSectionIndex(currentSectionIndex + 1)
+    }
+  }
+
+  const prevSection = (): void => {
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex(currentSectionIndex - 1)
+    }
+  }
+
+  const renderQuestion = (
+    question: Question,
+    index: number,
+    questions: Question[]
+  ) => {
+    const questionText = replacePlaceholders(question.text, responses)
+
+    // Check if we need to render a subsection header
+    const shouldShowSubsectionHeader =
+      question.subsectionTitle &&
+      (index === 0 ||
+        questions[index - 1].subsectionTitle !== question.subsectionTitle)
+
+    const currentValue = question.variable
+      ? responses[question.variable] || ""
+      : localResponses[question.id] || ""
+
+    const questionElement = (() => {
+      if (question.type === "multiple_choice") {
+        return (
+          <div className="space-y-3">
+            <Label className="text-base font-medium">{questionText}</Label>
+            <RadioGroup
+              value={currentValue}
+              onValueChange={(value) => handleResponse(question.id, value)}
+            >
+              {question.options.map((option, index) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value={option.value}
+                    id={`${question.id}-${index}`}
+                  />
+                  <Label
+                    htmlFor={`${question.id}-${index}`}
+                    className="cursor-pointer"
+                  >
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        )
+      }
+
+      if (question.type === "text") {
+        return (
+          <div className="space-y-3">
+            <Label className="text-base font-medium">{questionText}</Label>
+            <Textarea
+              value={currentValue}
+              onChange={(e) => handleResponse(question.id, e.target.value)}
+              placeholder="Enter your response..."
+              className="min-h-[100px]"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+        )
+      }
+
+      if (question.type === "number") {
+        return (
+          <div className="space-y-3">
+            <Label className="text-base font-medium">{questionText}</Label>
+            <Input
+              type="number"
+              value={currentValue}
+              onChange={(e) => handleResponse(question.id, e.target.value)}
+              placeholder="Enter a number..."
+            />
+          </div>
+        )
+      }
+
+      return null
+    })()
+
+    return (
+      <div key={question.id}>
+        {shouldShowSubsectionHeader && (
+          <div className="mb-4 mt-6 first:mt-0">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {question.subsectionTitle}
+            </h3>
+            {question.subsectionContent && (
+              <p className="text-gray-600 mb-4">
+                {replacePlaceholders(question.subsectionContent, responses)}
+              </p>
+            )}
+          </div>
+        )}
+        {questionElement}
+      </div>
+    )
+  }
+
+  if (!isPreviewMode) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-6 w-6" />
+              QST - Quick Survey Tester
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                Upload Questionnaire File
+              </h3>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <Label
+                  htmlFor="file-upload"
+                  className="cursor-pointer text-blue-600 hover:text-blue-500"
+                >
+                  Choose a text file or drag and drop
+                </Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  accept=".txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Supports .txt files
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex-1 border-t border-gray-300"></div>
+              <span className="text-gray-500 text-sm">OR</span>
+              <div className="flex-1 border-t border-gray-300"></div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                Try Sample Questionnaire
+              </h3>
+              <Button onClick={loadSample} variant="outline" className="w-full">
+                Load Sample Questionnaire
+              </Button>
+            </div>
+
+            {error && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Text Format Guide</h3>
+              <p className="text-sm text-gray-600">
+                This is the exact format used in the sample questionnaire:
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg text-sm font-mono whitespace-pre-wrap">
+                {SAMPLE_TEXT}
+              </div>
+              <div className="text-sm text-gray-600 space-y-2">
+                <p>
+                  <strong>Key features:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>
+                    <code># Section</code> - Creates new pages
+                  </li>
+                  <li>
+                    <code>## Subsection</code> - Headers within the same page
+                  </li>
+                  <li>
+                    <code>Q1: Question text?</code> - Questions
+                  </li>
+                  <li>
+                    <code>- Option text</code> - Multiple choice options (no
+                    letters needed)
+                  </li>
+                  <li>
+                    <code>TEXT_INPUT</code> / <code>NUMBER_INPUT</code> - Input
+                    types
+                  </li>
+                  <li>
+                    <code>VARIABLE: name</code> - Store response (optional)
+                  </li>
+                  <li>
+                    <code>{`{variable}`}</code> - Simple variable replacement
+                  </li>
+                  <li>
+                    <code>{`{{condition|true_text|false_text}}`}</code> -
+                    Conditional text based on responses
+                  </li>
+                  <li>
+                    <code>SHOW_IF: condition</code> - Conditional question
+                    display
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!questionnaire) return null
+
+  const currentSection = questionnaire[currentSectionIndex]
+  const visibleQuestions = getVisibleQuestions(currentSection)
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-6 flex justify-between items-center">
+        <Button variant="outline" onClick={() => setIsPreviewMode(false)}>
+          ← Back to Upload
+        </Button>
+        <div className="text-sm text-gray-500">
+          Section {currentSectionIndex + 1} of {questionnaire.length}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Markdown>
+              {replacePlaceholders(currentSection.title, responses)}
+            </Markdown>
+          </CardTitle>
+          {currentSection.content && (
+            <Markdown>
+              {replacePlaceholders(currentSection.content, responses)}
+            </Markdown>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {visibleQuestions.map((question, index) =>
+            renderQuestion(question, index, visibleQuestions)
+          )}
+
+          <div className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              onClick={prevSection}
+              disabled={currentSectionIndex === 0}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+
+            {currentSectionIndex === questionnaire.length - 1 ? (
+              <Button
+                onClick={() =>
+                  alert(
+                    "Questionnaire completed! In a real app, this would submit or export the data."
+                  )
+                }
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                Complete Survey
+              </Button>
+            ) : (
+              <Button onClick={nextSection} className="flex items-center gap-2">
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {Object.keys(responses).length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Current Responses (for testing)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-sm bg-gray-50 p-4 rounded overflow-auto">
+              {JSON.stringify(responses, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
     </div>
-  );
+  )
 }
+
+export default QuestionnaireApp
