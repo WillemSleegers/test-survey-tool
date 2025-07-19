@@ -8,11 +8,17 @@ This survey is about the following:
 - A
 - B
 
-Q1: What is your primary role?
+Q1: Which programming languages do you use?
+- JavaScript
+- Python
+- Java  
+- C++
+CHECKBOX
+VARIABLE: languages
+
+Q2: What is your primary role?
 - Manager
 - Developer
-- Designer
-- Other
 VARIABLE: role
 `
 

@@ -9,7 +9,7 @@ import { QuestionRenderer } from "./question-renderer"
 interface SubsectionRendererProps {
   subsection: VisibleSubsection
   responses: Responses
-  onResponse: (questionId: string, value: string) => void
+  onResponse: (questionId: string, value: string | string[]) => void
 }
 
 export function SubsectionRenderer({

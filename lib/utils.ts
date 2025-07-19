@@ -105,11 +105,41 @@ export const evaluateCondition = (
 
     if (responseValue === undefined) return false
 
-    // Type conversion
+    // Handle array responses (checkbox questions)
+    if (Array.isArray(responseValue)) {
+      switch (operator) {
+        case "==":
+          // Check if array contains the value
+          return responseValue.includes(value)
+        case "!=":
+          // Check if array doesn't contain the value
+          return !responseValue.includes(value)
+        case ">=":
+          // Check if array length is >= value
+          const minLength = parseFloat(value)
+          return responseValue.length >= minLength
+        case "<=":
+          // Check if array length is <= value
+          const maxLength = parseFloat(value)
+          return responseValue.length <= maxLength
+        case ">":
+          // Check if array length is > value
+          const minLengthExclusive = parseFloat(value)
+          return responseValue.length > minLengthExclusive
+        case "<":
+          // Check if array length is < value
+          const maxLengthExclusive = parseFloat(value)
+          return responseValue.length < maxLengthExclusive
+        default:
+          return true
+      }
+    }
+
+    // Handle string responses (radio, text, number questions)
     const numValue = isNaN(value as any) ? value : parseFloat(value)
     const numResponse = isNaN(responseValue as any)
       ? responseValue
-      : parseFloat(responseValue)
+      : parseFloat(responseValue as string)
 
     switch (operator) {
       case "==":
@@ -178,7 +208,28 @@ export const processVariablePlaceholders = (
       (r) => r.variable === variable
     )
     const value = responseEntry?.value
-    return value !== undefined ? value : match
+
+    if (value === undefined) {
+      return match
+    }
+
+    // Handle array values (from checkbox questions)
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return "none"
+      } else if (value.length === 1) {
+        return value[0]
+      } else if (value.length === 2) {
+        return `${value[0]} and ${value[1]}`
+      } else {
+        const allButLast = value.slice(0, -1).join(", ")
+        const last = value[value.length - 1]
+        return `${allButLast}, and ${last}`
+      }
+    }
+
+    // Handle string values (from radio, text, number questions)
+    return value
   })
 }
 

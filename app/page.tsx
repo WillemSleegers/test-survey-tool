@@ -126,6 +126,11 @@ export function QuestionnaireApp() {
             currentQuestion.type = "number"
             currentQuestion.options = []
           }
+        } else if (trimmedLine === "CHECKBOX") {
+          if (currentQuestion) {
+            currentQuestion.type = "checkbox"
+            currentQuestion.options = []
+          }
         }
         // Variable assignment
         else if (trimmedLine.startsWith("VARIABLE:")) {

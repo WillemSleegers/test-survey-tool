@@ -53,7 +53,10 @@ export function QuestionnaireViewer({
     [responses]
   )
 
-  const handleResponse = (questionId: string, value: string): void => {
+  const handleResponse = (
+    questionId: string,
+    value: string | string[]
+  ): void => {
     const question =
       questionnaire
         ?.flatMap((s) => s.questions)

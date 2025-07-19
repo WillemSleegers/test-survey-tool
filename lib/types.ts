@@ -6,7 +6,7 @@ export type Option = {
 export type Question = {
   id: string
   text: string
-  type: "multiple_choice" | "text" | "number"
+  type: "multiple_choice" | "checkbox" | "text" | "number"
   options: Option[]
   variable?: string
   showIf?: string
@@ -28,7 +28,7 @@ export type Section = {
 }
 
 export type Response = {
-  value: string
+  value: string | string[]
   variable?: string
 }
 

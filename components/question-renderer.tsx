@@ -4,6 +4,7 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { replacePlaceholders } from "@/lib/utils"
 import { Question, Responses } from "@/lib/types"
@@ -11,7 +12,7 @@ import { Question, Responses } from "@/lib/types"
 interface QuestionRendererProps {
   question: Question
   responses: Responses
-  onResponse: (questionId: string, value: string) => void
+  onResponse: (questionId: string, value: string | string[]) => void
 }
 
 export function QuestionRenderer({
@@ -20,15 +21,18 @@ export function QuestionRenderer({
   onResponse,
 }: QuestionRendererProps) {
   const questionText = replacePlaceholders(question.text, responses)
-  const currentValue = responses[question.id]?.value || ""
+  const responseValue = responses[question.id]?.value
 
   switch (question.type) {
     case "multiple_choice":
+      // For radio buttons, value should always be string
+      const radioValue = typeof responseValue === "string" ? responseValue : ""
+
       return (
         <div className="space-y-3">
           <Label className="text-base font-medium">{questionText}</Label>
           <RadioGroup
-            value={currentValue}
+            value={radioValue}
             onValueChange={(value) => onResponse(question.id, value)}
           >
             {question.options.map((option, optionIndex) => (
@@ -49,12 +53,51 @@ export function QuestionRenderer({
         </div>
       )
 
+    case "checkbox":
+      // For checkboxes, value should be string array
+      const checkboxValues = Array.isArray(responseValue) ? responseValue : []
+
+      return (
+        <div className="space-y-3">
+          <Label className="text-base font-medium">{questionText}</Label>
+          <div className="space-y-3">
+            {question.options.map((option, optionIndex) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${question.id}-${optionIndex}`}
+                  checked={checkboxValues.includes(option.value)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      onResponse(question.id, [...checkboxValues, option.value])
+                    } else {
+                      onResponse(
+                        question.id,
+                        checkboxValues.filter((v) => v !== option.value)
+                      )
+                    }
+                  }}
+                />
+                <Label
+                  htmlFor={`${question.id}-${optionIndex}`}
+                  className="cursor-pointer text-sm font-normal"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
     case "text":
+      // For text inputs, value should be string
+      const textValue = typeof responseValue === "string" ? responseValue : ""
+
       return (
         <div className="space-y-3">
           <Label className="text-base font-medium">{questionText}</Label>
           <Textarea
-            value={currentValue}
+            value={textValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
             placeholder="Enter your response..."
             className="min-h-[100px]"
@@ -63,12 +106,15 @@ export function QuestionRenderer({
       )
 
     case "number":
+      // For number inputs, value should be string
+      const numberValue = typeof responseValue === "string" ? responseValue : ""
+
       return (
         <div className="space-y-3">
           <Label className="text-base font-medium">{questionText}</Label>
           <Input
             type="number"
-            value={currentValue}
+            value={numberValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
             placeholder="Enter a number..."
           />

@@ -3,13 +3,13 @@
 import React from "react"
 
 import { VisibleSectionContent, Responses } from "@/lib/types"
-import { QuestionRenderer } from "./question-renderer"
 import { SubsectionRenderer } from "./subsection-renderer"
+import { QuestionRenderer } from "./question-renderer"
 
 interface SectionContentProps {
   content: VisibleSectionContent
   responses: Responses
-  onResponse: (questionId: string, value: string) => void
+  onResponse: (questionId: string, value: string | string[]) => void
 }
 
 export function SectionContent({
