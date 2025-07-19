@@ -1,32 +1,38 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+
 import Markdown from "react-markdown"
+
 import { Button } from "@/components/ui/button"
+import { SectionContent } from "@/components/section-content"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 import { evaluateCondition, replacePlaceholders } from "@/lib/utils"
-import {
-  Question,
-  Responses,
-  Section,
-  VisibleSectionContent,
-} from "@/lib/types"
-import { SectionContent } from "./section-content"
+
+import { Responses, Section, VisibleSectionContent } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Section[]
-  onBack: () => void
 }
 
 export function QuestionnaireViewer({
   questionnaire,
-  onBack,
 }: QuestionnaireViewerProps) {
   const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0)
   const [responses, setResponses] = useState<Responses>({})
 
-  // Get visible content for a section (preserving hierarchy)
+  // Check if debug mode is enabled via URL hash
+  const isDebugMode =
+    typeof window !== "undefined" && window.location.hash === "#debug"
+
+  // Scroll to top when section changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [currentSectionIndex])
+
+  // Get visible content for a section
   const getVisibleSectionContent = useCallback(
     (section: Section): VisibleSectionContent => {
       // Filter main section questions
@@ -90,9 +96,7 @@ export function QuestionnaireViewer({
   }
 
   const handleComplete = (): void => {
-    alert(
-      "Questionnaire completed! In a real app, this would submit or export the data."
-    )
+    alert("Questionnaire completed!")
   }
 
   if (!questionnaire || questionnaire.length === 0) {
@@ -104,29 +108,18 @@ export function QuestionnaireViewer({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <Button variant="outline" onClick={onBack}>
-          ← Back to Upload
-        </Button>
-        <div className="text-sm text-gray-500">
-          Section {currentSectionIndex + 1} of {questionnaire.length}
-        </div>
-      </div>
-
       <Card>
-        <CardHeader>
-          <CardTitle>
-            <Markdown>
-              {replacePlaceholders(currentSection.title, responses)}
-            </Markdown>
-          </CardTitle>
-          {currentSection.content && (
-            <Markdown>
-              {replacePlaceholders(currentSection.content, responses)}
-            </Markdown>
-          )}
-        </CardHeader>
         <CardContent className="space-y-6">
+          {(currentSection.title || currentSection.content) && (
+            <div>
+              <Markdown>
+                {replacePlaceholders(currentSection.title, responses)}
+              </Markdown>
+              <Markdown>
+                {replacePlaceholders(currentSection.content, responses)}
+              </Markdown>
+            </div>
+          )}
           <SectionContent
             content={sectionContent}
             responses={responses}
@@ -147,7 +140,7 @@ export function QuestionnaireViewer({
             {currentSectionIndex === questionnaire.length - 1 ? (
               <Button
                 onClick={handleComplete}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                className="flex items-center gap-2 bg-primary hover:bg-primary/75"
               >
                 Complete Survey
               </Button>
@@ -161,7 +154,8 @@ export function QuestionnaireViewer({
         </CardContent>
       </Card>
 
-      {Object.keys(responses).length > 0 && (
+      {/* Debug Info - only shown if URL contains #debug */}
+      {isDebugMode && Object.keys(responses).length > 0 && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-lg">
@@ -169,7 +163,7 @@ export function QuestionnaireViewer({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="text-sm bg-gray-50 p-4 rounded overflow-auto">
+            <pre className="text-sm bg-muted p-4 rounded overflow-auto">
               {JSON.stringify(responses, null, 2)}
             </pre>
           </CardContent>

@@ -5,6 +5,7 @@ import { replacePlaceholders } from "@/lib/utils"
 
 import { VisibleSubsection, Responses } from "@/lib/types"
 import { QuestionRenderer } from "./question-renderer"
+import Markdown from "react-markdown"
 
 interface SubsectionRendererProps {
   subsection: VisibleSubsection
@@ -18,16 +19,14 @@ export function SubsectionRenderer({
   onResponse,
 }: SubsectionRendererProps) {
   return (
-    <div className="mt-8">
+    <div className="space-y-6">
       {/* Subsection Header */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          {replacePlaceholders(subsection.title, responses)}
-        </h3>
+      <div>
+        <Markdown>{replacePlaceholders(subsection.title, responses)}</Markdown>
         {subsection.content && (
-          <p className="text-gray-600 mb-4">
+          <Markdown>
             {replacePlaceholders(subsection.content, responses)}
-          </p>
+          </Markdown>
         )}
       </div>
 

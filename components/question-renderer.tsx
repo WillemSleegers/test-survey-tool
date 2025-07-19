@@ -1,12 +1,15 @@
 "use client"
 
 import React from "react"
+
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
 import { replacePlaceholders } from "@/lib/utils"
+
 import { Question, Responses } from "@/lib/types"
 
 interface QuestionRendererProps {
@@ -21,11 +24,8 @@ export function QuestionRenderer({
   onResponse,
 }: QuestionRendererProps) {
   const questionText = replacePlaceholders(question.text, responses)
+  const questionSubtext = replacePlaceholders(question.subtext, responses)
   const responseValue = responses[question.id]?.value
-
-  console.log(
-    `Question ${question.id}: type=${question.type}, options=${question.options.length}`
-  )
 
   switch (question.type) {
     case "multiple_choice":
@@ -34,7 +34,12 @@ export function QuestionRenderer({
 
       return (
         <div className="space-y-3">
-          <Label className="text-base font-medium">{questionText}</Label>
+          <div className="space-y-1">
+            <p className="text-base font-medium">{questionText}</p>
+            {questionSubtext && (
+              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+            )}
+          </div>
           <RadioGroup
             value={radioValue}
             onValueChange={(value) => onResponse(question.id, value)}

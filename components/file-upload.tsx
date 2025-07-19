@@ -1,27 +1,25 @@
 "use client"
 
-import React, { useState } from "react"
+import { useState } from "react"
 import { Upload } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
-interface FileUploadProps {
+import { Input } from "@/components/ui/input"
+
+type FileUploadProps = {
   onFileLoaded: (content: string) => void
   onError: (error: string) => void
-  accept?: string
-  supportedFormats?: string
 }
 
-export function FileUpload({
-  onFileLoaded,
-  onError,
-  accept = ".txt",
-  supportedFormats = ".txt files",
-}: FileUploadProps) {
+export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false)
 
   const processFile = (file: File) => {
-    if (file.type === "text/plain" || file.name.endsWith(".txt")) {
+    const fileName = file.name.toLowerCase()
+    const isTextFile = fileName.endsWith(".txt") || fileName.endsWith(".md")
+    const isMimeTypeText =
+      file.type === "text/plain" || file.type === "text/markdown"
+
+    if (isTextFile || isMimeTypeText) {
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
@@ -32,7 +30,7 @@ export function FileUpload({
       }
       reader.readAsText(file)
     } else {
-      onError(`Please upload a ${supportedFormats}`)
+      onError("Please upload a .txt or .md file")
     }
   }
 
@@ -65,34 +63,41 @@ export function FileUpload({
     }
   }
 
+  const handleAreaClick = () => {
+    const fileInput = document.getElementById("file-upload") as HTMLInputElement
+    fileInput?.click()
+  }
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Upload Questionnaire File</h3>
       <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+          isDragOver
+            ? "border-primary bg-accent"
+            : "border-border hover:border-muted-foreground hover:bg-muted"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={handleAreaClick}
       >
-        <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-        <Label
-          htmlFor="file-upload"
-          className="cursor-pointer text-blue-600 hover:text-blue-500"
-        >
-          Choose a text file or drag and drop
-        </Label>
+        <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <div>
+          <p className="text-base text-foreground font-medium mb-1">
+            Click to upload or drag & drop
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Supports .txt and .md files
+          </p>
+        </div>
         <Input
           id="file-upload"
           type="file"
-          accept={accept}
+          accept=".txt,.md"
           onChange={handleFileUpload}
           className="hidden"
         />
-        <p className="text-sm text-gray-500 mt-2">
-          Supports {supportedFormats}
-        </p>
       </div>
     </div>
   )

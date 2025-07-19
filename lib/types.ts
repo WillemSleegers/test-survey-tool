@@ -6,6 +6,7 @@ export type Option = {
 export type Question = {
   id: string
   text: string
+  subtext?: string
   type: "multiple_choice" | "checkbox" | "text" | "number"
   options: Option[]
   variable?: string
@@ -51,4 +52,33 @@ export type VisibleSubsection = {
 export type VisibleSectionContent = {
   mainQuestions: Question[]
   subsections: VisibleSubsection[]
+}
+
+// Parser-specific types with proper discriminated unions
+export type SectionData = { title: string }
+export type SubsectionData = { title: string }
+export type QuestionData = { id: string; text: string }
+export type SubtextData = { subtext: string }
+export type OptionData = { text: string }
+export type InputTypeData = { type: Question["type"] }
+export type VariableData = { variable: string }
+export type ShowIfData = { showIf: string }
+export type ContentData = { content: string }
+
+export type ParsedLine =
+  | { type: "section"; raw: string; data: SectionData }
+  | { type: "subsection"; raw: string; data: SubsectionData }
+  | { type: "question"; raw: string; data: QuestionData }
+  | { type: "subtext"; raw: string; data: SubtextData }
+  | { type: "option"; raw: string; data: OptionData }
+  | { type: "input_type"; raw: string; data: InputTypeData }
+  | { type: "variable"; raw: string; data: VariableData }
+  | { type: "show_if"; raw: string; data: ShowIfData }
+  | { type: "content"; raw: string; data: ContentData }
+
+export type ParserState = {
+  sections: Section[]
+  currentSection: Section | null
+  currentSubsection: Subsection | null
+  currentQuestion: Question | null
 }

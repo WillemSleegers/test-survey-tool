@@ -136,10 +136,14 @@ export const evaluateCondition = (
     }
 
     // Handle string responses (radio, text, number questions)
-    const numValue = isNaN(value as any) ? value : parseFloat(value)
-    const numResponse = isNaN(responseValue as any)
-      ? responseValue
-      : parseFloat(responseValue as string)
+    const numValue =
+      typeof value === "string" && !isNaN(Number(value))
+        ? parseFloat(value)
+        : value
+    const numResponse =
+      typeof responseValue === "string" && !isNaN(Number(responseValue))
+        ? parseFloat(responseValue)
+        : responseValue
 
     switch (operator) {
       case "==":
@@ -147,13 +151,21 @@ export const evaluateCondition = (
       case "!=":
         return responseValue != value
       case ">=":
-        return numResponse >= numValue
+        return typeof numResponse === "number" && typeof numValue === "number"
+          ? numResponse >= numValue
+          : false
       case "<=":
-        return numResponse <= numValue
+        return typeof numResponse === "number" && typeof numValue === "number"
+          ? numResponse <= numValue
+          : false
       case ">":
-        return numResponse > numValue
+        return typeof numResponse === "number" && typeof numValue === "number"
+          ? numResponse > numValue
+          : false
       case "<":
-        return numResponse < numValue
+        return typeof numResponse === "number" && typeof numValue === "number"
+          ? numResponse < numValue
+          : false
       default:
         return true
     }
@@ -179,7 +191,6 @@ export const processConditionalPlaceholders = (
     const endIndex = findMatchingBraces(result, startIndex)
     if (endIndex === -1) break
 
-    const fullMatch = result.slice(startIndex, endIndex + 1)
     const content = result.slice(startIndex + 2, endIndex - 1)
 
     const parsed = parseConditionalContent(content)
@@ -229,7 +240,7 @@ export const processVariablePlaceholders = (
     }
 
     // Handle string values (from radio, text, number questions)
-    return value
+    return String(value)
   })
 }
 

@@ -2,9 +2,10 @@
 
 import React from "react"
 
+import { QuestionRenderer } from "@/components/question-renderer"
+import { SubsectionRenderer } from "@/components/subsection-renderer"
+
 import { VisibleSectionContent, Responses } from "@/lib/types"
-import { SubsectionRenderer } from "./subsection-renderer"
-import { QuestionRenderer } from "./question-renderer"
 
 interface SectionContentProps {
   content: VisibleSectionContent
