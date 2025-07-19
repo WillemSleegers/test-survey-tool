@@ -23,6 +23,10 @@ export function QuestionRenderer({
   const questionText = replacePlaceholders(question.text, responses)
   const responseValue = responses[question.id]?.value
 
+  console.log(
+    `Question ${question.id}: type=${question.type}, options=${question.options.length}`
+  )
+
   switch (question.type) {
     case "multiple_choice":
       // For radio buttons, value should always be string

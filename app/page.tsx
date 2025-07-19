@@ -129,7 +129,6 @@ export function QuestionnaireApp() {
         } else if (trimmedLine === "CHECKBOX") {
           if (currentQuestion) {
             currentQuestion.type = "checkbox"
-            currentQuestion.options = []
           }
         }
         // Variable assignment
