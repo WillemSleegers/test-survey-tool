@@ -27,8 +27,13 @@ export type Section = {
   subsections: Subsection[]
 }
 
+export type Response = {
+  value: string
+  variable?: string
+}
+
 export type Responses = {
-  [key: string]: string
+  [questionId: string]: Response
 }
 
 export type ConditionalPlaceholder = {

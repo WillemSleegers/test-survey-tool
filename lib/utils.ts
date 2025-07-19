@@ -96,7 +96,12 @@ export const evaluateCondition = (
     if (!match) return true
 
     const [, variable, operator, value] = match
-    const responseValue = responses[variable]
+
+    // Find response by variable name
+    const responseEntry = Object.values(responses).find(
+      (r) => r.variable === variable
+    )
+    const responseValue = responseEntry?.value
 
     if (responseValue === undefined) return false
 
@@ -168,7 +173,11 @@ export const processVariablePlaceholders = (
   responses: Responses
 ): string => {
   return text.replace(/\{(\w+)\}/g, (match, variable) => {
-    const value = responses[variable]
+    // Find response by variable name
+    const responseEntry = Object.values(responses).find(
+      (r) => r.variable === variable
+    )
+    const value = responseEntry?.value
     return value !== undefined ? value : match
   })
 }

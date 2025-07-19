@@ -18,20 +18,20 @@ import { SAMPLE_TEXT } from "@/lib/constants"
 
 export function QuestionnaireApp() {
   const [questionnaire, setQuestionnaire] = useState<Section[] | null>(null)
-  const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0)
   const [responses, setResponses] = useState<Responses>({})
-  const [localResponses, setLocalResponses] = useState<Responses>({}) // For questions without variables
+
+  const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0)
+
   const [error, setError] = useState<string>("")
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
 
   // Parse the text format into structured data
+  // Replace the parseQuestionnaire function with this:
   const parseQuestionnaire = useCallback((text: string): Section[] => {
     try {
       const sections: Section[] = []
-      const lines = text
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line)
+      // Don't filter empty lines - preserve them for Markdown
+      const lines = text.split("\n")
 
       let currentSection: Section | null = null
       let currentQuestion: Question | null = null
@@ -40,9 +40,10 @@ export function QuestionnaireApp() {
 
       while (i < lines.length) {
         const line = lines[i]
+        const trimmedLine = line.trim()
 
         // Section header (Markdown style)
-        if (line.startsWith("# ")) {
+        if (trimmedLine.startsWith("# ")) {
           if (currentSection) {
             if (currentQuestion) {
               if (currentSubsection) {
@@ -57,7 +58,7 @@ export function QuestionnaireApp() {
             sections.push(currentSection)
           }
           currentSection = {
-            title: line.substring(2).trim(),
+            title: trimmedLine.substring(2).trim(),
             content: "",
             questions: [],
             subsections: [],
@@ -66,7 +67,7 @@ export function QuestionnaireApp() {
           currentSubsection = null
         }
         // Subsection header
-        else if (line.startsWith("## ")) {
+        else if (trimmedLine.startsWith("## ")) {
           if (currentQuestion) {
             if (currentSubsection) {
               currentSubsection.questions.push(currentQuestion)
@@ -78,14 +79,14 @@ export function QuestionnaireApp() {
             currentSection.subsections.push(currentSubsection)
           }
           currentSubsection = {
-            title: line.substring(3).trim(),
+            title: trimmedLine.substring(3).trim(),
             content: "",
             questions: [],
           }
           currentQuestion = null
         }
         // Question
-        else if (line.match(/^Q\d+:/)) {
+        else if (trimmedLine.match(/^Q\d+:/)) {
           if (currentQuestion) {
             if (currentSubsection) {
               currentSubsection.questions.push(currentQuestion)
@@ -93,72 +94,75 @@ export function QuestionnaireApp() {
               currentSection.questions.push(currentQuestion)
             }
           }
-          const idMatch = line.match(/^Q(\d+):/)
+          const idMatch = trimmedLine.match(/^Q(\d+):/)
           currentQuestion = {
             id: idMatch ? idMatch[1] : "0",
-            text: line.substring(line.indexOf(":") + 1).trim(),
+            text: trimmedLine.substring(trimmedLine.indexOf(":") + 1).trim(),
             type: "multiple_choice",
             options: [],
           }
         }
-        // Multiple choice option - handle both old format (A) Text) and new format (- Text)
-        else if (line.match(/^-\s*([A-Z]\))?(.+)/) || line.match(/^-\s+(.+)/)) {
-          if (currentQuestion) {
-            let optionText: string
-            // Check for old format with letters first
-            const oldFormatMatch = line.match(/^-\s*[A-Z]\)\s*(.+)/)
-            if (oldFormatMatch) {
-              optionText = oldFormatMatch[1]
-            } else {
-              // New format without letters
-              optionText = line.substring(1).trim()
-            }
-
-            currentQuestion.options.push({
-              value: optionText,
-              label: optionText,
-            })
+        // Multiple choice option - ONLY when we're in a question context
+        else if (
+          currentQuestion &&
+          (trimmedLine.match(/^-\s*([A-Z]\))?(.+)/) ||
+            trimmedLine.match(/^-\s+(.+)/))
+        ) {
+          let optionText: string
+          // Check for old format with letters first
+          const oldFormatMatch = trimmedLine.match(/^-\s*[A-Z]\)\s*(.+)/)
+          if (oldFormatMatch) {
+            optionText = oldFormatMatch[1]
+          } else {
+            // New format without letters
+            optionText = trimmedLine.substring(1).trim()
           }
+
+          currentQuestion.options.push({
+            value: optionText,
+            label: optionText,
+          })
         }
         // Input type
-        else if (line === "TEXT_INPUT") {
+        else if (trimmedLine === "TEXT_INPUT") {
           if (currentQuestion) {
             currentQuestion.type = "text"
             currentQuestion.options = []
           }
-        } else if (line === "NUMBER_INPUT") {
+        } else if (trimmedLine === "NUMBER_INPUT") {
           if (currentQuestion) {
             currentQuestion.type = "number"
             currentQuestion.options = []
           }
         }
         // Variable assignment
-        else if (line.startsWith("VARIABLE:")) {
+        else if (trimmedLine.startsWith("VARIABLE:")) {
           if (currentQuestion) {
-            currentQuestion.variable = line.substring(9).trim()
+            currentQuestion.variable = trimmedLine.substring(9).trim()
           }
         }
         // Conditional display
-        else if (line.startsWith("SHOW_IF:")) {
+        else if (trimmedLine.startsWith("SHOW_IF:")) {
           if (currentQuestion) {
-            currentQuestion.showIf = line.substring(8).trim()
+            currentQuestion.showIf = trimmedLine.substring(8).trim()
           }
         }
-        // Section content
+        // Section content - preserve original formatting including newlines
         else if (
-          !line.startsWith("Q") &&
-          !line.startsWith("-") &&
-          !line.startsWith("VARIABLE:") &&
-          !line.startsWith("SHOW_IF:") &&
-          !line.includes("_INPUT")
+          !trimmedLine.startsWith("Q") &&
+          !trimmedLine.startsWith("VARIABLE:") &&
+          !trimmedLine.startsWith("SHOW_IF:") &&
+          !trimmedLine.includes("_INPUT")
         ) {
           if (currentSection && !currentQuestion) {
             if (currentSubsection) {
+              // Preserve newlines for Markdown
               currentSubsection.content +=
-                (currentSubsection.content ? " " : "") + line
+                (currentSubsection.content ? "\n" : "") + line
             } else {
+              // Preserve newlines for Markdown
               currentSection.content +=
-                (currentSection.content ? " " : "") + line
+                (currentSection.content ? "\n" : "") + line
             }
           }
         }
@@ -226,7 +230,6 @@ export function QuestionnaireApp() {
           setQuestionnaire(parsed)
           setCurrentSectionIndex(0)
           setResponses({})
-          setLocalResponses({})
           setError("")
           setIsPreviewMode(true)
         } catch (err) {
@@ -241,10 +244,10 @@ export function QuestionnaireApp() {
     try {
       const parsed = parseQuestionnaire(SAMPLE_TEXT)
       console.log(parsed)
+      console.log(parsed[0].content)
       setQuestionnaire(parsed)
       setCurrentSectionIndex(0)
       setResponses({})
-      setLocalResponses({})
       setError("")
       setIsPreviewMode(true)
     } catch (err) {
@@ -267,13 +270,10 @@ export function QuestionnaireApp() {
         // Store in responses for variables
         setResponses((prev) => ({
           ...prev,
-          [question.variable!]: value,
-        }))
-      } else {
-        // Store locally for questions without variables
-        setLocalResponses((prev) => ({
-          ...prev,
-          [questionId]: value,
+          [questionId]: {
+            value,
+            variable: question.variable,
+          },
         }))
       }
     }
@@ -304,9 +304,7 @@ export function QuestionnaireApp() {
       (index === 0 ||
         questions[index - 1].subsectionTitle !== question.subsectionTitle)
 
-    const currentValue = question.variable
-      ? responses[question.variable] || ""
-      : localResponses[question.id] || ""
+    const currentValue = responses[question.id]?.value || ""
 
     const questionElement = (() => {
       if (question.type === "multiple_choice") {
