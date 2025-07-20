@@ -68,7 +68,12 @@ export function QuestionRenderer({
 
       return (
         <div className="space-y-3">
-          <Label className="text-base font-medium">{questionText}</Label>
+          <div className="space-y-1">
+            <p className="text-base font-medium">{questionText}</p>
+            {questionSubtext && (
+              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+            )}
+          </div>
           <div className="space-y-3">
             {question.options.map((option, optionIndex) => (
               <div key={option.value} className="flex items-center space-x-2">
@@ -104,7 +109,12 @@ export function QuestionRenderer({
 
       return (
         <div className="space-y-3">
-          <Label className="text-base font-medium">{questionText}</Label>
+          <div className="space-y-1">
+            <p className="text-base font-medium">{questionText}</p>
+            {questionSubtext && (
+              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+            )}
+          </div>
           <Textarea
             value={textValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
@@ -120,7 +130,12 @@ export function QuestionRenderer({
 
       return (
         <div className="space-y-3">
-          <Label className="text-base font-medium">{questionText}</Label>
+          <div className="space-y-1">
+            <p className="text-base font-medium">{questionText}</p>
+            {questionSubtext && (
+              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+            )}
+          </div>
           <Input
             type="number"
             value={numberValue}
