@@ -1,9 +1,12 @@
-import { Question, Section, Subsection } from "@/lib/types"
+import {
+  Question,
+  Section,
+  SectionData,
+  Subsection,
+  SubsectionData,
+} from "@/lib/types"
 
 // Types for parsing
-
-type SectionData = { title: string }
-type SubsectionData = { title: string }
 type QuestionData = { id: string; text: string }
 type SubtextData = { subtext: string }
 type OptionData = { text: string }
