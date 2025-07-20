@@ -2,7 +2,7 @@ export const SAMPLE_TEXT = `# **Developer Background Survey**
 Welcome! This survey helps us understand the software development community better.
 
 Q1: What is your primary role in software development?
-<Choose the option that best describes your current position>
+<Choose the option that best describes your current position.>
 - Frontend Developer
 - Backend Developer
 - Full-Stack Developer
@@ -10,6 +10,7 @@ Q1: What is your primary role in software development?
 - Data Scientist
 - Mobile Developer
 - Other
+CHECKBOX
 VARIABLE: role
 
 # 
