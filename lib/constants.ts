@@ -1,3 +1,17 @@
+export const SAMPLE_TEXT2 = `# **Developer Background Survey**
+Welcome! This survey helps us understand the software development community better.
+
+## **Test**
+Testing a list:
+- list option
+- another one
+
+Q1: New question with subtext
+<Subtext across lines>
+- A
+- B
+`
+
 export const SAMPLE_TEXT = `# **Developer Background Survey**
 Welcome! This survey helps us understand the software development community better.
 
