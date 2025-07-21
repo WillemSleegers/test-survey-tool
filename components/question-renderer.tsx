@@ -37,7 +37,9 @@ export function QuestionRenderer({
           <div className="space-y-1">
             <p className="text-base font-medium">{questionText}</p>
             {questionSubtext && (
-              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {questionSubtext}
+              </p>
             )}
           </div>
           <RadioGroup
