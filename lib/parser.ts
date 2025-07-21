@@ -31,19 +31,21 @@ type ParserState = {
   currentSection: Section | null
   currentSubsection: Subsection | null
   currentQuestion: Question | null
+  subtextBuffer: string[] | null
 }
 
 // Line classification functions
 
-const classifyLine = (line: string): ParsedLine["type"] => {
+const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   const trimmed = line.trim()
 
   if (trimmed.startsWith("# ") || trimmed === "#") return "section"
   if (trimmed.startsWith("## ")) return "subsection"
   if (trimmed.match(/^Q\d+:/)) return "question"
   if (trimmed.match(/^<.*>$/)) return "subtext"
-  if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/))
-    return "option"
+  if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
+    return state.currentQuestion ? "option" : "content"
+  }
   if (["TEXT", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
@@ -121,8 +123,8 @@ const parseContent = (line: string): ContentData => ({
 
 // Line processing functions
 
-const parseLine = (line: string): ParsedLine => {
-  const type = classifyLine(line)
+const parseLine = (line: string, state: ParserState): ParsedLine => {
+  const type = classifyLine(line, state)
 
   switch (type) {
     case "section":
@@ -349,7 +351,66 @@ const handleContent = (
   data: ContentData,
   originalLine: string
 ): ParserState => {
-  // Don't add content if we're in a question context
+  const trimmed = originalLine.trim()
+
+  // Check if we're starting subtext (line starts with <)
+  if (trimmed.startsWith("<")) {
+    // Check if it's a complete single-line subtext
+    if (trimmed.endsWith(">")) {
+      // Single line subtext - handle immediately
+      if (state.currentQuestion) {
+        const subtextContent = trimmed.slice(1, -1) // Remove < and >
+        return {
+          ...state,
+          currentQuestion: {
+            ...state.currentQuestion,
+            subtext: subtextContent,
+          },
+        }
+      }
+      return state
+    } else {
+      // Multi-line subtext starting - start collecting
+      const subtextContent = trimmed.substring(1) // Remove opening <
+      return {
+        ...state,
+        subtextBuffer: [subtextContent],
+      }
+    }
+  }
+
+  // Check if we're ending subtext (line ends with > and we're collecting)
+  if (state.subtextBuffer && trimmed.endsWith(">")) {
+    // Complete the multi-line subtext
+    const finalLine = trimmed.slice(0, -1) // Remove closing >
+    const fullSubtext = [...state.subtextBuffer, finalLine].join("\n")
+
+    if (state.currentQuestion) {
+      return {
+        ...state,
+        currentQuestion: {
+          ...state.currentQuestion,
+          subtext: fullSubtext,
+        },
+        subtextBuffer: null, // Clear the buffer
+      }
+    }
+
+    return {
+      ...state,
+      subtextBuffer: null, // Clear the buffer even if no current question
+    }
+  }
+
+  // Check if we're in the middle of collecting subtext
+  if (state.subtextBuffer) {
+    return {
+      ...state,
+      subtextBuffer: [...state.subtextBuffer, originalLine],
+    }
+  }
+
+  // Regular content handling (existing logic)
   if (state.currentQuestion) return state
 
   if (state.currentSubsection) {
@@ -417,16 +478,18 @@ export const parseQuestionnaire = (text: string): Section[] => {
   try {
     const lines = text.split("\n")
 
-    // Parse all lines into structured data
-    const parsedLines = lines.map(parseLine)
-
-    // Process lines through state reducer
-    const finalState = parsedLines.reduce(reduceParsedLine, {
+    const initialState: ParserState = {
       sections: [],
       currentSection: null,
       currentSubsection: null,
       currentQuestion: null,
-    })
+      subtextBuffer: null,
+    }
+
+    const finalState = lines.reduce((state, line) => {
+      const parsedLine = parseLine(line, state)
+      return reduceParsedLine(state, parsedLine)
+    }, initialState)
 
     // Save any remaining work
     let result = saveCurrentQuestion(finalState)
