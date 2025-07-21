@@ -33,6 +33,7 @@ const QuestionnaireApp = () => {
   const loadSample = (): void => {
     try {
       const parsed = parseQuestionnaire(SAMPLE_TEXT)
+      console.log(parsed)
       setQuestionnaire(parsed)
       setError("")
       setIsPreviewMode(true)
