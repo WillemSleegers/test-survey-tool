@@ -41,15 +41,13 @@ export function QuestionnaireViewer({
       )
 
       // Filter subsections and their questions
-      const visibleSubsections = section.subsections
-        .map((subsection) => ({
-          title: subsection.title,
-          content: subsection.content,
-          questions: subsection.questions.filter((question) =>
-            evaluateCondition(question.showIf || "", responses)
-          ),
-        }))
-        .filter((subsection) => subsection.questions.length > 0) // Only show subsections with visible questions
+      const visibleSubsections = section.subsections.map((subsection) => ({
+        title: subsection.title,
+        content: subsection.content,
+        questions: subsection.questions.filter((question) =>
+          evaluateCondition(question.showIf || "", responses)
+        ),
+      }))
 
       return {
         mainQuestions,
