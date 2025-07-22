@@ -54,7 +54,7 @@ export function QuestionRenderer({
                 />
                 <Label
                   htmlFor={`${question.id}-${optionIndex}`}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-sm font-normal"
                 >
                   {option.label}
                 </Label>
