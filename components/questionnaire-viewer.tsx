@@ -109,7 +109,7 @@ export function QuestionnaireViewer({
       <Card>
         <CardContent className="space-y-6">
           {(currentSection.title || currentSection.content) && (
-            <div>
+            <div className="whitespace-pre-wrap">
               <Markdown>
                 {replacePlaceholders(currentSection.title, responses)}
               </Markdown>
