@@ -21,7 +21,7 @@ export function SubsectionRenderer({
   return (
     <div className="space-y-6">
       {/* Subsection Header */}
-      <div>
+      <div className="whitespace-pre-wrap">
         <Markdown>{replacePlaceholders(subsection.title, responses)}</Markdown>
         {subsection.content && (
           <Markdown>
