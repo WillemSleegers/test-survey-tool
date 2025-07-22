@@ -123,4 +123,8 @@
   ul {
     @apply list-disc list-inside;
   }
+
+  li > ul {
+    @apply ms-4;
+  }
 }
