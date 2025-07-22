@@ -22,6 +22,7 @@ const QuestionnaireApp = () => {
   const handleFileLoaded = (content: string) => {
     try {
       const parsed = parseQuestionnaire(content)
+      console.log(parsed)
       setQuestionnaire(parsed)
       setError("")
       setIsPreviewMode(true)
