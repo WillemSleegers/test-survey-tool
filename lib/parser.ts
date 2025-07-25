@@ -335,15 +335,27 @@ const handleVariable = (
 }
 
 const handleShowIf = (state: ParserState, data: ShowIfData): ParserState => {
-  if (!state.currentQuestion) return state
-
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      showIf: data.showIf,
-    },
+  if (state.currentQuestion) {
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        showIf: data.showIf,
+      },
+    }
   }
+
+  if (state.currentSection) {
+    return {
+      ...state,
+      currentSection: {
+        ...state.currentSection,
+        showIf: data.showIf,
+      },
+    }
+  }
+
+  return state
 }
 
 const handleContent = (

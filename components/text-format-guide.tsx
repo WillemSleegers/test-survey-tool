@@ -29,13 +29,12 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
             <code>&lt;Additional description&gt;</code> - Optional clarifying
             text below the question (shown in muted color)
           </li>
-
           <li>
             <code>- Option text</code> - Multiple choice options (no letters
             needed)
           </li>
           <li>
-            <code>TEXT_INPUT</code> / <code>NUMBER_INPUT</code> - Input types
+            <code>TEXT</code> / <code>NUMBER</code> - Input types
           </li>
           <li>
             <code>VARIABLE: name</code> - Store response (optional)
@@ -48,7 +47,16 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
             text based on responses
           </li>
           <li>
-            <code>SHOW_IF: condition</code> - Conditional question display
+            <code>SHOW_IF: condition</code> - Conditional display
+            <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
+              <li>After questions: Hide individual questions</li>
+              <li>After section headers: Skip entire pages</li>
+              <li>
+                Example: <code># Advanced Topics</code> →{" "}
+                <code>SHOW_IF: experience != "Beginner"</code>
+              </li>
+              <li>Sections with only titles are automatically hidden</li>
+            </ul>
           </li>
         </ul>
       </div>

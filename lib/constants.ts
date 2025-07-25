@@ -1,18 +1,23 @@
-export const SAMPLE_TEXT2 = `# **Developer Background Survey**
+export const SAMPLE_TEXT = `# **Developer Background Survey**
 Welcome! This survey helps us understand the software development community better.
 
-## **Test**
-Testing a list:
-- list option
-- another one
-
-Q1: New question with subtext
-<Subtext across lines>
+Q1: A or B?
 - A
 - B
-`
+VARIABLE: letter
 
-export const SAMPLE_TEXT = `# **Developer Background Survey**
+# New page
+With some content
+
+# Page with question
+
+Here is some content.
+
+Q2: Did it work?
+TEXT
+SHOW_IF: letter == A`
+
+export const SAMPLE_TEXT2 = `# **Developer Background Survey**
 Welcome! This survey helps us understand the software development community better.
 
 Q1: What is your primary role in software development?
@@ -63,6 +68,8 @@ TEXT
 VARIABLE: challenge
 
 # **Work Environment**
+SHOW_IF: experience != "Less than 1 year"
+
 Let's explore your current work situation as a {role}.
 
 ## **Team Dynamics**
@@ -124,15 +131,35 @@ Q11: What development methodology does your team follow?
 - Other
 VARIABLE: methodology
 
+# **Senior Developer Insights**
+SHOW_IF: experience == "6-10 years" || experience == "More than 10 years"
+
+As an experienced developer, your insights are particularly valuable to our community.
+
+Q12: What mentoring or leadership responsibilities do you have?
+<Select all that apply to your current role>
+- Code review oversight
+- Junior developer mentoring
+- Technical architecture decisions
+- Team lead responsibilities
+- None currently
+CHECKBOX
+VARIABLE: leadership_roles
+
+Q13: What advice would you give about career progression?
+<Share your thoughts on advancing in software development>
+TEXT
+VARIABLE: career_advice
+
 # Career Growth
 Your thoughts on professional development as a {role}.
 
-Q12: {{experience == Less than 1 year|As someone new to the field|With your {experience} of experience}}, what skills do you want to develop next?
+Q14: {{experience == Less than 1 year|As someone new to the field|With your {experience} of experience}}, what skills do you want to develop next?
 <Describe your top 2-3 learning priorities>
 TEXT
 VARIABLE: learning_goals
 
-Q13: Would you recommend a career in software development to others?
+Q15: Would you recommend a career in software development to others?
 <Think about someone with similar interests and aptitude>
 - Definitely yes
 - Probably yes
@@ -142,7 +169,7 @@ Q13: Would you recommend a career in software development to others?
 VARIABLE: recommend_career
 SHOW_IF: experience != Less than 1 year
 
-Q14: What advice would you give to someone starting as a {role}?
+Q16: What advice would you give to someone starting as a {role}?
 <Share your most important insights for beginners>
 TEXT
 SHOW_IF: recommend_career == Definitely yes || recommend_career == Probably yes

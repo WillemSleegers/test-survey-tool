@@ -26,6 +26,7 @@ export type Section = {
   content: string
   questions: Question[]
   subsections: Subsection[]
+  showIf?: string
 }
 
 export type Response = {

@@ -1,7 +1,7 @@
 import { twMerge } from "tailwind-merge"
 import { clsx, type ClassValue } from "clsx"
 
-import { ConditionalPlaceholder, Responses } from "@/lib/types"
+import { ConditionalPlaceholder, Responses, Section } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -253,4 +253,36 @@ export const replacePlaceholders = (
   // First process conditional placeholders, then variable placeholders
   const afterConditionals = processConditionalPlaceholders(text, responses)
   return processVariablePlaceholders(afterConditionals, responses)
+}
+export const isSectionVisible = (
+  section: Section,
+  responses: Responses
+): boolean => {
+  // Check explicit section-level condition first
+  if (section.showIf) {
+    return evaluateCondition(section.showIf, responses)
+  }
+
+  // Less conservative approach: section needs actual content, not just a title
+  // Section is visible if it has:
+  // 1. Content text (non-empty after trim)
+  // 2. Any visible main questions
+  // 3. Any visible subsections (with content or visible questions)
+
+  const hasContent = !!section.content.trim()
+
+  const hasVisibleQuestions = section.questions.some((question) =>
+    evaluateCondition(question.showIf || "", responses)
+  )
+
+  const hasVisibleSubsections = section.subsections.some((subsection) => {
+    const hasSubsectionContent =
+      !!subsection.title.trim() || !!subsection.content.trim()
+    const hasVisibleSubsectionQuestions = subsection.questions.some(
+      (question) => evaluateCondition(question.showIf || "", responses)
+    )
+    return hasSubsectionContent || hasVisibleSubsectionQuestions
+  })
+
+  return hasContent || hasVisibleQuestions || hasVisibleSubsections
 }
