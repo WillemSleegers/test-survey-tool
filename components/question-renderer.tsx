@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useLanguage } from "@/contexts/language-context"
 
 import { replacePlaceholders } from "@/lib/utils"
 
@@ -23,6 +24,7 @@ export function QuestionRenderer({
   responses,
   onResponse,
 }: QuestionRendererProps) {
+  const { t } = useLanguage()
   const questionText = replacePlaceholders(question.text, responses)
   const questionSubtext = replacePlaceholders(question.subtext, responses)
   const responseValue = responses[question.id]?.value
@@ -124,7 +126,7 @@ export function QuestionRenderer({
           <Textarea
             value={textValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
-            placeholder="Enter your response..."
+            placeholder={t('placeholders.textInput')}
             className="min-h-[100px]"
           />
         </div>
@@ -148,7 +150,7 @@ export function QuestionRenderer({
             type="number"
             value={numberValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
-            placeholder="Enter a number..."
+            placeholder={t('placeholders.numberInput')}
           />
         </div>
       )

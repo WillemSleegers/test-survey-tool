@@ -1,64 +1,65 @@
 "use client"
 
+import { useLanguage } from "@/contexts/language-context"
+
 type TextFormatGuideProps = {
   sampleText: string
 }
 
 export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
+  const { t } = useLanguage()
+  
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Text Format Guide</h3>
-      <div className="bg-muted p-4 rounded-lg text-sm font-mono whitespace-pre-wrap">
-        {sampleText}
-      </div>
+      <h3 className="text-lg font-semibold">{t('guide.title')}</h3>
       <div className="text-sm space-y-2">
         <p>
-          <strong>Key features:</strong>
+          <strong>{t('guide.keyFeatures')}</strong>
         </p>
         <ul className="list-disc list-inside space-y-1">
           <li>
-            <code># Section</code> - Creates new pages
+            <code># Section</code> - {t('guide.features.section')}
           </li>
           <li>
-            <code>## Subsection</code> - Headers within the same page
+            <code>## Subsection</code> - {t('guide.features.subsection')}
           </li>
           <li>
-            <code>Q1: Question text?</code> - Questions
+            <code>Q1: Question text?</code> - {t('guide.features.question')}
           </li>
           <li>
-            <code>&lt;Additional description&gt;</code> - Optional clarifying
-            text below the question (shown in muted color)
+            <code>&lt;Additional description&gt;</code> - {t('guide.features.description')}
           </li>
           <li>
-            <code>- Option text</code> - Multiple choice options (no letters
-            needed)
+            <code>- Option text</code> - {t('guide.features.options')}
           </li>
           <li>
-            <code>TEXT</code> / <code>NUMBER</code> - Input types
+            <code>TEXT</code> / <code>NUMBER</code> - {t('guide.features.inputTypes')}
           </li>
           <li>
-            <code>VARIABLE: name</code> - Store response (optional)
+            <code>VARIABLE: name</code> - {t('guide.features.variable')}
           </li>
           <li>
-            <code>{`{variable}`}</code> - Simple variable replacement
+            <code>{`{variable}`}</code> - {t('guide.features.replacement')}
           </li>
           <li>
-            <code>{`{{condition|true_text|false_text}}`}</code> - Conditional
-            text based on responses
+            <code>{`{{condition|true_text|false_text}}`}</code> - {t('guide.features.conditional')}
           </li>
           <li>
-            <code>SHOW_IF: condition</code> - Conditional display
+            <code>SHOW_IF: condition</code> - {t('guide.features.showIf')}
             <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-              <li>After questions: Hide individual questions</li>
-              <li>After section headers: Skip entire pages</li>
+              <li>{t('guide.features.afterQuestions')}</li>
+              <li>{t('guide.features.afterSections')}</li>
               <li>
-                Example: <code># Advanced Topics</code> →{" "}
+                {t('guide.features.example')} <code># Advanced Topics</code> →{" "}
                 <code>SHOW_IF: experience != Beginner</code>
               </li>
-              <li>Sections with only titles are automatically hidden</li>
+              <li>{t('guide.features.autoHidden')}</li>
             </ul>
           </li>
         </ul>
+      </div>
+      <div className="bg-muted p-4 rounded-lg text-sm font-mono whitespace-pre-wrap">
+        {sampleText}
       </div>
     </div>
   )

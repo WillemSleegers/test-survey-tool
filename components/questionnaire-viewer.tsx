@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useLanguage } from "@/contexts/language-context"
 
 import {
   evaluateCondition,
@@ -37,6 +38,7 @@ export function QuestionnaireViewer({
   const [currentVisibleSectionIndex, setCurrentVisibleSectionIndex] =
     useState<number>(0)
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
+  const { t } = useLanguage()
 
   // Check if debug mode is enabled via URL hash
   const isDebugMode =
@@ -136,7 +138,7 @@ export function QuestionnaireViewer({
         <Card>
           <CardContent className="text-center py-12">
             <p className="text-muted-foreground">
-              No sections are currently visible based on your responses.
+              {t('errors.noSections')}
             </p>
           </CardContent>
         </Card>
@@ -175,7 +177,7 @@ export function QuestionnaireViewer({
               className="flex items-center gap-2"
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              {t('navigation.previous')}
             </Button>
 
             {currentVisibleSectionIndex === visibleSections.length - 1 ? (
@@ -183,11 +185,11 @@ export function QuestionnaireViewer({
                 onClick={handleComplete}
                 className="flex items-center gap-2 bg-primary hover:bg-primary/75"
               >
-                Complete Survey
+                {t('navigation.complete')}
               </Button>
             ) : (
               <Button onClick={nextSection} className="flex items-center gap-2">
-                Next
+                {t('navigation.next')}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -260,13 +262,13 @@ export function QuestionnaireViewer({
       <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Survey Complete!</AlertDialogTitle>
+            <AlertDialogTitle>{t('completion.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Thank you for completing the questionnaire. Your responses have been recorded.
+              {t('completion.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>Close</AlertDialogAction>
+            <AlertDialogAction>{t('completion.close')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
