@@ -82,4 +82,5 @@ export type ParserState = {
   currentSection: Section | null
   currentSubsection: Subsection | null
   currentQuestion: Question | null
+  subtextBuffer: string[] | null
 }

@@ -4,35 +4,16 @@ import {
   SectionData,
   Subsection,
   SubsectionData,
+  QuestionData,
+  SubtextData,
+  OptionData,
+  InputTypeData,
+  VariableData,
+  ShowIfData,
+  ContentData,
+  ParsedLine,
+  ParserState,
 } from "@/lib/types"
-
-// Types for parsing
-type QuestionData = { id: string; text: string }
-type SubtextData = { subtext: string }
-type OptionData = { text: string }
-type InputTypeData = { type: Question["type"] }
-type VariableData = { variable: string }
-type ShowIfData = { showIf: string }
-type ContentData = { content: string }
-
-type ParsedLine =
-  | { type: "section"; raw: string; data: SectionData }
-  | { type: "subsection"; raw: string; data: SubsectionData }
-  | { type: "question"; raw: string; data: QuestionData }
-  | { type: "subtext"; raw: string; data: SubtextData }
-  | { type: "option"; raw: string; data: OptionData }
-  | { type: "input_type"; raw: string; data: InputTypeData }
-  | { type: "variable"; raw: string; data: VariableData }
-  | { type: "show_if"; raw: string; data: ShowIfData }
-  | { type: "content"; raw: string; data: ContentData }
-
-type ParserState = {
-  sections: Section[]
-  currentSection: Section | null
-  currentSubsection: Subsection | null
-  currentQuestion: Question | null
-  subtextBuffer: string[] | null
-}
 
 // Line classification functions
 
