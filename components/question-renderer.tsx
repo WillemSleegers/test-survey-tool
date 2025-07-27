@@ -37,7 +37,7 @@ export function QuestionRenderer({
           <div className="space-y-1">
             <p className="text-base font-medium">{questionText}</p>
             {questionSubtext && (
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              <p className="text-base text-muted-foreground whitespace-pre-wrap">
                 {questionSubtext}
               </p>
             )}
@@ -54,7 +54,7 @@ export function QuestionRenderer({
                 />
                 <Label
                   htmlFor={`${question.id}-${optionIndex}`}
-                  className="cursor-pointer text-sm font-normal"
+                  className="cursor-pointer text-base font-normal"
                 >
                   {option.label}
                 </Label>
@@ -73,7 +73,9 @@ export function QuestionRenderer({
           <div className="space-y-1">
             <p className="text-base font-medium">{questionText}</p>
             {questionSubtext && (
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{questionSubtext}</p>
+              <p className="text-base text-muted-foreground whitespace-pre-wrap">
+                {questionSubtext}
+              </p>
             )}
           </div>
           <div className="space-y-3">
@@ -95,7 +97,7 @@ export function QuestionRenderer({
                 />
                 <Label
                   htmlFor={`${question.id}-${optionIndex}`}
-                  className="cursor-pointer text-sm font-normal"
+                  className="cursor-pointer text-base font-normal"
                 >
                   {option.label}
                 </Label>
@@ -114,7 +116,9 @@ export function QuestionRenderer({
           <div className="space-y-1">
             <p className="text-base font-medium">{questionText}</p>
             {questionSubtext && (
-              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+              <p className="text-base text-muted-foreground">
+                {questionSubtext}
+              </p>
             )}
           </div>
           <Textarea
@@ -135,7 +139,9 @@ export function QuestionRenderer({
           <div className="space-y-1">
             <p className="text-base font-medium">{questionText}</p>
             {questionSubtext && (
-              <p className="text-sm text-muted-foreground">{questionSubtext}</p>
+              <p className="text-base text-muted-foreground">
+                {questionSubtext}
+              </p>
             )}
           </div>
           <Input

@@ -1,21 +1,18 @@
-export const SAMPLE_TEXT = `# **Developer Background Survey**
-Welcome! This survey helps us understand the software development community better.
+export const SAMPLE_TEXT = `# **Test Survey**
+This is a test survey.
 
-Q1: A or B?
-- A
-- B
-VARIABLE: letter
+## This is a section header
 
-# New page
-With some content
-
-# Page with question
-
-Here is some content.
-
-Q2: Did it work?
+Q1: Question 1
 TEXT
-SHOW_IF: letter == A`
+
+#
+
+Q2: Question 2
+TEXT
+
+#
+Just some content.`
 
 export const SAMPLE_TEXT2 = `# **Developer Background Survey**
 Welcome! This survey helps us understand the software development community better.

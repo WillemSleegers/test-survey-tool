@@ -53,7 +53,7 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
               <li>After section headers: Skip entire pages</li>
               <li>
                 Example: <code># Advanced Topics</code> →{" "}
-                <code>SHOW_IF: experience != "Beginner"</code>
+                <code>SHOW_IF: experience != Beginner</code>
               </li>
               <li>Sections with only titles are automatically hidden</li>
             </ul>

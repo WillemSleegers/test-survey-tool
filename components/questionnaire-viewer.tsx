@@ -8,6 +8,15 @@ import Markdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { SectionContent } from "@/components/section-content"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import {
   evaluateCondition,
@@ -27,6 +36,7 @@ export function QuestionnaireViewer({
   const [responses, setResponses] = useState<Responses>({})
   const [currentVisibleSectionIndex, setCurrentVisibleSectionIndex] =
     useState<number>(0)
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false)
 
   // Check if debug mode is enabled via URL hash
   const isDebugMode =
@@ -113,7 +123,7 @@ export function QuestionnaireViewer({
   }
 
   const handleComplete = (): void => {
-    alert("Questionnaire completed!")
+    setShowCompletionDialog(true)
   }
 
   if (!questionnaire || questionnaire.length === 0) {
@@ -246,6 +256,20 @@ export function QuestionnaireViewer({
           </Card>
         </>
       )}
+
+      <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Survey Complete!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Thank you for completing the questionnaire. Your responses have been recorded.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
