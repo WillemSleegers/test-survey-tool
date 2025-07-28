@@ -153,7 +153,7 @@ export function QuestionnaireViewer({
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardContent className="space-y-6">
-          {(currentSection.title || currentSection.content) && (
+          {(currentSection.title.length > 1 || currentSection.content.length > 1) && (
             <div className="whitespace-pre-wrap">
               <Markdown>
                 {replacePlaceholders(currentSection.title, responses)}
