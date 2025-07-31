@@ -83,6 +83,37 @@ Q9: Any final thoughts about {color}?
 <Optional - share anything else you'd like to say>
 TEXT
 
+# **Advanced User Section**
+SHOW_IF: age >= 25
+
+This section only appears for users 25 and older. Notice how all questions below inherit this condition automatically - no need to repeat "SHOW_IF: age >= 25" on each question!
+
+Q10: What's your professional experience with {color}?
+<Since you're 25+, tell us about work experience>
+- 0-2 years
+- 3-5 years  
+- 6-10 years
+- 10+ years
+VARIABLE: work_experience
+
+Q11: Would you consider {color} for business use?
+<Professional perspective on {color}>
+- Definitely
+- Probably
+- Not sure
+- Probably not
+- Definitely not
+VARIABLE: business_use
+
+Q12: Rate {color}'s versatility in professional settings
+<Scale of 1-5 for professional applications>
+- 1 (Very Limited)
+- 2 (Limited)
+- 3 (Moderate)
+- 4 (High)
+- 5 (Excellent)
+VARIABLE: professional_rating
+
 # **Summary Page**
 Thank you, {name}! Here's what you told us:
 

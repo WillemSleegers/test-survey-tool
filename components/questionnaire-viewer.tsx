@@ -22,7 +22,6 @@ import { useLanguage } from "@/contexts/language-context"
 import {
   evaluateCondition,
   replacePlaceholders,
-  isSectionVisible,
 } from "@/lib/utils"
 
 import { Responses, Section, VisibleSectionContent } from "@/lib/types"
@@ -44,10 +43,10 @@ export function QuestionnaireViewer({
   const isDebugMode =
     typeof window !== "undefined" && window.location.hash === "#debug"
 
-  // Get only visible sections
+  // Get only visible sections - now based purely on SHOW_IF conditions
   const visibleSections = useMemo(() => {
     return questionnaire.filter((section) =>
-      isSectionVisible(section, responses)
+      evaluateCondition(section.showIf || "", responses)
     )
   }, [questionnaire, responses])
 
@@ -66,12 +65,15 @@ export function QuestionnaireViewer({
   // Get visible content for a section
   const getVisibleSectionContent = useCallback(
     (section: Section): VisibleSectionContent => {
-      // Filter main section questions
+      // Questions inherit section visibility - they're only checked if section is already visible
+      // Since we only call this for visible sections, we just need to check individual question conditions
+      
+      // Filter main section questions based on their individual SHOW_IF conditions
       const mainQuestions = section.questions.filter((question) =>
         evaluateCondition(question.showIf || "", responses)
       )
 
-      // Filter subsections and their questions
+      // Filter subsections and their questions based on individual SHOW_IF conditions
       const visibleSubsections = section.subsections.map((subsection) => ({
         title: subsection.title,
         content: subsection.content,
@@ -87,6 +89,37 @@ export function QuestionnaireViewer({
     },
     [responses]
   )
+
+  // Initialize default responses for visible questions
+  useEffect(() => {
+    const currentSection = visibleSections[currentVisibleSectionIndex]
+    if (!currentSection) return
+
+    const sectionContent = getVisibleSectionContent(currentSection)
+    const allVisibleQuestions = [
+      ...sectionContent.mainQuestions,
+      ...sectionContent.subsections.flatMap(sub => sub.questions)
+    ]
+
+    setResponses(prev => {
+      const newResponses = { ...prev }
+      let hasChanges = false
+
+      allVisibleQuestions.forEach(question => {
+        if (!newResponses[question.id]) {
+          // Initialize with appropriate default value based on question type
+          const defaultValue = question.type === 'checkbox' ? [] : ''
+          newResponses[question.id] = {
+            value: defaultValue,
+            variable: question.variable,
+          }
+          hasChanges = true
+        }
+      })
+
+      return hasChanges ? newResponses : prev
+    })
+  }, [currentVisibleSectionIndex, visibleSections, getVisibleSectionContent])
 
   const handleResponse = (
     questionId: string,
@@ -147,20 +180,30 @@ export function QuestionnaireViewer({
   }
 
   const currentSection = visibleSections[currentVisibleSectionIndex]
+  
+  // Safety check - if no current section, don't render anything
+  if (!currentSection) {
+    return null
+  }
+  
   const sectionContent = getVisibleSectionContent(currentSection)
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardContent className="space-y-6">
-          {(currentSection.title.length > 1 || currentSection.content.length > 1) && (
+          {(currentSection.title.trim() || currentSection.content.trim()) && (
             <div className="whitespace-pre-wrap">
-              <Markdown>
-                {replacePlaceholders(currentSection.title, responses)}
-              </Markdown>
-              <Markdown>
-                {replacePlaceholders(currentSection.content, responses)}
-              </Markdown>
+              {currentSection.title.trim() && (
+                <Markdown>
+                  {replacePlaceholders(currentSection.title, responses)}
+                </Markdown>
+              )}
+              {currentSection.content.trim() && (
+                <Markdown>
+                  {replacePlaceholders(currentSection.content, responses)}
+                </Markdown>
+              )}
             </div>
           )}
           <SectionContent
@@ -231,27 +274,26 @@ export function QuestionnaireViewer({
                 </p>
                 <div className="mt-4">
                   <p className="font-medium mb-2">Section visibility:</p>
-                  {questionnaire.map((section, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          isSectionVisible(section, responses)
-                            ? "bg-green-500"
-                            : "bg-red-500"
-                        }`}
-                      />
-                      <span
-                        className={`${
-                          isSectionVisible(section, responses)
-                            ? ""
-                            : "line-through text-muted-foreground"
-                        }`}
-                      >
-                        Section {index + 1}: {section.title || "(Untitled)"}
-                        {section.showIf && ` [SHOW_IF: ${section.showIf}]`}
-                      </span>
-                    </div>
-                  ))}
+                  {questionnaire.map((section, index) => {
+                    const isVisible = evaluateCondition(section.showIf || "", responses)
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            isVisible ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        />
+                        <span
+                          className={`${
+                            isVisible ? "" : "line-through text-muted-foreground"
+                          }`}
+                        >
+                          Section {index + 1}: {section.title || "(Untitled)"}
+                          {section.showIf && ` [SHOW_IF: ${section.showIf}]`}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </CardContent>

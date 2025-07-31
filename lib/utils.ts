@@ -1,7 +1,7 @@
 import { twMerge } from "tailwind-merge"
 import { clsx, type ClassValue } from "clsx"
 
-import { ConditionalPlaceholder, Responses, Section } from "@/lib/types"
+import { ConditionalPlaceholder, Responses } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -59,14 +59,46 @@ export const parseConditionalContent = (
     parts.push(current)
   }
 
-  if (parts.length !== 3) {
+  if (parts.length < 2 || parts.length > 3) {
     return null
   }
 
   return {
     condition: parts[0].trim(),
     trueText: parts[1],
-    falseText: parts[2],
+    falseText: parts.length === 3 ? parts[2] : "", // Default to empty string if no false part
+  }
+}
+
+// Helper function to evaluate arithmetic expressions
+const evaluateExpression = (expression: string, responses: Responses): number => {
+  // Replace variables with their numeric values
+  const substituted = expression.replace(/\w+/g, (variable) => {
+    const responseEntry = Object.values(responses).find(
+      (r) => r.variable === variable
+    )
+    const value = responseEntry?.value
+    
+    // Convert to number, default to 0 if not a valid number
+    if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) {
+      return "0"
+    }
+    
+    if (Array.isArray(value)) {
+      return value.length.toString() // Use array length for checkbox questions
+    }
+    
+    const numValue = parseFloat(String(value))
+    return isNaN(numValue) ? "0" : numValue.toString()
+  })
+  
+  try {
+    // Use Function constructor to safely evaluate mathematical expressions
+    // This supports +, -, *, /, (), and basic math
+    const result = new Function(`return ${substituted}`)()
+    return typeof result === 'number' ? result : 0
+  } catch {
+    return 0
   }
 }
 
@@ -91,83 +123,145 @@ export const evaluateCondition = (
         .every((part) => evaluateCondition(part.trim(), responses))
     }
 
-    // Parse simple condition
-    const match = condition.match(/(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)/)
+    // Parse condition - now supports arithmetic expressions
+    const match = condition.match(/(.+)\s*(==|!=|>=|<=|>|<)\s*(.+)/)
     if (!match) return true
 
-    const [, variable, operator, value] = match
+    const [, leftSide, operator, rightSide] = match
 
-    // Find response by variable name
-    const responseEntry = Object.values(responses).find(
-      (r) => r.variable === variable
-    )
-    const responseValue = responseEntry?.value
+    // Check if this is a simple variable comparison or arithmetic expression
+    const isSimpleVariable = /^\w+$/.test(leftSide.trim())
+    
+    if (isSimpleVariable) {
+      // Handle simple variable conditions (original logic)
+      const variable = leftSide.trim()
+      const rawValue = rightSide.trim()
+      
+      // Find response by variable name
+      const responseEntry = Object.values(responses).find(
+        (r) => r.variable === variable
+      )
+      const responseValue = responseEntry?.value
 
-    if (responseValue === undefined) return false
+      // Check if the value is quoted (string comparison)
+      const quotedMatch = rawValue.match(/^["'](.*)["']$/)
+      if (quotedMatch) {
+        // This is a quoted string comparison
+        const value = quotedMatch[1] // Extract content between quotes
+        
+        // Handle empty string checks
+        if (value === "") {
+          if (responseEntry === undefined) {
+            // Question was never shown - return based on operator
+            return operator === "==" ? false : true
+          }
+          // Question was shown but empty
+          const isEmpty = responseValue === "" || (Array.isArray(responseValue) && responseValue.length === 0)
+          return operator === "==" ? isEmpty : !isEmpty
+        }
 
-    // Handle array responses (checkbox questions)
-    if (Array.isArray(responseValue)) {
+        if (responseValue === undefined) return false
+
+        // Handle array responses (checkbox questions) for quoted strings
+        if (Array.isArray(responseValue)) {
+          switch (operator) {
+            case "==":
+              // Check if array contains the value
+              return responseValue.includes(value)
+            case "!=":
+              // Check if array doesn't contain the value
+              return !responseValue.includes(value)
+            default:
+              return false // Other operators don't make sense for string/array comparisons
+          }
+        }
+
+        // Handle string responses (radio, text questions) for quoted strings
+        switch (operator) {
+          case "==":
+            return responseValue == value
+          case "!=":
+            return responseValue != value
+          default:
+            return false // Other operators don't make sense for string comparisons
+        }
+      } else {
+        // This is an unquoted value - treat as numeric comparison
+        const numValue = parseFloat(rawValue)
+        if (isNaN(numValue)) return false // Invalid numeric value
+
+        if (responseValue === undefined) return false
+
+        // Handle array responses (checkbox questions) for numeric comparisons
+        if (Array.isArray(responseValue)) {
+          switch (operator) {
+            case ">=":
+              // Check if array length is >= value
+              return responseValue.length >= numValue
+            case "<=":
+              // Check if array length is <= value
+              return responseValue.length <= numValue
+            case ">":
+              // Check if array length is > value
+              return responseValue.length > numValue
+            case "<":
+              // Check if array length is < value
+              return responseValue.length < numValue
+            case "==":
+              // Check if array length equals value
+              return responseValue.length === numValue
+            case "!=":
+              // Check if array length doesn't equal value
+              return responseValue.length !== numValue
+            default:
+              return true
+          }
+        }
+
+        // Handle numeric responses (number questions, or string numbers)
+        const numResponse = parseFloat(String(responseValue))
+        if (isNaN(numResponse)) return false // Response is not numeric
+
+        switch (operator) {
+          case "==":
+            return numResponse === numValue
+          case "!=":
+            return numResponse !== numValue
+          case ">=":
+            return numResponse >= numValue
+          case "<=":
+            return numResponse <= numValue
+          case ">":
+            return numResponse > numValue
+          case "<":
+            return numResponse < numValue
+          default:
+            return true
+        }
+      }
+    } else {
+      // Handle arithmetic expressions
+      const leftValue = evaluateExpression(leftSide.trim(), responses)
+      const rightValue = parseFloat(rightSide.trim())
+      
+      if (isNaN(rightValue)) return false
+      
       switch (operator) {
         case "==":
-          // Check if array contains the value
-          return responseValue.includes(value)
+          return leftValue === rightValue
         case "!=":
-          // Check if array doesn't contain the value
-          return !responseValue.includes(value)
+          return leftValue !== rightValue
         case ">=":
-          // Check if array length is >= value
-          const minLength = parseFloat(value)
-          return responseValue.length >= minLength
+          return leftValue >= rightValue
         case "<=":
-          // Check if array length is <= value
-          const maxLength = parseFloat(value)
-          return responseValue.length <= maxLength
+          return leftValue <= rightValue
         case ">":
-          // Check if array length is > value
-          const minLengthExclusive = parseFloat(value)
-          return responseValue.length > minLengthExclusive
+          return leftValue > rightValue
         case "<":
-          // Check if array length is < value
-          const maxLengthExclusive = parseFloat(value)
-          return responseValue.length < maxLengthExclusive
+          return leftValue < rightValue
         default:
           return true
       }
-    }
-
-    // Handle string responses (radio, text, number questions)
-    const numValue =
-      typeof value === "string" && !isNaN(Number(value))
-        ? parseFloat(value)
-        : value
-    const numResponse =
-      typeof responseValue === "string" && !isNaN(Number(responseValue))
-        ? parseFloat(responseValue)
-        : responseValue
-
-    switch (operator) {
-      case "==":
-        return responseValue == value
-      case "!=":
-        return responseValue != value
-      case ">=":
-        return typeof numResponse === "number" && typeof numValue === "number"
-          ? numResponse >= numValue
-          : false
-      case "<=":
-        return typeof numResponse === "number" && typeof numValue === "number"
-          ? numResponse <= numValue
-          : false
-      case ">":
-        return typeof numResponse === "number" && typeof numValue === "number"
-          ? numResponse > numValue
-          : false
-      case "<":
-        return typeof numResponse === "number" && typeof numValue === "number"
-          ? numResponse < numValue
-          : false
-      default:
-        return true
     }
   } catch {
     return true
@@ -224,18 +318,15 @@ export const processVariablePlaceholders = (
       return match
     }
 
-    // Handle array values (from checkbox questions)
+    // Handle array values (from checkbox questions) - convert to markdown list
     if (Array.isArray(value)) {
       if (value.length === 0) {
         return "none"
       } else if (value.length === 1) {
         return value[0]
-      } else if (value.length === 2) {
-        return `${value[0]} and ${value[1]}`
       } else {
-        const allButLast = value.slice(0, -1).join(", ")
-        const last = value[value.length - 1]
-        return `${allButLast}, and ${last}`
+        // Convert to markdown unordered list (with leading and trailing newlines for proper rendering)
+        return '\n' + value.map(item => `- ${item}`).join('\n') + '\n\n'
       }
     }
 
@@ -253,36 +344,4 @@ export const replacePlaceholders = (
   // First process conditional placeholders, then variable placeholders
   const afterConditionals = processConditionalPlaceholders(text, responses)
   return processVariablePlaceholders(afterConditionals, responses)
-}
-export const isSectionVisible = (
-  section: Section,
-  responses: Responses
-): boolean => {
-  // Check explicit section-level condition first
-  if (section.showIf) {
-    return evaluateCondition(section.showIf, responses)
-  }
-
-  // Less conservative approach: section needs actual content, not just a title
-  // Section is visible if it has:
-  // 1. Content text (non-empty after trim)
-  // 2. Any visible main questions
-  // 3. Any visible subsections (with content or visible questions)
-
-  const hasContent = !!section.content.trim()
-
-  const hasVisibleQuestions = section.questions.some((question) =>
-    evaluateCondition(question.showIf || "", responses)
-  )
-
-  const hasVisibleSubsections = section.subsections.some((subsection) => {
-    const hasSubsectionContent =
-      !!subsection.title.trim() || !!subsection.content.trim()
-    const hasVisibleSubsectionQuestions = subsection.questions.some(
-      (question) => evaluateCondition(question.showIf || "", responses)
-    )
-    return hasSubsectionContent || hasVisibleSubsectionQuestions
-  })
-
-  return hasContent || hasVisibleQuestions || hasVisibleSubsections
 }

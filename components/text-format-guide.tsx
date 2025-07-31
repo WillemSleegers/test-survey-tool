@@ -42,7 +42,7 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
             <code>{`{variable}`}</code> - {t('guide.features.replacement')}
           </li>
           <li>
-            <code>{`{{condition|true_text|false_text}}`}</code> - {t('guide.features.conditional')}
+            <code>{`{{condition|true_text|false_text}}`}</code> - {t('guide.features.conditional')} (false part optional)
           </li>
           <li>
             <code>SHOW_IF: condition</code> - {t('guide.features.showIf')}
@@ -58,7 +58,7 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
           </li>
         </ul>
       </div>
-      <div className="bg-muted p-4 rounded-lg text-sm font-mono whitespace-pre-wrap">
+      <div className="bg-muted p-4 rounded-lg text-xs font-mono whitespace-pre-wrap">
         {sampleText}
       </div>
     </div>

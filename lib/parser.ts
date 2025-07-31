@@ -188,13 +188,21 @@ const saveCurrentQuestion = (state: ParserState): ParserState => {
 const saveCurrentSubsection = (state: ParserState): ParserState => {
   if (!state.currentSubsection || !state.currentSection) return state
 
+  // Normalize whitespace-only content to empty string
+  const normalizedSubsection = {
+    ...state.currentSubsection,
+    content: state.currentSubsection.content.trim() === "" 
+      ? "" 
+      : state.currentSubsection.content
+  }
+
   return {
     ...state,
     currentSection: {
       ...state.currentSection,
       subsections: [
         ...state.currentSection.subsections,
-        state.currentSubsection,
+        normalizedSubsection,
       ],
     },
   }
@@ -204,9 +212,17 @@ const saveCurrentSubsection = (state: ParserState): ParserState => {
 const saveCurrentSection = (state: ParserState): ParserState => {
   if (!state.currentSection) return state
 
+  // Normalize whitespace-only content to empty string
+  const normalizedSection = {
+    ...state.currentSection,
+    content: state.currentSection.content.trim() === "" 
+      ? "" 
+      : state.currentSection.content
+  }
+
   return {
     ...state,
-    sections: [...state.sections, state.currentSection],
+    sections: [...state.sections, normalizedSection],
   }
 }
 

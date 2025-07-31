@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Markdown from "react-markdown"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,11 +38,11 @@ export function QuestionRenderer({
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-medium">{questionText}</p>
+            <Markdown>{questionText}</Markdown>
             {questionSubtext && (
-              <p className="text-base text-muted-foreground whitespace-pre-wrap">
-                {questionSubtext}
-              </p>
+              <div className="text-base text-muted-foreground whitespace-pre-wrap">
+                <Markdown>{questionSubtext}</Markdown>
+              </div>
             )}
           </div>
           <RadioGroup
@@ -73,11 +74,11 @@ export function QuestionRenderer({
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-medium">{questionText}</p>
+            <Markdown>{questionText}</Markdown>
             {questionSubtext && (
-              <p className="text-base text-muted-foreground whitespace-pre-wrap">
-                {questionSubtext}
-              </p>
+              <div className="text-base text-muted-foreground whitespace-pre-wrap">
+                <Markdown>{questionSubtext}</Markdown>
+              </div>
             )}
           </div>
           <div className="space-y-3">
@@ -116,11 +117,11 @@ export function QuestionRenderer({
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-medium">{questionText}</p>
+            <Markdown>{questionText}</Markdown>
             {questionSubtext && (
-              <p className="text-base text-muted-foreground">
-                {questionSubtext}
-              </p>
+              <div className="text-base text-muted-foreground">
+                <Markdown>{questionSubtext}</Markdown>
+              </div>
             )}
           </div>
           <Textarea
@@ -139,11 +140,11 @@ export function QuestionRenderer({
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-medium">{questionText}</p>
+            <Markdown>{questionText}</Markdown>
             {questionSubtext && (
-              <p className="text-base text-muted-foreground">
-                {questionSubtext}
-              </p>
+              <div className="text-base text-muted-foreground">
+                <Markdown>{questionSubtext}</Markdown>
+              </div>
             )}
           </div>
           <Input
