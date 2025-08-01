@@ -1,10 +1,10 @@
 "use client"
 
 import React from "react"
-import { replacePlaceholders } from "@/lib/utils"
+import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 import { VisibleSubsection, Responses } from "@/lib/types"
-import { QuestionRenderer } from "./question-renderer"
+import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 
 interface SubsectionRendererProps {

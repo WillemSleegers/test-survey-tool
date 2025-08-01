@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { QuestionRenderer } from "@/components/question-renderer"
+import { QuestionRenderer } from "@/components/questions/question-renderer"
 import { SubsectionRenderer } from "@/components/subsection-renderer"
 
 import { VisibleSectionContent, Responses } from "@/lib/types"
