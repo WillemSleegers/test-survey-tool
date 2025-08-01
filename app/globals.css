@@ -121,7 +121,7 @@
   }
 
   ul {
-    @apply list-disc list-inside whitespace-normal;
+    @apply list-disc list-outside ms-6 whitespace-normal;
   }
 
   li > ul {

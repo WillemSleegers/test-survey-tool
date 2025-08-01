@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import Markdown from "react-markdown"
@@ -44,23 +44,9 @@ export function QuestionnaireViewer({
     typeof window !== "undefined" && window.location.hash === "#debug"
 
   // Get only visible sections - now based purely on SHOW_IF conditions
-  const visibleSections = useMemo(() => {
-    return questionnaire.filter((section) =>
-      evaluateCondition(section.showIf || "", responses)
-    )
-  }, [questionnaire, responses])
-
-  // Make sure current section index is valid when visible sections change
-  useEffect(() => {
-    if (currentVisibleSectionIndex >= visibleSections.length) {
-      setCurrentVisibleSectionIndex(Math.max(0, visibleSections.length - 1))
-    }
-  }, [visibleSections.length, currentVisibleSectionIndex])
-
-  // Scroll to top when section changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [currentVisibleSectionIndex])
+  const visibleSections = questionnaire.filter((section) =>
+    evaluateCondition(section.showIf || "", responses)
+  )
 
   // Get visible content for a section
   const getVisibleSectionContent = useCallback(
@@ -89,6 +75,35 @@ export function QuestionnaireViewer({
     },
     [responses]
   )
+
+  // Check if all questions in current section are answered
+  const currentSection = visibleSections[currentVisibleSectionIndex]
+  const allQuestionsAnswered = currentSection ? (() => {
+    const sectionContent = getVisibleSectionContent(currentSection)
+    const allQuestions = [
+      ...sectionContent.mainQuestions,
+      ...sectionContent.subsections.flatMap(sub => sub.questions)
+    ]
+    return allQuestions.every(question => {
+      const response = responses[question.id]?.value
+      if (question.type === 'checkbox') {
+        return Array.isArray(response) && response.length > 0
+      }
+      return response !== undefined && response !== ''
+    })
+  })() : false
+
+  // Make sure current section index is valid when visible sections change
+  useEffect(() => {
+    if (currentVisibleSectionIndex >= visibleSections.length) {
+      setCurrentVisibleSectionIndex(Math.max(0, visibleSections.length - 1))
+    }
+  }, [visibleSections.length, currentVisibleSectionIndex])
+
+  // Scroll to top when section changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [currentVisibleSectionIndex])
 
   // Initialize default responses for visible questions
   useEffect(() => {
@@ -148,12 +163,24 @@ export function QuestionnaireViewer({
   const nextSection = (): void => {
     if (currentVisibleSectionIndex < visibleSections.length - 1) {
       setCurrentVisibleSectionIndex(currentVisibleSectionIndex + 1)
+      // Remove focus from button after navigation
+      setTimeout(() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+      }, 0)
     }
   }
 
   const prevSection = (): void => {
     if (currentVisibleSectionIndex > 0) {
       setCurrentVisibleSectionIndex(currentVisibleSectionIndex - 1)
+      // Remove focus from button after navigation
+      setTimeout(() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+      }, 0)
     }
   }
 
@@ -179,33 +206,67 @@ export function QuestionnaireViewer({
     )
   }
 
-  const currentSection = visibleSections[currentVisibleSectionIndex]
-  
   // Safety check - if no current section, don't render anything
   if (!currentSection) {
     return null
   }
   
   const sectionContent = getVisibleSectionContent(currentSection)
+  
+  // Calculate total number of input elements for tab indexing
+  const totalInputs = sectionContent.mainQuestions.reduce((sum, question) => {
+    let inputCount
+    if (question.type === 'text' || question.type === 'number') {
+      inputCount = 1
+    } else if (question.type === 'multiple_choice') {
+      // For radio buttons, use 1 slot if answered, all options if not answered
+      const response = responses[question.id]?.value
+      const isAnswered = response !== undefined && response !== ""
+      inputCount = isAnswered ? 1 : question.options.length
+    } else {
+      // For checkboxes, always use all options
+      inputCount = question.options.length
+    }
+    return sum + inputCount
+  }, 0) + sectionContent.subsections.reduce((sum, sub) => {
+    return sum + sub.questions.reduce((subSum, question) => {
+      let inputCount
+      if (question.type === 'text' || question.type === 'number') {
+        inputCount = 1
+      } else if (question.type === 'multiple_choice') {
+        // For radio buttons, use 1 slot if answered, all options if not answered
+        const response = responses[question.id]?.value
+        const isAnswered = response !== undefined && response !== ""
+        inputCount = isAnswered ? 1 : question.options.length
+      } else {
+        // For checkboxes, always use all options
+        inputCount = question.options.length
+      }
+      return subSum + inputCount
+    }, 0)
+  }, 0)
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardContent className="space-y-6">
-          {(currentSection.title.trim() || currentSection.content.trim()) && (
-            <div className="whitespace-pre-wrap">
-              {currentSection.title.trim() && (
-                <Markdown>
-                  {replacePlaceholders(currentSection.title, responses)}
-                </Markdown>
-              )}
-              {currentSection.content.trim() && (
-                <Markdown>
-                  {replacePlaceholders(currentSection.content, responses)}
-                </Markdown>
-              )}
-            </div>
-          )}
+          {(() => {
+            const processedTitle = currentSection.title.trim() ? replacePlaceholders(currentSection.title, responses).trim() : ''
+            const processedContent = currentSection.content.trim() ? replacePlaceholders(currentSection.content, responses).trim() : ''
+            
+            if (!processedTitle && !processedContent) return null
+            
+            return (
+              <div className="whitespace-pre-wrap">
+                {processedTitle && (
+                  <Markdown>{processedTitle}</Markdown>
+                )}
+                {processedContent && (
+                  <Markdown>{processedContent}</Markdown>
+                )}
+              </div>
+            )
+          })()}
           <SectionContent
             content={sectionContent}
             responses={responses}
@@ -218,6 +279,7 @@ export function QuestionnaireViewer({
               onClick={prevSection}
               disabled={currentVisibleSectionIndex === 0}
               className="flex items-center gap-2"
+              tabIndex={allQuestionsAnswered ? -1 : totalInputs + 1}
             >
               <ChevronLeft className="h-4 w-4" />
               {t('navigation.previous')}
@@ -227,11 +289,16 @@ export function QuestionnaireViewer({
               <Button
                 onClick={handleComplete}
                 className="flex items-center gap-2 bg-primary hover:bg-primary/75"
+                tabIndex={totalInputs + 2}
               >
                 {t('navigation.complete')}
               </Button>
             ) : (
-              <Button onClick={nextSection} className="flex items-center gap-2">
+              <Button 
+                onClick={nextSection} 
+                className="flex items-center gap-2"
+                tabIndex={totalInputs + 2}
+              >
                 {t('navigation.next')}
                 <ChevronRight className="h-4 w-4" />
               </Button>

@@ -123,8 +123,17 @@ export const evaluateCondition = (
       return true
     }
 
+    // First normalize keyword operators to symbols
+    const normalizedCondition = condition
+      .replace(/\s+IS_NOT\s+/gi, ' != ')
+      .replace(/\s+IS\s+/gi, ' == ')
+      .replace(/\s+GREATER_THAN_OR_EQUAL\s+/gi, ' >= ')
+      .replace(/\s+LESS_THAN_OR_EQUAL\s+/gi, ' <= ')
+      .replace(/\s+GREATER_THAN\s+/gi, ' > ')
+      .replace(/\s+LESS_THAN\s+/gi, ' < ')
+
     // Parse condition - now supports arithmetic expressions
-    const match = condition.match(/(.+)\s*(==|!=|>=|<=|>|<)\s*(.+)/)
+    const match = normalizedCondition.match(/(.+)\s*(==|!=|>=|<=|>|<)\s*(.+)/)
     if (!match) return true
 
     const [, leftSide, operator, rightSide] = match
@@ -145,9 +154,14 @@ export const evaluateCondition = (
 
       // Check if the value is quoted (string comparison)
       const quotedMatch = rawValue.match(/^["'](.*)["']$/)
-      if (quotedMatch) {
-        // This is a quoted string comparison
-        const value = quotedMatch[1] // Extract content between quotes
+      const value = quotedMatch ? quotedMatch[1] : rawValue // Use raw value if not quoted
+      
+      // Try to parse as number to determine if this should be numeric comparison
+      const numValue = parseFloat(rawValue)
+      const isNumeric = !isNaN(numValue) && rawValue.trim() === numValue.toString()
+      
+      if (quotedMatch || !isNumeric) {
+        // This is a string comparison (either quoted or non-numeric unquoted)
         
         // Handle empty string checks
         if (value === "") {
@@ -162,7 +176,7 @@ export const evaluateCondition = (
 
         if (responseValue === undefined) return false
 
-        // Handle array responses (checkbox questions) for quoted strings
+        // Handle array responses (checkbox questions) for strings
         if (Array.isArray(responseValue)) {
           switch (operator) {
             case "==":
@@ -176,7 +190,7 @@ export const evaluateCondition = (
           }
         }
 
-        // Handle string responses (radio, text questions) for quoted strings
+        // Handle string responses (radio, text questions)
         switch (operator) {
           case "==":
             return responseValue == value
@@ -186,9 +200,7 @@ export const evaluateCondition = (
             return false // Other operators don't make sense for string comparisons
         }
       } else {
-        // This is an unquoted value - treat as numeric comparison
-        const numValue = parseFloat(rawValue)
-        if (isNaN(numValue)) return false // Invalid numeric value
+        // This is a numeric comparison
 
         if (responseValue === undefined) return false
 

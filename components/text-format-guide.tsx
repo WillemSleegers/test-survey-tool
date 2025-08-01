@@ -61,6 +61,7 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
                 <code>SHOW_IF: experience</code> (if experience exists) or <code>SHOW_IF: NOT experience</code> (if empty)
               </li>
               <li><code>SHOW_IF: age {">="} 18 AND rating {">="} 4</code> - Multiple conditions</li>
+              <li><code>SHOW_IF: experience IS Advanced</code> - Keyword operators (IS, IS_NOT, GREATER_THAN, LESS_THAN, etc.)</li>
               <li>{t('guide.features.autoHidden')}</li>
             </ul>
           </li>

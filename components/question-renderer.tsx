@@ -18,12 +18,14 @@ interface QuestionRendererProps {
   question: Question
   responses: Responses
   onResponse: (questionId: string, value: string | string[]) => void
+  startTabIndex: number
 }
 
 export function QuestionRenderer({
   question,
   responses,
   onResponse,
+  startTabIndex,
 }: QuestionRendererProps) {
   const { t } = useLanguage()
   const questionText = replacePlaceholders(question.text, responses)
@@ -34,6 +36,7 @@ export function QuestionRenderer({
     case "multiple_choice":
       // For radio buttons, value should always be string
       const radioValue = typeof responseValue === "string" ? responseValue : ""
+      const isRadioAnswered = radioValue !== ""
 
       return (
         <div className="space-y-3">
@@ -54,6 +57,11 @@ export function QuestionRenderer({
                 <RadioGroupItem
                   value={option.value}
                   id={`${question.id}-${optionIndex}`}
+                  tabIndex={
+                    isRadioAnswered 
+                      ? (option.value === radioValue ? startTabIndex : -1)
+                      : startTabIndex + optionIndex
+                  }
                 />
                 <Label
                   htmlFor={`${question.id}-${optionIndex}`}
@@ -87,6 +95,7 @@ export function QuestionRenderer({
                 <Checkbox
                   id={`${question.id}-${optionIndex}`}
                   checked={checkboxValues.includes(option.value)}
+                  tabIndex={startTabIndex + optionIndex}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       onResponse(question.id, [...checkboxValues, option.value])
@@ -129,6 +138,7 @@ export function QuestionRenderer({
             onChange={(e) => onResponse(question.id, e.target.value)}
             placeholder={t('placeholders.textInput')}
             className="min-h-[100px]"
+            tabIndex={startTabIndex}
           />
         </div>
       )
@@ -152,6 +162,7 @@ export function QuestionRenderer({
             value={numberValue}
             onChange={(e) => onResponse(question.id, e.target.value)}
             placeholder={t('placeholders.numberInput')}
+            tabIndex={startTabIndex}
           />
         </div>
       )
