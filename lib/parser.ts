@@ -23,7 +23,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("# ") || trimmed === "#") return "section"
   if (trimmed.startsWith("## ")) return "subsection"
   if (trimmed.match(/^Q\d+:/)) return "question"
-  if (trimmed.match(/^<.*>$/)) return "subtext"
+  if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     return state.currentQuestion ? "option" : "content"
   }
@@ -59,9 +59,8 @@ const parseQuestion = (line: string): QuestionData => {
 
 const parseSubtext = (line: string): SubtextData => {
   const trimmed = line.trim()
-  const match = trimmed.match(/^<(.*)>$/) // Extract text between < and >
   return {
-    subtext: match ? match[1].trim() : trimmed,
+    subtext: trimmed.substring(5).trim(), // Remove "HINT:" prefix
   }
 }
 
@@ -360,66 +359,7 @@ const handleContent = (
   data: ContentData,
   originalLine: string
 ): ParserState => {
-  const trimmed = originalLine.trim()
-
-  // Check if we're starting subtext (line starts with <)
-  if (trimmed.startsWith("<")) {
-    // Check if it's a complete single-line subtext
-    if (trimmed.endsWith(">")) {
-      // Single line subtext - handle immediately
-      if (state.currentQuestion) {
-        const subtextContent = trimmed.slice(1, -1) // Remove < and >
-        return {
-          ...state,
-          currentQuestion: {
-            ...state.currentQuestion,
-            subtext: subtextContent,
-          },
-        }
-      }
-      return state
-    } else {
-      // Multi-line subtext starting - start collecting
-      const subtextContent = trimmed.substring(1) // Remove opening <
-      return {
-        ...state,
-        subtextBuffer: [subtextContent],
-      }
-    }
-  }
-
-  // Check if we're ending subtext (line ends with > and we're collecting)
-  if (state.subtextBuffer && trimmed.endsWith(">")) {
-    // Complete the multi-line subtext
-    const finalLine = trimmed.slice(0, -1) // Remove closing >
-    const fullSubtext = [...state.subtextBuffer, finalLine].join("\n")
-
-    if (state.currentQuestion) {
-      return {
-        ...state,
-        currentQuestion: {
-          ...state.currentQuestion,
-          subtext: fullSubtext,
-        },
-        subtextBuffer: null, // Clear the buffer
-      }
-    }
-
-    return {
-      ...state,
-      subtextBuffer: null, // Clear the buffer even if no current question
-    }
-  }
-
-  // Check if we're in the middle of collecting subtext
-  if (state.subtextBuffer) {
-    return {
-      ...state,
-      subtextBuffer: [...state.subtextBuffer, originalLine],
-    }
-  }
-
-  // Regular content handling (existing logic)
+  // Regular content handling - no more complex subtext logic needed
   if (state.currentQuestion) return state
 
   if (state.currentSubsection) {

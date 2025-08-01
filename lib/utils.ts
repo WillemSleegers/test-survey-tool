@@ -31,42 +31,19 @@ export const findMatchingBraces = (
 export const parseConditionalContent = (
   content: string
 ): ConditionalPlaceholder | null => {
-  // Split on | while respecting nested {{ }}
-  const parts: string[] = []
-  let current = ""
-  let depth = 0
-
-  for (let i = 0; i < content.length; i++) {
-    const char = content[i]
-
-    if (content.slice(i, i + 2) === "{{") {
-      depth++
-      current += content.slice(i, i + 2)
-      i++ // Skip next character
-    } else if (content.slice(i, i + 2) === "}}") {
-      depth--
-      current += content.slice(i, i + 2)
-      i++ // Skip next character
-    } else if (char === "|" && depth === 0) {
-      parts.push(current)
-      current = ""
-    } else {
-      current += char
-    }
-  }
-
-  if (current) {
-    parts.push(current)
-  }
-
-  if (parts.length < 2 || parts.length > 3) {
+  // Parse IF THEN ELSE syntax
+  const ifMatch = content.match(/^IF\s+(.+?)\s+THEN\s+(.+?)(?:\s+ELSE\s+(.+))?$/i)
+  
+  if (!ifMatch) {
     return null
   }
 
+  const [, condition, trueText, falseText] = ifMatch
+
   return {
-    condition: parts[0].trim(),
-    trueText: parts[1],
-    falseText: parts.length === 3 ? parts[2] : "", // Default to empty string if no false part
+    condition: condition.trim(),
+    trueText: trueText.trim(),
+    falseText: falseText ? falseText.trim() : "", // Default to empty string if no ELSE part
   }
 }
 
@@ -109,18 +86,41 @@ export const evaluateCondition = (
   if (!condition) return true
 
   try {
-    // Handle OR conditions
-    if (condition.includes("||")) {
-      return condition
-        .split("||")
-        .some((part) => evaluateCondition(part.trim(), responses))
+    // Handle NOT operator
+    if (condition.trim().toUpperCase().startsWith("NOT ")) {
+      const innerCondition = condition.trim().substring(4).trim()
+      return !evaluateCondition(innerCondition, responses)
     }
 
-    // Handle AND conditions
-    if (condition.includes("&&")) {
-      return condition
-        .split("&&")
-        .every((part) => evaluateCondition(part.trim(), responses))
+    // Handle OR conditions (using OR keyword or ||)
+    if (condition.toUpperCase().includes(" OR ") || condition.includes("||")) {
+      const parts = condition.toUpperCase().includes(" OR ") 
+        ? condition.split(/\s+OR\s+/i)
+        : condition.split("||")
+      return parts.some((part) => evaluateCondition(part.trim(), responses))
+    }
+
+    // Handle AND conditions (using AND keyword or &&)
+    if (condition.toUpperCase().includes(" AND ") || condition.includes("&&")) {
+      const parts = condition.toUpperCase().includes(" AND ") 
+        ? condition.split(/\s+AND\s+/i)
+        : condition.split("&&")
+      return parts.every((part) => evaluateCondition(part.trim(), responses))
+    }
+
+    // Handle implicit boolean testing (just variable name)
+    if (/^\w+$/.test(condition.trim())) {
+      const variable = condition.trim()
+      const responseEntry = Object.values(responses).find(
+        (r) => r.variable === variable
+      )
+      const value = responseEntry?.value
+      
+      // Return true if variable exists and has a non-empty value
+      if (value === undefined) return false
+      if (value === "") return false
+      if (Array.isArray(value) && value.length === 0) return false
+      return true
     }
 
     // Parse condition - now supports arithmetic expressions
