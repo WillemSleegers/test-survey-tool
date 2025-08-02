@@ -1,6 +1,7 @@
 export type Option = {
   value: string
   label: string
+  showIf?: string
 }
 
 export type Question = {
@@ -71,7 +72,7 @@ export type SectionData = { title: string }
 export type SubsectionData = { title: string }
 export type QuestionData = { id: string; text: string }
 export type SubtextData = { subtext: string }
-export type OptionData = { text: string }
+export type OptionData = { text: string; showIf?: string }
 export type InputTypeData = { type: Question["type"] }
 export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }

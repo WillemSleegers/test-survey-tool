@@ -74,7 +74,18 @@ const parseOption = (line: string): OptionData => {
     return { text: oldFormatMatch[1] }
   }
 
-  return { text: trimmed.substring(1).trim() }
+  const optionText = trimmed.substring(1).trim()
+  
+  // Check for SHOW_IF: prefix
+  const showIfMatch = optionText.match(/^SHOW_IF:\s*(.+?)\s*\|\s*(.+)$/)
+  if (showIfMatch) {
+    return {
+      text: showIfMatch[2].trim(),
+      showIf: showIfMatch[1].trim()
+    }
+  }
+
+  return { text: optionText }
 }
 
 const parseInputType = (line: string): InputTypeData => {
@@ -317,7 +328,11 @@ const handleOption = (state: ParserState, data: OptionData): ParserState => {
       ...state.currentQuestion,
       options: [
         ...state.currentQuestion.options,
-        { value: data.text, label: data.text },
+        { 
+          value: data.text, 
+          label: data.text,
+          showIf: data.showIf
+        },
       ],
     },
   }

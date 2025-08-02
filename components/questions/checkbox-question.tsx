@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 
 interface CheckboxQuestionProps {
   /** The question configuration */
@@ -50,6 +51,12 @@ export function CheckboxQuestion({
   const responseValue = responses[question.id]?.value
   const checkboxValues = Array.isArray(responseValue) ? responseValue : []
 
+  // Filter options based on conditions
+  const visibleOptions = question.options.filter(option => {
+    if (!option.showIf) return true
+    return evaluateCondition(option.showIf, responses, computedVariables)
+  })
+
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
     if (checked) {
       // Add the option to the selected values
@@ -66,7 +73,7 @@ export function CheckboxQuestion({
   return (
     <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <div className="space-y-3">
-        {question.options.map((option, optionIndex) => (
+        {visibleOptions.map((option, optionIndex) => (
           <div key={option.value} className="flex items-center space-x-2">
             <Checkbox
               id={`${question.id}-${optionIndex}`}

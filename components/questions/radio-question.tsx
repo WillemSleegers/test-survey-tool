@@ -3,6 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 
 interface RadioQuestionProps {
   /** The question configuration */
@@ -50,13 +51,19 @@ export function RadioQuestion({
   const radioValue = typeof responseValue === "string" ? responseValue : ""
   const isAnswered = radioValue !== ""
 
+  // Filter options based on conditions
+  const visibleOptions = question.options.filter(option => {
+    if (!option.showIf) return true
+    return evaluateCondition(option.showIf, responses, computedVariables)
+  })
+
   return (
     <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <RadioGroup
         value={radioValue}
         onValueChange={(value) => onResponse(question.id, value)}
       >
-        {question.options.map((option, optionIndex) => (
+        {visibleOptions.map((option, optionIndex) => (
           <div key={option.value} className="flex items-center space-x-2">
             <RadioGroupItem
               value={option.value}

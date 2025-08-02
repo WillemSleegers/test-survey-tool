@@ -32,6 +32,11 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
           </li>
           <li>
             <code>- Option text</code> - {t("guide.features.options")}
+            <ul className="list-disc list-inside ml-6 mt-1 space-y-1 text-xs">
+              <li><code>- SHOW_IF: condition | Option text</code> - Conditional options based on previous responses</li>
+              <li><code>- SHOW_IF: experience IS NOT Beginner | Advanced IDE</code> - Show only for non-beginners</li>
+              <li><code>- SHOW_IF: age {'>'}= 18 | Adult content option</code> - Age-restricted options</li>
+            </ul>
           </li>
           <li>
             <code>TEXT</code> / <code>NUMBER</code> -{" "}
