@@ -37,7 +37,7 @@ export type Section = {
 }
 
 export type Response = {
-  value: string | string[]
+  value: string | string[] | boolean | number
   variable?: string
 }
 

@@ -4,7 +4,7 @@ import { ComparisonOperator } from "./condition-parser"
 /**
  * Represents a response value that can be compared
  */
-export type ResponseValue = string | string[] | undefined
+export type ResponseValue = string | string[] | boolean | number | undefined
 
 /**
  * Determines if a raw value string should be treated as numeric
