@@ -1,4 +1,4 @@
-import { Responses, ConditionalPlaceholder } from "@/lib/types"
+import { Responses, ConditionalPlaceholder, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "../conditions/condition-evaluator"
 
 /**
@@ -28,7 +28,7 @@ export function findMatchingBraces(text: string, startIndex: number): number {
 
 /**
  * Parses conditional placeholder content like "IF condition THEN text ELSE text"
- * Handles nested braces properly by parsing manually instead of using regex
+ * Handles nested braces properly with manual parsing
  * 
  * @param content - The content between {{ and }}
  * @returns Parsed conditional object or null if invalid format
@@ -139,9 +139,11 @@ function findKeyword(text: string, keyword: string, startPos: number): number {
  * - {{IF age >= 18 THEN You are an adult ELSE You are a minor}}
  * - {{IF experience THEN You have experience}} (ELSE part optional)
  * - Nested conditionals
+ * - Computed variables from sections
  * 
  * @param text - Text containing conditional placeholders
  * @param responses - User responses to evaluate conditions against
+ * @param computedVariables - Optional computed variables from current section
  * @returns Text with conditional placeholders resolved
  * 
  * @example
@@ -153,7 +155,8 @@ function findKeyword(text: string, keyword: string, startPos: number): number {
  */
 export function processConditionalPlaceholders(
   text: string,
-  responses: Responses
+  responses: Responses,
+  computedVariables?: ComputedVariables
 ): string {
   let result = text
   let maxIterations = 20 // Prevent infinite loops
@@ -172,7 +175,7 @@ export function processConditionalPlaceholders(
 
     const parsed = parseConditionalContent(content)
     if (parsed) {
-      const conditionResult = evaluateCondition(parsed.condition, responses)
+      const conditionResult = evaluateCondition(parsed.condition, responses, computedVariables)
       const replacement = conditionResult ? parsed.trueText : parsed.falseText
       result =
         result.slice(0, startIndex) + replacement + result.slice(endIndex + 1)

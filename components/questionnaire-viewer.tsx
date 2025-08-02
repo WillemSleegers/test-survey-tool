@@ -35,7 +35,7 @@ export function QuestionnaireViewer({
   const { responses, handleResponse } = useQuestionnaireResponses(questionnaire)
   
   // Get visible sections and content filtering based on current responses
-  const { visibleSections, getVisibleSectionContent } = useVisibleSections(questionnaire, responses)
+  const { visibleSections, getVisibleSectionContent, getComputedVariables } = useVisibleSections(questionnaire, responses)
   
   // Navigation state and actions
   const {
@@ -47,6 +47,7 @@ export function QuestionnaireViewer({
   // Get current section and its content
   const currentSection = visibleSections[currentVisibleSectionIndex]
   const sectionContent = currentSection ? getVisibleSectionContent(currentSection) : null
+  const currentSectionComputedVars = currentSection ? getComputedVariables(currentSection) : undefined
   
   // Check completion status
   const allQuestionsAnswered = useSectionCompletion(sectionContent, responses)
@@ -85,12 +86,17 @@ export function QuestionnaireViewer({
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardContent className="space-y-6">
-          <SectionHeader section={currentSection} responses={responses} />
+          <SectionHeader 
+            section={currentSection} 
+            responses={responses} 
+            computedVariables={currentSectionComputedVars}
+          />
           
           <SectionContent
             content={sectionContent}
             responses={responses}
             onResponse={handleResponse}
+            computedVariables={currentSectionComputedVars}
           />
 
           <NavigationButtons

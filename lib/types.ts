@@ -21,12 +21,19 @@ export type Subsection = {
   questions: Question[]
 }
 
+export type ComputedVariable = {
+  name: string
+  expression: string
+  value?: boolean | string | number
+}
+
 export type Section = {
   title: string
   content: string
   questions: Question[]
   subsections: Subsection[]
   showIf?: string
+  computedVariables: ComputedVariable[]
 }
 
 export type Response = {
@@ -36,6 +43,10 @@ export type Response = {
 
 export type Responses = {
   [questionId: string]: Response
+}
+
+export type ComputedVariables = {
+  [variableName: string]: boolean | string | number
 }
 
 export type ConditionalPlaceholder = {
@@ -65,6 +76,7 @@ export type InputTypeData = { type: Question["type"] }
 export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }
 export type ContentData = { content: string }
+export type ComputeData = { name: string; expression: string }
 
 export type ParsedLine =
   | { type: "section"; raw: string; data: SectionData }
@@ -76,6 +88,7 @@ export type ParsedLine =
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
   | { type: "content"; raw: string; data: ContentData }
+  | { type: "compute"; raw: string; data: ComputeData }
 
 export type ParserState = {
   sections: Section[]

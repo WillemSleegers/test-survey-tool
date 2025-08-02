@@ -11,6 +11,7 @@ import {
   VariableData,
   ShowIfData,
   ContentData,
+  ComputeData,
   ParsedLine,
   ParserState,
 } from "@/lib/types"
@@ -30,6 +31,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (["TEXT", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
+  if (trimmed.startsWith("COMPUTE:")) return "compute"
 
   return "content"
 }
@@ -101,6 +103,25 @@ const parseContent = (line: string): ContentData => ({
   content: line,
 })
 
+const parseCompute = (line: string): ComputeData => {
+  const trimmed = line.trim()
+  const content = trimmed.substring(8).trim() // Remove "COMPUTE:" prefix
+  const equalIndex = content.indexOf('=')
+  
+  if (equalIndex === -1) {
+    throw new Error(`Invalid COMPUTE syntax: ${line}. Expected format: COMPUTE: variableName = expression`)
+  }
+  
+  const name = content.substring(0, equalIndex).trim()
+  const expression = content.substring(equalIndex + 1).trim()
+  
+  if (!name || !expression) {
+    throw new Error(`Invalid COMPUTE syntax: ${line}. Both variable name and expression are required`)
+  }
+  
+  return { name, expression }
+}
+
 // Line processing functions
 
 const parseLine = (line: string, state: ParserState): ParsedLine => {
@@ -125,6 +146,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseShowIf(line) }
     case "content":
       return { type, raw: line, data: parseContent(line) }
+    case "compute":
+      return { type, raw: line, data: parseCompute(line) }
     default:
       const _exhaustive: never = type
       throw new Error(`Unknown line type: ${_exhaustive}`)
@@ -145,6 +168,7 @@ const createSection = (title: string): Section => ({
   content: "",
   questions: [],
   subsections: [],
+  computedVariables: [],
 })
 
 const createSubsection = (title: string): Subsection => ({
@@ -389,6 +413,21 @@ const handleContent = (
   return state
 }
 
+const handleCompute = (state: ParserState, data: ComputeData): ParserState => {
+  if (!state.currentSection) return state
+
+  return {
+    ...state,
+    currentSection: {
+      ...state.currentSection,
+      computedVariables: [
+        ...state.currentSection.computedVariables,
+        { name: data.name, expression: data.expression },
+      ],
+    },
+  }
+}
+
 // Main state reducer
 
 const reduceParsedLine = (
@@ -414,6 +453,8 @@ const reduceParsedLine = (
       return handleShowIf(state, parsedLine.data)
     case "content":
       return handleContent(state, parsedLine.data, parsedLine.raw)
+    case "compute":
+      return handleCompute(state, parsedLine.data)
     default:
       // Exhaustiveness check - TypeScript will error if we miss a case
       const _exhaustive: never = parsedLine

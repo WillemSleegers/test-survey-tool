@@ -1,6 +1,32 @@
-import { Responses } from "@/lib/types"
+import { Responses, ComputedVariables } from "@/lib/types"
 import { processConditionalPlaceholders } from "./placeholder-processor"
 import { processVariablePlaceholders } from "./variable-replacer"
+
+/**
+ * Creates an extended responses object that includes computed variables
+ * as pseudo-responses so they can be referenced like regular variables
+ */
+function createExtendedResponses(
+  responses: Responses,
+  computedVariables?: ComputedVariables
+): Responses {
+  if (!computedVariables) {
+    return responses
+  }
+  
+  const extended = { ...responses }
+  
+  // Add computed variables as pseudo-responses
+  Object.entries(computedVariables).forEach(([name, value]) => {
+    const pseudoQuestionId = `__computed_${name}`
+    extended[pseudoQuestionId] = {
+      value: value,
+      variable: name
+    }
+  })
+  
+  return extended
+}
 
 /**
  * Main text processing function that handles both conditional and variable placeholders
@@ -14,6 +40,7 @@ import { processVariablePlaceholders } from "./variable-replacer"
  * 
  * @param text - Text containing placeholders to process
  * @param responses - User responses for condition evaluation and variable replacement
+ * @param computedVariables - Optional computed variables from current section
  * @returns Fully processed text with all placeholders resolved
  * 
  * @example
@@ -25,11 +52,15 @@ import { processVariablePlaceholders } from "./variable-replacer"
  */
 export function replacePlaceholders(
   text: string | undefined,
-  responses: Responses
+  responses: Responses,
+  computedVariables?: ComputedVariables
 ): string {
   if (!text) return ""
 
+  // Create extended responses that includes computed variables
+  const extendedResponses = createExtendedResponses(responses, computedVariables)
+
   // First process conditional placeholders, then variable placeholders
-  const afterConditionals = processConditionalPlaceholders(text, responses)
-  return processVariablePlaceholders(afterConditionals, responses)
+  const afterConditionals = processConditionalPlaceholders(text, extendedResponses, computedVariables)
+  return processVariablePlaceholders(afterConditionals, extendedResponses)
 }

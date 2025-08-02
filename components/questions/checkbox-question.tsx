@@ -2,7 +2,7 @@ import React from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses } from "@/lib/types"
+import { Question, Responses, ComputedVariables } from "@/lib/types"
 
 interface CheckboxQuestionProps {
   /** The question configuration */
@@ -13,6 +13,8 @@ interface CheckboxQuestionProps {
   onResponse: (questionId: string, value: string[]) => void
   /** Starting tab index for accessibility */
   startTabIndex: number
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -41,7 +43,8 @@ export function CheckboxQuestion({
   question, 
   responses, 
   onResponse, 
-  startTabIndex 
+  startTabIndex,
+  computedVariables
 }: CheckboxQuestionProps) {
   // Get current response values (should be string array)
   const responseValue = responses[question.id]?.value
@@ -61,7 +64,7 @@ export function CheckboxQuestion({
   }
 
   return (
-    <QuestionWrapper question={question} responses={responses}>
+    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <div className="space-y-3">
         {question.options.map((option, optionIndex) => (
           <div key={option.value} className="flex items-center space-x-2">

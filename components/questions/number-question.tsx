@@ -2,7 +2,7 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { Question, Responses } from "@/lib/types"
+import { Question, Responses, ComputedVariables } from "@/lib/types"
 
 interface NumberQuestionProps {
   /** The question configuration */
@@ -13,6 +13,8 @@ interface NumberQuestionProps {
   onResponse: (questionId: string, value: string) => void
   /** Tab index for accessibility */
   tabIndex: number
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -37,7 +39,8 @@ export function NumberQuestion({
   question, 
   responses, 
   onResponse, 
-  tabIndex 
+  tabIndex,
+  computedVariables
 }: NumberQuestionProps) {
   const { t } = useLanguage()
   
@@ -46,7 +49,7 @@ export function NumberQuestion({
   const numberValue = typeof responseValue === "string" ? responseValue : ""
 
   return (
-    <QuestionWrapper question={question} responses={responses}>
+    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <Input
         type="number"
         value={numberValue}

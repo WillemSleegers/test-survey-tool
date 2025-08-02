@@ -1,4 +1,4 @@
-import { Responses } from "@/lib/types"
+import { Responses, ComputedVariables } from "@/lib/types"
 import { 
   parseCondition, 
   isSimpleBooleanTest, 
@@ -33,39 +33,60 @@ import { evaluateExpression, isArithmeticExpression } from "./expression-evaluat
  * - Negation: "NOT completed"
  * - Arithmetic: "age + years >= 21"
  * - Array operations: "selections >= 2" (for checkboxes)
+ * - Computed variables: References to computed variables defined in sections
  * 
  * @param condition - The condition string to evaluate
  * @param responses - Object containing all user responses
+ * @param computedVariables - Optional computed variables from current section
  * @returns True if condition is met, false otherwise
  * 
  * @example
  * evaluateCondition("age >= 18", responses) // Check if age is 18 or more
  * evaluateCondition("experience IS Advanced", responses) // Check exact match
  * evaluateCondition("age >= 18 AND experience", responses) // Multiple conditions
+ * evaluateCondition("has_crime", responses, computedVars) // Use computed variable
  */
-export function evaluateCondition(condition: string, responses: Responses): boolean {
+export function evaluateCondition(
+  condition: string, 
+  responses: Responses, 
+  computedVariables?: ComputedVariables
+): boolean {
   // Empty condition always passes
   if (!condition) return true
 
   try {
+    // Create extended responses that includes computed variables
+    const extendedResponses = createExtendedResponses(responses, computedVariables)
+
     // Handle NOT operator
     if (hasNotOperator(condition)) {
-      return evaluateNotCondition(condition, responses, evaluateCondition)
+      return evaluateNotCondition(condition, extendedResponses, (cond) => 
+        evaluateCondition(cond, responses, computedVariables)
+      )
     }
 
     // Handle OR conditions  
     if (hasOrOperator(condition)) {
-      return evaluateOrCondition(condition, responses, evaluateCondition)
+      return evaluateOrCondition(condition, extendedResponses, (cond) => 
+        evaluateCondition(cond, responses, computedVariables)
+      )
     }
 
     // Handle AND conditions
     if (hasAndOperator(condition)) {
-      return evaluateAndCondition(condition, responses, evaluateCondition)
+      return evaluateAndCondition(condition, extendedResponses, (cond) => 
+        evaluateCondition(cond, responses, computedVariables)
+      )
     }
+
+    // Handle literal boolean values first
+    const trimmedCondition = condition.trim()
+    if (trimmedCondition === "true") return true
+    if (trimmedCondition === "false") return false
 
     // Handle simple boolean testing (just variable name)
     if (isSimpleBooleanTest(condition)) {
-      return evaluateSimpleBooleanTest(condition.trim(), responses)
+      return evaluateSimpleBooleanTest(trimmedCondition, extendedResponses)
     }
 
     // Parse comparison condition
@@ -76,14 +97,40 @@ export function evaluateCondition(condition: string, responses: Responses): bool
 
     // Handle arithmetic expressions vs simple variable comparisons
     if (isArithmeticExpression(leftSide)) {
-      return evaluateArithmeticComparison(leftSide, operator, rightSide, responses)
+      return evaluateArithmeticComparison(leftSide, operator, rightSide, extendedResponses)
     } else {
-      return evaluateVariableComparison(leftSide, operator, rightSide, responses)
+      return evaluateVariableComparison(leftSide, operator, rightSide, extendedResponses)
     }
   } catch {
     // Any error in evaluation defaults to true (fail-safe)
     return true
   }
+}
+
+/**
+ * Creates an extended responses object that includes computed variables as pseudo-responses
+ * This allows computed variables to be referenced in conditions just like regular variables
+ */
+function createExtendedResponses(
+  responses: Responses,
+  computedVariables?: ComputedVariables
+): Responses {
+  if (!computedVariables) {
+    return responses
+  }
+  
+  const extended = { ...responses }
+  
+  // Add computed variables as pseudo-responses
+  Object.entries(computedVariables).forEach(([name, value]) => {
+    const pseudoQuestionId = `__computed_${name}`
+    extended[pseudoQuestionId] = {
+      value: value,
+      variable: name
+    }
+  })
+  
+  return extended
 }
 
 /**

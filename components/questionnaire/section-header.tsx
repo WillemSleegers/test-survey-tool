@@ -1,13 +1,15 @@
 import React from "react"
 import Markdown from "react-markdown"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Section, Responses } from "@/lib/types"
+import { Section, Responses, ComputedVariables } from "@/lib/types"
 
 interface SectionHeaderProps {
   /** The section to render header for */
   section: Section
   /** User responses for placeholder replacement */
   responses: Responses
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -22,12 +24,12 @@ interface SectionHeaderProps {
  * @example
  * <SectionHeader section={currentSection} responses={responses} />
  */
-export function SectionHeader({ section, responses }: SectionHeaderProps) {
+export function SectionHeader({ section, responses, computedVariables }: SectionHeaderProps) {
   const processedTitle = section.title.trim() 
-    ? replacePlaceholders(section.title, responses).trim() 
+    ? replacePlaceholders(section.title, responses, computedVariables).trim() 
     : ''
   const processedContent = section.content.trim() 
-    ? replacePlaceholders(section.content, responses).trim() 
+    ? replacePlaceholders(section.content, responses, computedVariables).trim() 
     : ''
   
   // Don't render anything if both title and content are empty

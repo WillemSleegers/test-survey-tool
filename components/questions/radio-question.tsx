@@ -2,7 +2,7 @@ import React from "react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses } from "@/lib/types"
+import { Question, Responses, ComputedVariables } from "@/lib/types"
 
 interface RadioQuestionProps {
   /** The question configuration */
@@ -13,6 +13,8 @@ interface RadioQuestionProps {
   onResponse: (questionId: string, value: string) => void
   /** Starting tab index for accessibility */
   startTabIndex: number
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -40,7 +42,8 @@ export function RadioQuestion({
   question, 
   responses, 
   onResponse, 
-  startTabIndex 
+  startTabIndex,
+  computedVariables
 }: RadioQuestionProps) {
   // Get current response value
   const responseValue = responses[question.id]?.value
@@ -48,7 +51,7 @@ export function RadioQuestion({
   const isAnswered = radioValue !== ""
 
   return (
-    <QuestionWrapper question={question} responses={responses}>
+    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <RadioGroup
         value={radioValue}
         onValueChange={(value) => onResponse(question.id, value)}

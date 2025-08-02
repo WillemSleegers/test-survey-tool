@@ -40,6 +40,15 @@ export function processVariablePlaceholders(
       return formatArrayValue(value)
     }
 
+    // Handle different value types
+    if (typeof value === 'boolean') {
+      return value ? 'true' : 'false'
+    }
+    
+    if (typeof value === 'number') {
+      return String(value)
+    }
+    
     // Handle string values (from radio, text, number questions)
     return String(value)
   })
@@ -62,7 +71,7 @@ function formatArrayValue(value: string[]): string {
   } else if (value.length === 1) {
     return value[0]
   } else {
-    // Convert to markdown unordered list (with leading and trailing newlines for proper rendering)
+    // Convert to markdown unordered list with surrounding newlines
     return '\n' + value.map(item => `- ${item}`).join('\n') + '\n\n'
   }
 }

@@ -2,7 +2,7 @@ import React from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { Question, Responses } from "@/lib/types"
+import { Question, Responses, ComputedVariables } from "@/lib/types"
 
 interface TextQuestionProps {
   /** The question configuration */
@@ -13,6 +13,8 @@ interface TextQuestionProps {
   onResponse: (questionId: string, value: string) => void
   /** Tab index for accessibility */
   tabIndex: number
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -37,7 +39,8 @@ export function TextQuestion({
   question, 
   responses, 
   onResponse, 
-  tabIndex 
+  tabIndex,
+  computedVariables
 }: TextQuestionProps) {
   const { t } = useLanguage()
   
@@ -46,7 +49,7 @@ export function TextQuestion({
   const textValue = typeof responseValue === "string" ? responseValue : ""
 
   return (
-    <QuestionWrapper question={question} responses={responses}>
+    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <Textarea
         value={textValue}
         onChange={(e) => onResponse(question.id, e.target.value)}

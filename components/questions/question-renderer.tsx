@@ -1,5 +1,5 @@
 import React from "react"
-import { Question, Responses } from "@/lib/types"
+import { Question, Responses, ComputedVariables } from "@/lib/types"
 import { RadioQuestion } from "./radio-question"
 import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
@@ -14,6 +14,8 @@ interface QuestionRendererProps {
   onResponse: (questionId: string, value: string | string[]) => void
   /** Starting tab index for this question */
   startTabIndex: number
+  /** Computed variables from the current section */
+  computedVariables?: ComputedVariables
 }
 
 /**
@@ -41,6 +43,7 @@ export function QuestionRenderer({
   responses,
   onResponse,
   startTabIndex,
+  computedVariables,
 }: QuestionRendererProps) {
   switch (question.type) {
     case "multiple_choice":
@@ -50,6 +53,7 @@ export function QuestionRenderer({
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
+          computedVariables={computedVariables}
         />
       )
 
@@ -60,6 +64,7 @@ export function QuestionRenderer({
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
+          computedVariables={computedVariables}
         />
       )
 
@@ -70,6 +75,7 @@ export function QuestionRenderer({
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
+          computedVariables={computedVariables}
         />
       )
 
@@ -80,6 +86,7 @@ export function QuestionRenderer({
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
+          computedVariables={computedVariables}
         />
       )
 

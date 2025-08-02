@@ -5,18 +5,20 @@ import React from "react"
 import { QuestionRenderer } from "@/components/questions/question-renderer"
 import { SubsectionRenderer } from "@/components/subsection-renderer"
 
-import { VisibleSectionContent, Responses } from "@/lib/types"
+import { VisibleSectionContent, Responses, ComputedVariables } from "@/lib/types"
 
 interface SectionContentProps {
   content: VisibleSectionContent
   responses: Responses
   onResponse: (questionId: string, value: string | string[]) => void
+  computedVariables?: ComputedVariables
 }
 
 export function SectionContent({
   content,
   responses,
   onResponse,
+  computedVariables,
 }: SectionContentProps) {
   // Calculate the tab index for each question based on total inputs needed by previous questions
   let currentTabIndex = 1
@@ -50,6 +52,7 @@ export function SectionContent({
             responses={responses}
             onResponse={onResponse}
             startTabIndex={questionTabIndex}
+            computedVariables={computedVariables}
           />
         )
       })}
@@ -82,6 +85,7 @@ export function SectionContent({
             responses={responses}
             onResponse={onResponse}
             startTabIndex={subsectionStartTabIndex}
+            computedVariables={computedVariables}
           />
         )
       })}

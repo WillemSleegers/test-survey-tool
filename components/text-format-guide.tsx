@@ -41,6 +41,15 @@ export function TextFormatGuide({ sampleText }: TextFormatGuideProps) {
             <code>VARIABLE: name</code> - {t("guide.features.variable")}
           </li>
           <li>
+            <code>COMPUTE: var_name = expression</code> - Define computed variables
+            <ul className="list-disc list-inside ml-6 mt-1 space-y-1 text-xs">
+              <li><code>COMPUTE: is_adult = age {'>'}= 18</code> - Boolean expression</li>
+              <li><code>COMPUTE: has_name = name</code> - Variable exists check</li>
+              <li><code>COMPUTE: high_rating = rating {'>'}= 4 AND recommend</code> - Complex logic</li>
+              <li>Use computed variables in conditions: <code>SHOW_IF: is_adult</code></li>
+            </ul>
+          </li>
+          <li>
             <code>{`{variable}`}</code> - {t("guide.features.replacement")}
           </li>
           <li>

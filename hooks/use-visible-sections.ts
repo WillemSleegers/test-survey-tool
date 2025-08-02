@@ -1,6 +1,7 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { Section, Responses, VisibleSectionContent } from "@/lib/types"
+import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
+import { Section, Responses, VisibleSectionContent, ComputedVariables } from "@/lib/types"
 
 /**
  * Hook for managing section visibility and content filtering
@@ -15,20 +16,31 @@ import { Section, Responses, VisibleSectionContent } from "@/lib/types"
  * @returns Visible sections and content getter function
  */
 export function useVisibleSections(questionnaire: Section[], responses: Responses) {
-  // Get only visible sections - based purely on SHOW_IF conditions
-  const visibleSections = questionnaire.filter((section) =>
-    evaluateCondition(section.showIf || "", responses)
-  )
+  // Compute all computed variables for all sections once
+  const allComputedVariables = useMemo(() => {
+    const computedVars: Map<Section, ComputedVariables> = new Map()
+    questionnaire.forEach(section => {
+      computedVars.set(section, evaluateComputedVariables(section, responses))
+    })
+    return computedVars
+  }, [questionnaire, responses])
+
+  // Get only visible sections - based purely on SHOW_IF conditions and computed variables
+  const visibleSections = useMemo(() => {
+    return questionnaire.filter((section) => {
+      const sectionComputedVars = allComputedVariables.get(section) || {}
+      return evaluateCondition(section.showIf || "", responses, sectionComputedVars)
+    })
+  }, [questionnaire, responses, allComputedVariables])
 
   // Get visible content for a section
   const getVisibleSectionContent = useCallback(
     (section: Section): VisibleSectionContent => {
-      // Questions inherit section visibility - they're only checked if section is already visible
-      // Since we only call this for visible sections, we just need to check individual question conditions
+      const sectionComputedVars = allComputedVariables.get(section) || {}
       
       // Filter main section questions based on their individual SHOW_IF conditions
       const mainQuestions = section.questions.filter((question) =>
-        evaluateCondition(question.showIf || "", responses)
+        evaluateCondition(question.showIf || "", responses, sectionComputedVars)
       )
 
       // Filter subsections and their questions based on individual SHOW_IF conditions
@@ -36,7 +48,7 @@ export function useVisibleSections(questionnaire: Section[], responses: Response
         title: subsection.title,
         content: subsection.content,
         questions: subsection.questions.filter((question) =>
-          evaluateCondition(question.showIf || "", responses)
+          evaluateCondition(question.showIf || "", responses, sectionComputedVars)
         ),
       }))
 
@@ -45,11 +57,12 @@ export function useVisibleSections(questionnaire: Section[], responses: Response
         subsections: visibleSubsections,
       }
     },
-    [responses]
+    [responses, allComputedVariables]
   )
 
   return {
     visibleSections,
     getVisibleSectionContent,
+    getComputedVariables: (section: Section) => allComputedVariables.get(section) || {},
   }
 }

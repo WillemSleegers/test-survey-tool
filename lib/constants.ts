@@ -16,6 +16,8 @@ VARIABLE: color
 
 # **Page Two: More Questions**
 SHOW_IF: color
+COMPUTE: has_name = name
+COMPUTE: is_adult = age >= 18
 
 Welcome back, {name}! Since you chose {color}, let's continue with more questions.
 
@@ -29,8 +31,8 @@ VARIABLE: age
 
 #
 
-Q4: {{IF age >= 18 THEN As an adult ELSE As someone under 18}}, what activities do you enjoy?
-HINT: This question text changes based on your age. Select all that apply
+Q4: {{IF is_adult THEN As an adult ELSE As someone under 18}}, what activities do you enjoy?
+HINT: This question text changes based on computed variables. Select all that apply
 - Reading
 - Sports
 - Music
@@ -58,7 +60,7 @@ HINT: This question appears conditionally based on your previous answers
 - Probably no
 - Definitely no
 VARIABLE: recommend
-SHOW_IF: age >= 13
+SHOW_IF: is_adult OR age >= 13
 
 Q7: Tell us more about your {color} preference:
 HINT: This is a text area for longer responses
@@ -67,11 +69,13 @@ VARIABLE: explanation
 
 # **Conditional Page**
 SHOW_IF: recommend == "Definitely yes" OR recommend == "Probably yes"
+COMPUTE: would_recommend = recommend == "Definitely yes" OR recommend == "Probably yes"
+COMPUTE: likes_color = rating >= 4
 
 This entire page only appears if you said you'd recommend {color} to others!
 
-Q8: What specific aspects of {color} would you highlight?
-HINT: Since you'd recommend it, tell us what makes it special
+Q8: {{IF likes_color THEN What specific aspects of {color} would you highlight ELSE What aspects of {color} could be improved}}?
+HINT: {{IF would_recommend THEN Since you'd recommend it, tell us what makes it special ELSE Help us understand what could be better}}
 - Visual appeal
 - Versatility
 - Personal meaning
@@ -125,7 +129,7 @@ Thank you, {name}! Here's what you told us:
 - **Rating:** {rating}/5 for {color} items
 - **Would Recommend:** {{IF recommend THEN {recommend} ELSE Not answered}}
 
-{{IF age >= 18 THEN As an adult ELSE As a young person}} who enjoys {activities}, your {color} preference makes sense!
+{{IF is_adult THEN As an adult ELSE As a young person}} who enjoys {activities}, your {color} preference makes sense!
 
 Q10: How easy was this survey format to understand?
 HINT: Rate the clarity of the text-based format

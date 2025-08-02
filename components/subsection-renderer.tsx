@@ -3,7 +3,7 @@
 import React from "react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
-import { VisibleSubsection, Responses } from "@/lib/types"
+import { VisibleSubsection, Responses, ComputedVariables } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 
@@ -12,6 +12,7 @@ interface SubsectionRendererProps {
   responses: Responses
   onResponse: (questionId: string, value: string | string[]) => void
   startTabIndex: number
+  computedVariables?: ComputedVariables
 }
 
 export function SubsectionRenderer({
@@ -19,13 +20,14 @@ export function SubsectionRenderer({
   responses,
   onResponse,
   startTabIndex,
+  computedVariables,
 }: SubsectionRendererProps) {
   return (
     <div className="space-y-6">
       {/* Subsection Header */}
       {(() => {
-        const processedTitle = replacePlaceholders(subsection.title, responses).trim()
-        const processedContent = subsection.content ? replacePlaceholders(subsection.content, responses).trim() : ''
+        const processedTitle = replacePlaceholders(subsection.title, responses, computedVariables).trim()
+        const processedContent = subsection.content ? replacePlaceholders(subsection.content, responses, computedVariables).trim() : ''
         
         if (!processedTitle && !processedContent) return null
         
@@ -66,6 +68,7 @@ export function SubsectionRenderer({
               responses={responses}
               onResponse={onResponse}
               startTabIndex={questionStartTabIndex}
+              computedVariables={computedVariables}
             />
           )
         })}
