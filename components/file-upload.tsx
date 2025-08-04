@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Upload } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
-import { useLanguage } from "@/contexts/language-context"
 
 type FileUploadProps = {
   onFileLoaded: (content: string) => void
@@ -13,7 +12,6 @@ type FileUploadProps = {
 
 export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const { t } = useLanguage()
 
   const processFile = (file: File) => {
     const fileName = file.name.toLowerCase()
@@ -28,11 +26,11 @@ export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
         onFileLoaded(content)
       }
       reader.onerror = () => {
-        onError(t("upload.failedToRead"))
+        onError("Failed to read file")
       }
       reader.readAsText(file)
     } else {
-      onError(t("upload.invalidFileType"))
+      onError("Please upload a .txt or .md file")
     }
   }
 
@@ -76,7 +74,7 @@ export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
           isDragOver
             ? "border-primary bg-accent"
-            : "border-border hover:border-muted-foreground hover:bg-muted"
+            : "border-muted-foreground/60 hover:border-muted-foreground hover:bg-muted"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -86,10 +84,10 @@ export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
         <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <div>
           <p className="text-base text-foreground font-medium mb-1">
-            {t("upload.clickOrDrag")}
+            Click to upload or drag & drop
           </p>
           <p className="text-sm text-muted-foreground">
-            {t("upload.supportedFiles")}
+            Supports .txt and .md files
           </p>
         </div>
         <Input

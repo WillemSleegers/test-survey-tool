@@ -7,6 +7,7 @@ import {
   QuestionData,
   SubtextData,
   OptionData,
+  OptionShowIfData,
   InputTypeData,
   VariableData,
   ShowIfData,
@@ -26,6 +27,10 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.match(/^Q\d+:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
+    // Check if this is a conditional option modifier
+    if (trimmed.match(/^-\s*SHOW_IF:/)) {
+      return state.currentQuestion ? "option_show_if" : "content"
+    }
     return state.currentQuestion ? "option" : "content"
   }
   if (["TEXT", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
@@ -75,16 +80,6 @@ const parseOption = (line: string): OptionData => {
   }
 
   const optionText = trimmed.substring(1).trim()
-  
-  // Check for SHOW_IF: prefix
-  const showIfMatch = optionText.match(/^SHOW_IF:\s*(.+?)\s*\|\s*(.+)$/)
-  if (showIfMatch) {
-    return {
-      text: showIfMatch[2].trim(),
-      showIf: showIfMatch[1].trim()
-    }
-  }
-
   return { text: optionText }
 }
 
@@ -109,6 +104,13 @@ const parseVariable = (line: string): VariableData => ({
 const parseShowIf = (line: string): ShowIfData => ({
   showIf: line.trim().substring(8).trim(),
 })
+
+const parseOptionShowIf = (line: string): OptionShowIfData => {
+  const trimmed = line.trim()
+  // Remove "- SHOW_IF:" prefix and any leading whitespace
+  const conditionText = trimmed.replace(/^-\s*SHOW_IF:\s*/, '')
+  return { showIf: conditionText }
+}
 
 const parseContent = (line: string): ContentData => ({
   content: line,
@@ -149,6 +151,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseSubtext(line) }
     case "option":
       return { type, raw: line, data: parseOption(line) }
+    case "option_show_if":
+      return { type, raw: line, data: parseOptionShowIf(line) }
     case "input_type":
       return { type, raw: line, data: parseInputType(line) }
     case "variable":
@@ -330,10 +334,29 @@ const handleOption = (state: ParserState, data: OptionData): ParserState => {
         ...state.currentQuestion.options,
         { 
           value: data.text, 
-          label: data.text,
-          showIf: data.showIf
+          label: data.text
         },
       ],
+    },
+  }
+}
+
+const handleOptionShowIf = (state: ParserState, data: OptionShowIfData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the condition to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    showIf: data.showIf
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
     },
   }
 }
@@ -460,6 +483,8 @@ const reduceParsedLine = (
       return handleSubtext(state, parsedLine.data)
     case "option":
       return handleOption(state, parsedLine.data)
+    case "option_show_if":
+      return handleOptionShowIf(state, parsedLine.data)
     case "input_type":
       return handleInputType(state, parsedLine.data)
     case "variable":
