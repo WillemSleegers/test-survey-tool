@@ -57,10 +57,26 @@ export function useQuestionnaireNavigation(totalVisibleSections: number) {
     }
   }
 
+  /**
+   * Jump directly to a specific section by index
+   */
+  const jumpToSection = (sectionIndex: number): void => {
+    if (sectionIndex >= 0 && sectionIndex < totalVisibleSections) {
+      setCurrentVisibleSectionIndex(sectionIndex)
+      // Remove focus from any active element after navigation
+      setTimeout(() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+      }, 0)
+    }
+  }
+
   return {
     currentVisibleSectionIndex,
     nextSection,
     prevSection,
+    jumpToSection,
     isFirstSection: currentVisibleSectionIndex === 0,
     isLastSection: currentVisibleSectionIndex === totalVisibleSections - 1,
   }

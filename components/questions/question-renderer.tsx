@@ -24,7 +24,8 @@ interface QuestionRendererProps {
  * Supported question types:
  * - "multiple_choice": Radio buttons for single selection
  * - "checkbox": Checkboxes for multiple selections  
- * - "text": Textarea for free-form text input
+ * - "text": Single-line input for short text responses
+ * - "essay": Multi-line textarea for longer text responses
  * - "number": Number input for numeric values
  * 
  * This component acts as a dispatcher, routing each question to its specialized
@@ -69,6 +70,7 @@ export function QuestionRenderer({
       )
 
     case "text":
+    case "essay":
       return (
         <TextQuestion
           question={question}

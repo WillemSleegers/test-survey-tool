@@ -1,4 +1,5 @@
 import React from "react"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
@@ -21,7 +22,8 @@ interface TextQuestionProps {
  * Text input question component for free-form text responses
  * 
  * Features:
- * - Multi-line textarea for longer responses
+ * - Single-line input for "text" type (names, short answers)
+ * - Multi-line textarea for "essay" type (longer responses)
  * - Localized placeholder text
  * - Real-time response updates
  * - Accessible with proper labeling
@@ -50,13 +52,23 @@ export function TextQuestion({
 
   return (
     <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
-      <Textarea
-        value={textValue}
-        onChange={(e) => onResponse(question.id, e.target.value)}
-        placeholder={t('placeholders.textInput')}
-        className="min-h-[100px]"
-        tabIndex={tabIndex}
-      />
+      {question.type === "text" ? (
+        <Input
+          type="text"
+          value={textValue}
+          onChange={(e) => onResponse(question.id, e.target.value)}
+          placeholder={t('placeholders.textInput')}
+          tabIndex={tabIndex}
+        />
+      ) : (
+        <Textarea
+          value={textValue}
+          onChange={(e) => onResponse(question.id, e.target.value)}
+          placeholder={t('placeholders.textInput')}
+          className="min-h-[100px]"
+          tabIndex={tabIndex}
+        />
+      )}
     </QuestionWrapper>
   )
 }

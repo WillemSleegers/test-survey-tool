@@ -8,7 +8,7 @@ export type Question = {
   id: string
   text: string
   subtext?: string
-  type: "multiple_choice" | "checkbox" | "text" | "number"
+  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   options: Option[]
   variable?: string
   showIf?: string

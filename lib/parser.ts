@@ -33,7 +33,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
     return state.currentQuestion ? "option" : "content"
   }
-  if (["TEXT", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
+  if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
@@ -88,6 +88,8 @@ const parseInputType = (line: string): InputTypeData => {
   switch (trimmed) {
     case "TEXT":
       return { type: "text" }
+    case "ESSAY":
+      return { type: "essay" }
     case "NUMBER":
       return { type: "number" }
     case "CHECKBOX":

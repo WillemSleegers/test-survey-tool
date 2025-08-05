@@ -37,7 +37,7 @@ Q2: What is your age?
               radio buttons)
             </li>
             <li>
-              <code>TEXT / NUMBER / CHECKBOX</code> - Input types
+              <code>TEXT / ESSAY / NUMBER / CHECKBOX</code> - Input types
             </li>
           </ul>
         </div>

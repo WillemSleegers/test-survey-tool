@@ -9,10 +9,10 @@ import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation
 import { useVisibleSections } from "@/hooks/use-visible-sections"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
 import { useSectionCompletion } from "@/hooks/use-section-completion"
-import { DebugInfo } from "@/components/questionnaire/debug-info"
 import { SectionHeader } from "@/components/questionnaire/section-header"
 import { NavigationButtons } from "@/components/questionnaire/navigation-buttons"
 import { CompletionDialog } from "@/components/questionnaire/completion-dialog"
+import { SectionNavigator } from "@/components/questionnaire/section-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
 import { Section } from "@/lib/types"
@@ -27,10 +27,6 @@ export function QuestionnaireViewer({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
 
-  // Check if debug mode is enabled via URL hash
-  const isDebugMode =
-    typeof window !== "undefined" && window.location.hash === "#debug"
-
   // Response management - initialize first
   const { responses, handleResponse } = useQuestionnaireResponses(questionnaire)
   
@@ -42,6 +38,7 @@ export function QuestionnaireViewer({
     currentVisibleSectionIndex,
     nextSection,
     prevSection,
+    jumpToSection,
   } = useQuestionnaireNavigation(visibleSections.length)
 
   // Get current section and its content
@@ -111,12 +108,13 @@ export function QuestionnaireViewer({
         </CardContent>
       </Card>
 
-      <DebugInfo
-        isDebugMode={isDebugMode}
-        responses={responses}
+      <SectionNavigator
         questionnaire={questionnaire}
         visibleSections={visibleSections}
         currentVisibleSectionIndex={currentVisibleSectionIndex}
+        responses={responses}
+        getComputedVariables={getComputedVariables}
+        onJumpToSection={jumpToSection}
       />
 
       <CompletionDialog
