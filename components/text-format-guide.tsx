@@ -14,10 +14,10 @@ export function TextFormatGuide() {
 ## Basic Details
 Please answer the following questions about yourself.
 
-Q1: What is your name?
+Q: What is your name?
 TEXT
 
-Q2: What is your age?
+Q: What is your age?
 - Under 18
 - 18-25
 - Over 25`}
@@ -30,7 +30,7 @@ Q2: What is your age?
               <code>## Section</code> - Create sections within a page
             </li>
             <li>
-              <code>Q1: Question text?</code> - Add numbered questions
+              <code>Q: Question text?</code> - Add questions (auto-numbered)
             </li>
             <li>
               <code>- Option text</code> - Multiple choice options (default:
@@ -50,19 +50,21 @@ Q2: What is your age?
 ## Basic Details
 Please answer the following questions about yourself.
 
-Q1: What is your name?
+Q: What is your name?
 TEXT
 VARIABLE: name
 
-Q2: Hello {name}, what are your interests?
+Q: Hello {name}, what are your interests?
 HINT: Select all that apply
 - Sports
 - Music
 - Technology
+- Other
+  - TEXT
 CHECKBOX
 VARIABLE: interests
 
-Q3: Do you like programming?
+Q: Do you like programming?
 - Yes
 - No
 SHOW_IF: name`}
@@ -79,8 +81,15 @@ SHOW_IF: name`}
               <code>{`{name}`}</code> - Insert saved variables
             </li>
             <li>
+              <code>{`{age + 5}`}</code> - Arithmetic expressions with variables
+            </li>
+            <li>
               <code>SHOW_IF: condition</code> - Hide/show questions
               conditionally (place after question)
+            </li>
+            <li>
+              <code>- TEXT</code> - Add text input to previous option
+              (flexible for any option)
             </li>
             <li>
               Conditions:
@@ -109,15 +118,15 @@ SHOW_IF: name`}
 ## Basic Details
 Please answer the following questions about yourself.
 
-Q1: What is your name?
+Q: What is your name?
 TEXT
 VARIABLE: name
 
-Q2: What is your age?
+Q: What is your age?
 NUMBER
 VARIABLE: age
 
-Q3: Hello {name}, what are your interests?
+Q: Hello {name}, what are your interests?
 HINT: Select all that apply
 - Sports
 - Music
@@ -125,22 +134,31 @@ HINT: Select all that apply
 CHECKBOX
 VARIABLE: interests
 
+Q: How many years have you worked in tech?
+NUMBER
+VARIABLE: tech_years
+
+## Summary Section
+Based on your age of {age} and {tech_years} years in tech, your total experience score is {age + tech_years}.
+
 # Advanced Logic
 COMPUTE: is_adult = age >= 18
 COMPUTE: likes_tech = interests == Technology
 
-Q4: What programming languages do you know?
+Q: What programming languages do you know?
 - Basic scripting
 - JavaScript
   - SHOW_IF: is_adult
 - Advanced frameworks
   - SHOW_IF: likes_tech AND is_adult
+- Other
+  - TEXT
 VARIABLE: programming
 
 # Advanced Topics
 SHOW_IF: is_adult AND likes_tech
 
-Q5: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}}, what's your experience level?
+Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}}, what's your experience level?
 - Beginner
 - Intermediate  
 - Expert`}
@@ -155,8 +173,16 @@ Q5: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech
               conditional text within question text
             </li>
             <li>
+              <code>{`{var1 + var2}`}</code> - Arithmetic expressions: add,
+              subtract, multiply, divide variables
+            </li>
+            <li>
               <code>- SHOW_IF: condition</code> - Conditionally show question
               options (place after option)
+            </li>
+            <li>
+              <code>- TEXT</code> - Show text input when previous option
+              is selected (flexible for any option needing elaboration)
             </li>
             <li>
               <code>SHOW_IF: condition</code> - Hide/show pages/sections (place
@@ -201,6 +227,10 @@ Q5: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech
                 <li>
                   <code>age {"<"}= 25 || student IS true</code>: Young or is a
                   student
+                </li>
+                <li>
+                  <code>total != var1 + var2</code>: Total doesn't equal sum
+                  of var1 and var2
                 </li>
                 <li>
                   <code>NOT (completed && submitted)</code>: Either not

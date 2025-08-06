@@ -7,6 +7,7 @@ export const en = {
   placeholders: {
     textInput: "Enter your response...",
     numberInput: "Enter a number...",
+    otherText: "Please specify...",
   },
   completion: {
     title: "Survey Complete!",

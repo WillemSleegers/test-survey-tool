@@ -96,7 +96,7 @@ export function evaluateCondition(
     const { leftSide, operator, rightSide } = parsed
 
     // Handle arithmetic expressions vs simple variable comparisons
-    if (isArithmeticExpression(leftSide)) {
+    if (isArithmeticExpression(leftSide) || isArithmeticExpression(rightSide)) {
       return evaluateArithmeticComparison(leftSide, operator, rightSide, extendedResponses)
     } else {
       return evaluateVariableComparison(leftSide, operator, rightSide, extendedResponses)
@@ -134,7 +134,7 @@ function createExtendedResponses(
 }
 
 /**
- * Evaluates arithmetic expression comparisons like "age + 5 >= 25"
+ * Evaluates arithmetic expression comparisons like "age + 5 >= 25" or "var1 != var2 + var3"
  */
 function evaluateArithmeticComparison(
   leftSide: string,
@@ -142,10 +142,26 @@ function evaluateArithmeticComparison(
   rightSide: string,
   responses: Responses
 ): boolean {
-  const leftValue = evaluateExpression(leftSide, responses)
-  const rightValue = parseFloat(rightSide)
+  // Handle left side - could be arithmetic expression or simple variable
+  let leftValue: number
+  if (isArithmeticExpression(leftSide)) {
+    leftValue = evaluateExpression(leftSide, responses)
+  } else {
+    // Simple variable name - get its numeric value
+    const responseEntry = Object.values(responses).find(r => r.variable === leftSide.trim())
+    const value = responseEntry?.value
+    leftValue = value === undefined ? 0 : parseFloat(String(value))
+    if (isNaN(leftValue)) return false
+  }
   
-  if (isNaN(rightValue)) return false
+  // Handle right side - could be arithmetic expression or just a number
+  let rightValue: number
+  if (isArithmeticExpression(rightSide)) {
+    rightValue = evaluateExpression(rightSide, responses)
+  } else {
+    rightValue = parseFloat(rightSide)
+    if (isNaN(rightValue)) return false
+  }
   
   switch (operator) {
     case "==": return leftValue === rightValue

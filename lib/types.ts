@@ -2,6 +2,7 @@ export type Option = {
   value: string
   label: string
   showIf?: string
+  allowsOtherText?: boolean
 }
 
 export type Question = {
@@ -74,6 +75,7 @@ export type QuestionData = { id: string; text: string }
 export type SubtextData = { subtext: string }
 export type OptionData = { text: string; showIf?: string }
 export type OptionShowIfData = { showIf: string }
+export type OptionOtherTextData = { allowsOtherText: true }
 export type InputTypeData = { type: Question["type"] }
 export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }
@@ -87,6 +89,7 @@ export type ParsedLine =
   | { type: "subtext"; raw: string; data: SubtextData }
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
+  | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
@@ -99,4 +102,5 @@ export type ParserState = {
   currentSubsection: Subsection | null
   currentQuestion: Question | null
   subtextBuffer: string[] | null
+  questionCounter: number
 }

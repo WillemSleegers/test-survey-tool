@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronRight, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { Section, Responses, ComputedVariables } from "@/lib/types"
 
@@ -20,11 +19,13 @@ interface SectionNavigatorProps {
   getComputedVariables: (section: Section) => ComputedVariables
   /** Function to jump to a specific section */
   onJumpToSection: (sectionIndex: number) => void
+  /** Function to reset back to upload page */
+  onResetToUpload: () => void
 }
 
 /**
  * Minimal section navigator for researchers
- * 
+ *
  * Features:
  * - Nearly invisible toggle button that only shows on hover
  * - Collapsible panel with section overview
@@ -39,6 +40,7 @@ export function SectionNavigator({
   responses,
   getComputedVariables,
   onJumpToSection,
+  onResetToUpload,
 }: SectionNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -67,7 +69,9 @@ export function SectionNavigator({
   }, [isOpen])
 
   const currentSection = visibleSections[currentVisibleSectionIndex]
-  const currentSectionComputedVars = currentSection ? getComputedVariables(currentSection) : {}
+  const currentSectionComputedVars = currentSection
+    ? getComputedVariables(currentSection)
+    : {}
 
   return (
     <>
@@ -77,7 +81,12 @@ export function SectionNavigator({
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 right-4 z-40 w-8 h-8 p-0 opacity-20 hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
-        title={`Section Navigator (${navigator.platform?.includes('Mac') ? 'Cmd' : 'Ctrl'}+/)`}
+        title={`Section Navigator (${
+          typeof navigator !== "undefined" &&
+          navigator.userAgent?.includes("Mac")
+            ? "Cmd"
+            : "Ctrl"
+        }+/)`}
       >
         <Menu className="w-4 h-4" />
       </Button>
@@ -114,25 +123,28 @@ export function SectionNavigator({
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Section List */}
             <div>
-              <h3 className="text-sm font-medium mb-3">
-                Sections ({visibleSections.length}/{questionnaire.length} visible)
+              <h3 className="font-medium mb-3">
+                Sections ({visibleSections.length}/{questionnaire.length}{" "}
+                visible)
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {questionnaire.map((section, globalIndex) => {
                   const isVisible = evaluateCondition(
                     section.showIf || "",
                     responses,
                     getComputedVariables(section)
                   )
-                  
+
                   // Find the visible section index for this section
-                  const visibleIndex = visibleSections.findIndex(s => s === section)
+                  const visibleIndex = visibleSections.findIndex(
+                    (s) => s === section
+                  )
                   const isCurrent = visibleIndex === currentVisibleSectionIndex
-                  
+
                   return (
                     <div
                       key={globalIndex}
-                      className={`flex items-center gap-2 p-2 rounded text-sm ${
+                      className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
                         isCurrent
                           ? "bg-primary/10 border border-primary/20"
                           : isVisible
@@ -151,10 +163,14 @@ export function SectionNavigator({
                           isVisible ? "bg-green-500" : "bg-red-500"
                         }`}
                       />
-                      
+
                       {/* Section info */}
                       <div className="flex-1 min-w-0">
-                        <div className={`truncate ${isCurrent ? "font-medium" : ""}`}>
+                        <div
+                          className={`truncate ${
+                            isCurrent ? "font-medium" : ""
+                          }`}
+                        >
                           {section.title || `Section ${globalIndex + 1}`}
                         </div>
                         {section.showIf && (
@@ -163,11 +179,6 @@ export function SectionNavigator({
                           </div>
                         )}
                       </div>
-                      
-                      {/* Current indicator */}
-                      {isCurrent && (
-                        <ChevronRight className="w-4 h-4 text-primary flex-shrink-0" />
-                      )}
                     </div>
                   )
                 })}
@@ -191,22 +202,46 @@ export function SectionNavigator({
                   Computed Variables (Current Section)
                 </h3>
                 <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                  <pre>{JSON.stringify(currentSectionComputedVars, null, 2)}</pre>
+                  <pre>
+                    {JSON.stringify(currentSectionComputedVars, null, 2)}
+                  </pre>
                 </div>
               </div>
             )}
 
             {/* Keyboard Shortcuts */}
             <div>
-              <h3 className="text-sm font-medium mb-3">Shortcuts</h3>
-              <div className="text-xs text-muted-foreground space-y-1">
+              <h3 className="font-medium mb-3">Shortcuts</h3>
+              <div className="text-sm text-muted-foreground space-y-1">
                 <div>
                   <kbd className="px-1 py-0.5 bg-muted rounded">
-                    {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? 'Cmd' : 'Ctrl'}+/
-                  </kbd> Toggle navigator
+                    {typeof navigator !== "undefined" &&
+                    navigator.userAgent?.includes("Mac")
+                      ? "Cmd"
+                      : "Ctrl"}{" "}
+                    + /
+                  </kbd>
+                  : Toggle navigator
                 </div>
-                <div><kbd className="px-1 py-0.5 bg-muted rounded">Esc</kbd> Close navigator</div>
+                <div>
+                  <kbd className="px-1 py-0.5 bg-muted rounded">Esc</kbd>: Close
+                  navigator
+                </div>
               </div>
+            </div>
+
+            {/* New Survey Button */}
+            <div>
+              <Button
+                onClick={() => {
+                  onResetToUpload()
+                  setIsOpen(false)
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Exit survey
+              </Button>
             </div>
           </div>
         </div>

@@ -44,8 +44,14 @@ const QuestionnaireApp = () => {
     }
   }
 
+  const handleResetToUpload = () => {
+    setQuestionnaire(null)
+    setError("")
+    setIsPreviewMode(false)
+  }
+
   if (isPreviewMode && questionnaire) {
-    return <QuestionnaireViewer questionnaire={questionnaire} />
+    return <QuestionnaireViewer questionnaire={questionnaire} onResetToUpload={handleResetToUpload} />
   }
 
   return (

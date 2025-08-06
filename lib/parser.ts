@@ -8,6 +8,7 @@ import {
   SubtextData,
   OptionData,
   OptionShowIfData,
+  OptionOtherTextData,
   InputTypeData,
   VariableData,
   ShowIfData,
@@ -24,12 +25,16 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
 
   if (trimmed.startsWith("# ") || trimmed === "#") return "section"
   if (trimmed.startsWith("## ")) return "subsection"
-  if (trimmed.match(/^Q\d+:/)) return "question"
+  if (trimmed.match(/^Q\d+:/) || trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a conditional option modifier
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
       return state.currentQuestion ? "option_show_if" : "content"
+    }
+    // Check if this is an other text modifier (only if we have a current question)
+    if (trimmed.match(/^-\s*TEXT\s*$/)) {
+      return state.currentQuestion ? "option_other_text" : "content"
     }
     return state.currentQuestion ? "option" : "content"
   }
@@ -55,11 +60,26 @@ const parseSubsection = (line: string): SubsectionData => ({
   title: line.trim().substring(3).trim(),
 })
 
-const parseQuestion = (line: string): QuestionData => {
+const parseQuestion = (line: string, questionCounter: number): QuestionData => {
   const trimmed = line.trim()
-  const idMatch = trimmed.match(/^(Q\d+):/)
+  const numberedMatch = trimmed.match(/^(Q\d+):/)
+  const unnumberedMatch = trimmed.match(/^Q:/)
+  
+  if (numberedMatch) {
+    return {
+      id: numberedMatch[1],
+      text: trimmed.substring(trimmed.indexOf(":") + 1).trim(),
+    }
+  } else if (unnumberedMatch) {
+    return {
+      id: `Q${questionCounter}`,
+      text: trimmed.substring(2).trim(),
+    }
+  }
+  
+  // Fallback (shouldn't happen with proper classification)
   return {
-    id: idMatch ? idMatch[1] : "Q0",
+    id: `Q${questionCounter}`,
     text: trimmed.substring(trimmed.indexOf(":") + 1).trim(),
   }
 }
@@ -114,6 +134,10 @@ const parseOptionShowIf = (line: string): OptionShowIfData => {
   return { showIf: conditionText }
 }
 
+const parseOptionOtherText = (): OptionOtherTextData => ({
+  allowsOtherText: true,
+})
+
 const parseContent = (line: string): ContentData => ({
   content: line,
 })
@@ -148,13 +172,15 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
     case "subsection":
       return { type, raw: line, data: parseSubsection(line) }
     case "question":
-      return { type, raw: line, data: parseQuestion(line) }
+      return { type, raw: line, data: parseQuestion(line, state.questionCounter) }
     case "subtext":
       return { type, raw: line, data: parseSubtext(line) }
     case "option":
       return { type, raw: line, data: parseOption(line) }
     case "option_show_if":
       return { type, raw: line, data: parseOptionShowIf(line) }
+    case "option_other_text":
+      return { type, raw: line, data: parseOptionOtherText() }
     case "input_type":
       return { type, raw: line, data: parseInputType(line) }
     case "variable":
@@ -306,10 +332,13 @@ const handleQuestion = (
   // Save current question
   const newState = saveCurrentQuestion(state)
 
-  // Start new question
+  // Start new question and increment counter
   return {
     ...newState,
     currentQuestion: createQuestion(data.id, data.text),
+    questionCounter: state.questionCounter + 1,
+    // Clear subtext buffer when starting new question
+    subtextBuffer: null,
   }
 }
 
@@ -322,6 +351,8 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
       ...state.currentQuestion,
       subtext: data.subtext,
     },
+    // Start collecting multiline subtext
+    subtextBuffer: [data.subtext],
   }
 }
 
@@ -340,6 +371,8 @@ const handleOption = (state: ParserState, data: OptionData): ParserState => {
         },
       ],
     },
+    // Clear subtext buffer when we encounter structured elements
+    subtextBuffer: null,
   }
 }
 
@@ -352,6 +385,26 @@ const handleOptionShowIf = (state: ParserState, data: OptionShowIfData): ParserS
   updatedOptions[lastOptionIndex] = {
     ...updatedOptions[lastOptionIndex],
     showIf: data.showIf
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the allowsOtherText flag to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    allowsOtherText: data.allowsOtherText
   }
 
   return {
@@ -376,6 +429,8 @@ const handleInputType = (
       type: data.type,
       options: data.type === "checkbox" ? state.currentQuestion.options : [],
     },
+    // Clear subtext buffer when we encounter structured elements
+    subtextBuffer: null,
   }
 }
 
@@ -391,6 +446,8 @@ const handleVariable = (
       ...state.currentQuestion,
       variable: data.variable,
     },
+    // Clear subtext buffer when we encounter structured elements
+    subtextBuffer: null,
   }
 }
 
@@ -423,7 +480,20 @@ const handleContent = (
   data: ContentData,
   originalLine: string
 ): ParserState => {
-  // Regular content handling - no more complex subtext logic needed
+  // If we have a current question and an active subtext buffer, append to subtext
+  if (state.currentQuestion && state.subtextBuffer) {
+    const updatedBuffer = [...state.subtextBuffer, originalLine]
+    return {
+      ...state,
+      subtextBuffer: updatedBuffer,
+      currentQuestion: {
+        ...state.currentQuestion,
+        subtext: updatedBuffer.join('\n'),
+      },
+    }
+  }
+  
+  // If we have a current question but no subtext buffer, ignore content
   if (state.currentQuestion) return state
 
   if (state.currentSubsection) {
@@ -487,6 +557,8 @@ const reduceParsedLine = (
       return handleOption(state, parsedLine.data)
     case "option_show_if":
       return handleOptionShowIf(state, parsedLine.data)
+    case "option_other_text":
+      return handleOptionOtherText(state, parsedLine.data)
     case "input_type":
       return handleInputType(state, parsedLine.data)
     case "variable":
@@ -516,6 +588,7 @@ export const parseQuestionnaire = (text: string): Section[] => {
       currentSubsection: null,
       currentQuestion: null,
       subtextBuffer: null,
+      questionCounter: 1,
     }
 
     const finalState = lines.reduce((state, line) => {

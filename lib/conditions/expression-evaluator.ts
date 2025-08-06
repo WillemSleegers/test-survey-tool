@@ -45,14 +45,26 @@ export function evaluateExpression(expression: string, responses: Responses): nu
 /**
  * Checks if a condition contains arithmetic expressions (not just simple variables)
  * 
- * @param leftSide - The left side of a condition
- * @returns True if the left side contains arithmetic operators or expressions
+ * @param expression - The expression to check
+ * @returns True if the expression contains arithmetic operators
  * 
  * @example
  * isArithmeticExpression("age + 5") // true
+ * isArithmeticExpression("var1 * var2") // true
  * isArithmeticExpression("age") // false
+ * isArithmeticExpression("Ja, in de afgelopen 12 maanden") // false
  */
-export function isArithmeticExpression(leftSide: string): boolean {
-  // Simple check: if it's not just a word, it's likely an expression
-  return !/^\w+$/.test(leftSide.trim())
+export function isArithmeticExpression(expression: string): boolean {
+  // Check for arithmetic operators: +, -, *, /, (, )
+  // But exclude these when they appear in quoted strings or are part of regular text
+  const trimmed = expression.trim()
+  
+  // If it's a simple word variable, it's not arithmetic
+  if (/^\w+$/.test(trimmed)) {
+    return false
+  }
+  
+  // Check for arithmetic operators with word boundaries (variables on both sides)
+  // This matches patterns like "var1 + var2" or "age * 2" but not "text with + signs"
+  return /\w+\s*[+\-*/]\s*\w+/.test(trimmed) || /^\(.*\)$/.test(trimmed)
 }

@@ -7,6 +7,7 @@ export const nl = {
   placeholders: {
     textInput: "Voer je antwoord in...",
     numberInput: "Voer een nummer in...",
+    otherText: "Voer je antwoord in...",
   },
   completion: {
     title: "Vragenlijst voltooid!",

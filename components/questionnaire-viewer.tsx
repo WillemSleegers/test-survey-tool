@@ -19,10 +19,12 @@ import { Section } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Section[]
+  onResetToUpload: () => void
 }
 
 export function QuestionnaireViewer({
   questionnaire,
+  onResetToUpload,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
@@ -115,6 +117,7 @@ export function QuestionnaireViewer({
         responses={responses}
         getComputedVariables={getComputedVariables}
         onJumpToSection={jumpToSection}
+        onResetToUpload={onResetToUpload}
       />
 
       <CompletionDialog
