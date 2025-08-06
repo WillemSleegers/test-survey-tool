@@ -27,6 +27,19 @@ const OPERATOR_KEYWORDS: Record<string, ComparisonOperator> = {
 }
 
 /**
+ * Explicit processing order for keywords to avoid conflicts
+ * IS_NOT must be processed before IS to prevent partial matches
+ */
+const KEYWORD_ORDER = [
+  'IS_NOT',
+  'GREATER_THAN_OR_EQUAL', 
+  'LESS_THAN_OR_EQUAL',
+  'GREATER_THAN',
+  'LESS_THAN',
+  'IS'
+] as const
+
+/**
  * Normalizes keyword operators to symbols in a condition string
  * 
  * @param condition - The condition string potentially containing keywords
@@ -39,8 +52,9 @@ const OPERATOR_KEYWORDS: Record<string, ComparisonOperator> = {
 export function normalizeOperators(condition: string): string {
   let normalized = condition
   
-  // Replace keywords with symbols (order matters - IS_NOT before IS)
-  for (const [keyword, symbol] of Object.entries(OPERATOR_KEYWORDS)) {
+  // Replace keywords with symbols in explicit order to avoid conflicts
+  for (const keyword of KEYWORD_ORDER) {
+    const symbol = OPERATOR_KEYWORDS[keyword]
     const regex = new RegExp(`\\s+${keyword}\\s+`, 'gi')
     normalized = normalized.replace(regex, ` ${symbol} `)
   }
@@ -106,7 +120,7 @@ export function evaluateSimpleBooleanTest(variable: string, responses: Responses
   }
   
   if (typeof value === 'number') {
-    return value !== 0
+    return true // Any number (including 0) means the question was answered
   }
   
   if (typeof value === 'string') {

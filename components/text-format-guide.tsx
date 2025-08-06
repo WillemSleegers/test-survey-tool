@@ -229,7 +229,7 @@ Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}
                   student
                 </li>
                 <li>
-                  <code>total != var1 + var2</code>: Total doesn't equal sum
+                  <code>total != var1 + var2</code>: Total doesn&apos;t equal sum
                   of var1 and var2
                 </li>
                 <li>
