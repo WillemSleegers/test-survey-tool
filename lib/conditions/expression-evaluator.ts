@@ -1,4 +1,5 @@
 import { Responses } from "@/lib/types"
+import { getKnownVariables, getVariableNumericValue } from "./value-converter"
 
 /**
  * Evaluates arithmetic expressions by substituting variables with their values
@@ -12,24 +13,27 @@ import { Responses } from "@/lib/types"
  * evaluateExpression("count * 2", responses) // If count = 3, returns 6
  */ 
 export function evaluateExpression(expression: string, responses: Responses): number {
-  // Replace variables with their numeric values
-  const substituted = expression.replace(/\w+/g, (variable) => {
-    const responseEntry = Object.values(responses).find(
-      (r) => r.variable === variable
-    )
-    const value = responseEntry?.value
+  // Get all known variable names, sorted by length to avoid partial matches
+  const knownVariables = getKnownVariables(responses)
+  
+  // Replace each known variable with its numeric value
+  let substituted = expression
+  for (const variable of knownVariables) {
+    const numericValue = getVariableNumericValue(variable, responses).toString()
     
-    // Convert to number, default to 0 if not a valid number
-    if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) {
-      return "0"
+    // Replace all occurrences of this variable name with its numeric value
+    // Use word boundaries to avoid partial matches
+    const regex = new RegExp(`\\b${variable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g')
+    substituted = substituted.replace(regex, numericValue)
+  }
+  
+  // Handle any remaining unknown variables by replacing them with 0
+  substituted = substituted.replace(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g, (match) => {
+    // If it's still a variable name (not a number), replace with 0
+    if (isNaN(parseFloat(match))) {
+      return '0'
     }
-    
-    if (Array.isArray(value)) {
-      return value.length.toString() // Use array length for checkbox questions
-    }
-    
-    const numValue = parseFloat(String(value))
-    return isNaN(numValue) ? "0" : numValue.toString()
+    return match
   })
   
   try {
@@ -41,6 +45,7 @@ export function evaluateExpression(expression: string, responses: Responses): nu
     return 0
   }
 }
+
 
 /**
  * Checks if a condition contains arithmetic expressions (not just simple variables)
@@ -56,7 +61,6 @@ export function evaluateExpression(expression: string, responses: Responses): nu
  */
 export function isArithmeticExpression(expression: string): boolean {
   // Check for arithmetic operators: +, -, *, /, (, )
-  // But exclude these when they appear in quoted strings or are part of regular text
   const trimmed = expression.trim()
   
   // If it's a simple word variable, it's not arithmetic

@@ -38,7 +38,9 @@ export function PageHeader({ page, responses, computedVariables }: PageHeaderPro
   return (
     <div className="whitespace-pre-wrap">
       {processedTitle && (
-        <Markdown>{processedTitle}</Markdown>
+        <div className="mb-6">
+          <Markdown>{processedTitle}</Markdown>
+        </div>
       )}
       {processedContent && (
         <Markdown>{processedContent}</Markdown>

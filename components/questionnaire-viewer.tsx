@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { PageContent } from "@/components/page-content"
 import { useLanguage } from "@/contexts/language-context"
 
@@ -17,7 +16,7 @@ import { CompletionDialog } from "@/components/questionnaire/completion-dialog"
 import { PageNavigator } from "@/components/questionnaire/page-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
-import { Block, Page } from "@/lib/types"
+import { Block, Page, ComputedVariables } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Block[]
@@ -36,8 +35,9 @@ export function QuestionnaireViewer({
   const { responses, handleResponse } = useQuestionnaireResponses(allPages)
   
   // Filter blocks by visibility, then flatten to pages
-  const visibleBlockPages = useMemo(() => {
+  const { visibleBlockPages, allBlockComputedVariables } = useMemo(() => {
     const visiblePages: Page[] = []
+    const blockComputedVars: ComputedVariables = {}
     
     questionnaire.forEach(block => {
       // Evaluate block-level visibility  
@@ -48,25 +48,26 @@ export function QuestionnaireViewer({
         sections: [],
         computedVariables: block.computedVariables
       }
-      const blockComputedVars = evaluateComputedVariables(mockPage, responses)
+      const currentBlockComputedVars = evaluateComputedVariables(mockPage, responses)
       
       const blockVisible = evaluateCondition(
         block.showIf || "",
         responses,
-        blockComputedVars
+        currentBlockComputedVars
       )
       
       if (blockVisible) {
-        // If block is visible, add all its pages
+        // If block is visible, add all its pages and collect its computed variables
         visiblePages.push(...block.pages)
+        Object.assign(blockComputedVars, currentBlockComputedVars)
       }
     })
     
-    return visiblePages
+    return { visibleBlockPages: visiblePages, allBlockComputedVariables: blockComputedVars }
   }, [questionnaire, responses])
   
   // Get visible pages and content filtering based on current responses  
-  const { visiblePages, getVisiblePageContent, getComputedVariables } = useVisiblePages(visibleBlockPages, responses)
+  const { visiblePages, getVisiblePageContent, getComputedVariables } = useVisiblePages(visibleBlockPages, responses, allBlockComputedVariables)
   
   // Navigation state and actions
   const {
@@ -79,7 +80,44 @@ export function QuestionnaireViewer({
   // Get current page and its content
   const currentPage = visiblePages[currentVisiblePageIndex]
   const pageContent = currentPage ? getVisiblePageContent(currentPage) : null
-  const currentPageComputedVars = currentPage ? getComputedVariables(currentPage) : undefined
+  
+  // Get current block and its computed variables
+  const currentBlockComputedVars: ComputedVariables = (() => {
+    if (!currentPage) return {}
+    
+    // Find which block contains the current page
+    for (const block of questionnaire) {
+      if (block.pages.includes(currentPage)) {
+        // Evaluate this block's computed variables with current responses
+        const mockPage: Page = {
+          title: "",
+          content: "",
+          questions: [],
+          sections: [],
+          computedVariables: block.computedVariables
+        }
+        return evaluateComputedVariables(mockPage, responses)
+      }
+    }
+    return {}
+  })()
+  
+  // Get page-level computed variables (excluding block variables)
+  const currentPageComputedVars: ComputedVariables = (() => {
+    if (!currentPage) return {}
+    
+    const allVars = getComputedVariables(currentPage)
+    const pageOnlyVars: ComputedVariables = {}
+    
+    // Only include variables that are defined at page level
+    currentPage.computedVariables.forEach(computedVar => {
+      if (computedVar.name in allVars) {
+        pageOnlyVars[computedVar.name] = allVars[computedVar.name]
+      }
+    })
+    
+    return pageOnlyVars
+  })()
   
   // Check completion status
   const allQuestionsAnswered = usePageCompletion(pageContent, responses)
@@ -94,14 +132,10 @@ export function QuestionnaireViewer({
 
   if (visiblePages.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card>
-          <CardContent className="text-center py-12">
-            <p className="text-muted-foreground">
-              {t('errors.noPages')}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto pt-16 px-6 pb-6 text-center py-12">
+        <p className="text-muted-foreground">
+          {t('errors.noPages')}
+        </p>
       </div>
     )
   }
@@ -115,40 +149,41 @@ export function QuestionnaireViewer({
   const totalInputs = calculateTotalTabInputs(pageContent, responses)
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardContent className="space-y-6">
-          <PageHeader 
-            page={currentPage} 
-            responses={responses} 
-            computedVariables={currentPageComputedVars}
-          />
-          
-          <PageContent
-            content={pageContent}
-            responses={responses}
-            onResponse={handleResponse}
-            computedVariables={currentPageComputedVars}
-          />
+    <>
+      <div className="max-w-4xl mx-auto pt-16 px-6 pb-6 space-y-6">
+        <PageHeader 
+          page={currentPage} 
+          responses={responses} 
+          computedVariables={currentPageComputedVars}
+        />
+        
+        <PageContent
+          content={pageContent}
+          responses={responses}
+          onResponse={handleResponse}
+          computedVariables={{ ...currentBlockComputedVars, ...currentPageComputedVars }}
+        />
 
-          <NavigationButtons
-            currentPageIndex={currentVisiblePageIndex}
-            totalPages={visiblePages.length}
-            allQuestionsAnswered={allQuestionsAnswered}
-            totalInputs={totalInputs}
-            onPrevious={prevPage}
-            onNext={nextPage}
-            onComplete={handleComplete}
-          />
-        </CardContent>
-      </Card>
+        <NavigationButtons
+          currentPageIndex={currentVisiblePageIndex}
+          totalPages={visiblePages.length}
+          allQuestionsAnswered={allQuestionsAnswered}
+          totalInputs={totalInputs}
+          onPrevious={prevPage}
+          onNext={nextPage}
+          onComplete={handleComplete}
+        />
+      </div>
 
       <PageNavigator
-        questionnaire={allPages}
+        questionnaire={questionnaire}
+        allPages={allPages}
         visiblePages={visiblePages}
         currentVisiblePageIndex={currentVisiblePageIndex}
         responses={responses}
         getComputedVariables={getComputedVariables}
+        currentBlockComputedVars={currentBlockComputedVars}
+        currentPageComputedVars={currentPageComputedVars}
         onJumpToPage={jumpToPage}
         onResetToUpload={onResetToUpload}
       />
@@ -157,6 +192,6 @@ export function QuestionnaireViewer({
         isOpen={showCompletionDialog}
         onOpenChange={setShowCompletionDialog}
       />
-    </div>
+    </>
   )
 }

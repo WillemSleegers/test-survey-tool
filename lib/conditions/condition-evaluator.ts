@@ -22,6 +22,7 @@ import {
   evaluateAndCondition
 } from "./logical-operators"
 import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
+import { convertValueToNumber } from "./value-converter"
 
 /**
  * Main condition evaluator that handles all types of survey conditions
@@ -53,6 +54,7 @@ export function evaluateCondition(
 ): boolean {
   // Empty condition always passes
   if (!condition) return true
+
 
   try {
     // Create extended responses that includes computed variables
@@ -147,20 +149,24 @@ function evaluateArithmeticComparison(
   if (isArithmeticExpression(leftSide)) {
     leftValue = evaluateExpression(leftSide, responses)
   } else {
-    // Simple variable name - get its numeric value
+    // Simple variable name - get its numeric value using clean converter
     const responseEntry = Object.values(responses).find(r => r.variable === leftSide.trim())
-    const value = responseEntry?.value
-    leftValue = value === undefined ? 0 : parseFloat(String(value))
-    if (isNaN(leftValue)) return false
+    leftValue = convertValueToNumber(responseEntry?.value)
   }
   
-  // Handle right side - could be arithmetic expression or just a number
+  // Handle right side - could be arithmetic expression, variable name, or literal number
   let rightValue: number
   if (isArithmeticExpression(rightSide)) {
     rightValue = evaluateExpression(rightSide, responses)
   } else {
-    rightValue = parseFloat(rightSide)
-    if (isNaN(rightValue)) return false
+    // Check if right side is a variable name
+    const responseEntry = Object.values(responses).find(r => r.variable === rightSide.trim())
+    if (responseEntry) {
+      rightValue = convertValueToNumber(responseEntry.value)
+    } else {
+      rightValue = parseFloat(rightSide)
+      if (isNaN(rightValue)) rightValue = 0
+    }
   }
   
   switch (operator) {
@@ -187,7 +193,27 @@ function evaluateVariableComparison(
   const responseEntry = Object.values(responses).find(r => r.variable === variable)
   const responseValue: ResponseValue = responseEntry?.value
   
-  // Extract the comparison value (handles quoted strings)
+  // Check if rawValue is actually another variable name
+  const rightVariableEntry = Object.values(responses).find(r => r.variable === rawValue.trim())
+  
+  if (rightVariableEntry) {
+    // Variable-to-variable comparison using clean converter utilities
+    const leftNum = convertValueToNumber(responseValue)
+    const rightNum = convertValueToNumber(rightVariableEntry.value)
+    
+    // Perform numeric comparison
+    switch (operator) {
+      case "==": return leftNum === rightNum
+      case "!=": return leftNum !== rightNum
+      case ">=": return leftNum >= rightNum
+      case "<=": return leftNum <= rightNum
+      case ">": return leftNum > rightNum
+      case "<": return leftNum < rightNum
+      default: return true
+    }
+  }
+  
+  // Original logic for literal value comparison
   const value = extractComparisonValue(rawValue)
   
   // Handle empty string checks (special case)

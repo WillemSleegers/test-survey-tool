@@ -564,8 +564,16 @@ const handleContent = (
     }
   }
   
-  // If we have a current question but no subtext buffer, ignore content
-  if (state.currentQuestion) return state
+  // If we have a current question but no subtext buffer, append to question text
+  if (state.currentQuestion) {
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        text: state.currentQuestion.text + "\n\n" + originalLine,
+      },
+    }
+  }
 
   if (state.currentSection) {
     return {

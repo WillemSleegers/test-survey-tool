@@ -1,8 +1,27 @@
 import { Page, Responses, ComputedVariables, ComputedVariable } from "@/lib/types"
 import { evaluateCondition } from "./condition-evaluator"
+import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
+
+/**
+ * Checks if an expression contains comparison operators, making it a boolean condition
+ * rather than a pure arithmetic expression
+ * 
+ * @param expression - The expression to check
+ * @returns True if the expression contains comparison operators (>, <, >=, <=, ==, !=)
+ */
+function isComparisonExpression(expression: string): boolean {
+  const trimmed = expression.trim()
+  // Check for comparison operators
+  return /[><=!]=?|[><]/.test(trimmed)
+}
 
 /**
  * Evaluates all computed variables for a given page
+ * 
+ * Supports both boolean and numeric computed variables:
+ * - Boolean: "age >= 18" -> true/false
+ * - Numeric: "count + 5" -> number
+ * - Ternary: "age >= 18 ? 1 : 0" -> number (1 or 0)
  * 
  * @param page - The page containing computed variables
  * @param responses - Current user responses
@@ -10,9 +29,11 @@ import { evaluateCondition } from "./condition-evaluator"
  */
 export function evaluateComputedVariables(
   page: Page,
-  responses: Responses
+  responses: Responses,
+  existingComputedVariables?: ComputedVariables
 ): ComputedVariables {
-  const computedVars: ComputedVariables = {}
+  // Start with existing computed variables (e.g., from block level)
+  const computedVars: ComputedVariables = { ...existingComputedVariables }
   
   // Sort computed variables to handle dependencies
   // Variables that depend on other computed variables should be evaluated after their dependencies
@@ -23,17 +44,30 @@ export function evaluateComputedVariables(
       // Create a responses object that includes computed variables evaluated so far
       const extendedResponses = createExtendedResponses(responses, computedVars)
       
-      // Evaluate the expression as a condition
-      const result = evaluateCondition(computedVar.expression, extendedResponses)
+      // Determine if this is a pure arithmetic expression (numeric) or a condition (boolean)
+      let result: boolean | number
+      
+      if (isComparisonExpression(computedVar.expression)) {
+        // Expression contains comparison operators, evaluate as boolean condition
+        result = evaluateCondition(computedVar.expression, extendedResponses)
+      } else if (isArithmeticExpression(computedVar.expression)) {
+        // Pure arithmetic expression, evaluate as numeric
+        result = evaluateExpression(computedVar.expression, extendedResponses)
+      } else {
+        // Simple condition (variable name, etc.), evaluate as boolean
+        result = evaluateCondition(computedVar.expression, extendedResponses)
+      }
+      
       computedVars[computedVar.name] = result
       
       // Store the evaluated value for debugging purposes
       computedVar.value = result
     } catch (error) {
-      // If evaluation fails, default to false
+      // If evaluation fails, default to false for conditions or 0 for arithmetic
       console.warn(`Failed to evaluate computed variable "${computedVar.name}": ${error}`)
-      computedVars[computedVar.name] = false
-      computedVar.value = false
+      const defaultValue = isArithmeticExpression(computedVar.expression) ? 0 : false
+      computedVars[computedVar.name] = defaultValue
+      computedVar.value = defaultValue
     }
   }
   

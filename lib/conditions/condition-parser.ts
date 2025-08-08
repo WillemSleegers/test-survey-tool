@@ -112,7 +112,7 @@ export function evaluateSimpleBooleanTest(variable: string, responses: Responses
   const responseEntry = Object.values(responses).find(r => r.variable === variable)
   const value = responseEntry?.value
   
-  if (value === undefined) return false
+  if (value === undefined || value === null) return false
   
   // Handle different data types
   if (typeof value === 'boolean') {

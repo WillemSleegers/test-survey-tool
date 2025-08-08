@@ -13,17 +13,20 @@ import { Page, Responses, VisiblePageContent, ComputedVariables } from "@/lib/ty
  * 
  * @param questionnaire - All questionnaire pages
  * @param responses - Current user responses
+ * @param blockComputedVariables - Computed variables from block level (optional)
  * @returns Visible pages and content getter function
  */
-export function useVisiblePages(questionnaire: Page[], responses: Responses) {
+export function useVisiblePages(questionnaire: Page[], responses: Responses, blockComputedVariables?: ComputedVariables) {
   // Compute all computed variables for all pages once
   const allComputedVariables = useMemo(() => {
     const computedVars: Map<Page, ComputedVariables> = new Map()
     questionnaire.forEach(page => {
-      computedVars.set(page, evaluateComputedVariables(page, responses))
+      // Pass block computed variables so page-level computations can reference them
+      const mergedComputedVars = evaluateComputedVariables(page, responses, blockComputedVariables)
+      computedVars.set(page, mergedComputedVars)
     })
     return computedVars
-  }, [questionnaire, responses])
+  }, [questionnaire, responses, blockComputedVariables])
 
   // Get only visible pages - based purely on SHOW_IF conditions and computed variables
   const visiblePages = useMemo(() => {

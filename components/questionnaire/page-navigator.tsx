@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { Page, Responses, ComputedVariables } from "@/lib/types"
+import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
+import { Block, Page, Responses, ComputedVariables } from "@/lib/types"
 
 interface PageNavigatorProps {
-  /** All questionnaire pages */
-  questionnaire: Page[]
+  /** All questionnaire blocks */
+  questionnaire: Block[]
+  /** All pages flattened from blocks */
+  allPages: Page[]
   /** Currently visible pages */
   visiblePages: Page[]
   /** Current visible page index */
@@ -17,6 +20,10 @@ interface PageNavigatorProps {
   responses: Responses
   /** Function to get computed variables for a page */
   getComputedVariables: (page: Page) => ComputedVariables
+  /** Current block's computed variables */
+  currentBlockComputedVars: ComputedVariables
+  /** Current page's computed variables (page-level only) */
+  currentPageComputedVars: ComputedVariables
   /** Function to jump to a specific page */
   onJumpToPage: (pageIndex: number) => void
   /** Function to reset back to upload page */
@@ -35,14 +42,73 @@ interface PageNavigatorProps {
  */
 export function PageNavigator({
   questionnaire,
+  allPages,
   visiblePages,
   currentVisiblePageIndex,
   responses,
   getComputedVariables,
+  currentBlockComputedVars,
+  currentPageComputedVars,
   onJumpToPage,
   onResetToUpload,
 }: PageNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set())
+
+  // Auto-expand blocks containing the current page
+  useEffect(() => {
+    const currentPage = visiblePages[currentVisiblePageIndex]
+    if (!currentPage) return
+
+    // Find which block contains the current page
+    questionnaire.forEach((block, blockIndex) => {
+      if (block.pages.includes(currentPage)) {
+        setExpandedBlocks(prev => new Set([...prev, blockIndex]))
+      }
+    })
+  }, [currentVisiblePageIndex, visiblePages, questionnaire])
+
+  // Helper function to check if a block is visible
+  const isBlockVisible = (block: Block): boolean => {
+    if (!block.showIf) return true
+    
+    // Create a mock page with block's computed variables to evaluate block visibility
+    const mockPage: Page = {
+      title: "",
+      content: "",
+      questions: [],
+      sections: [],
+      computedVariables: block.computedVariables
+    }
+    const blockComputedVars = evaluateComputedVariables(mockPage, responses)
+    
+    return evaluateCondition(block.showIf, responses, blockComputedVars)
+  }
+
+  // Toggle block expansion
+  const toggleBlockExpansion = (blockIndex: number) => {
+    const newExpanded = new Set(expandedBlocks)
+    if (newExpanded.has(blockIndex)) {
+      newExpanded.delete(blockIndex)
+    } else {
+      newExpanded.add(blockIndex)
+    }
+    setExpandedBlocks(newExpanded)
+  }
+
+  // Helper function to clean markdown from titles for navigation display
+  const cleanTitle = (title: string): string => {
+    return title
+      .replace(/#+\s+/g, '') // Remove headers: ### Text -> Text
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold: **text** -> text
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic: *text* -> text
+      .replace(/`(.*?)`/g, '$1') // Remove inline code: `code` -> code
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links: [text](url) -> text
+      .replace(/^\s*[-*+]\s+/gm, '') // Remove list markers: - item -> item
+      .replace(/^\s*\d+\.\s+/gm, '') // Remove numbered lists: 1. item -> item
+      .split('\n')[0] // Take only first line
+      .trim()
+  }
 
   // Close navigator on Escape key
   useEffect(() => {
@@ -67,11 +133,6 @@ export function PageNavigator({
       document.removeEventListener("keydown", handleToggle)
     }
   }, [isOpen])
-
-  const currentPage = visiblePages[currentVisiblePageIndex]
-  const currentPageComputedVars = currentPage
-    ? getComputedVariables(currentPage)
-    : {}
 
   return (
     <>
@@ -121,64 +182,113 @@ export function PageNavigator({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* Page List */}
+            {/* Blocks and Pages List */}
             <div>
               <h3 className="font-medium mb-3">
-                Pages ({visiblePages.length}/{questionnaire.length}{" "}
-                visible)
+                Pages ({visiblePages.length}/{allPages.length} visible)
               </h3>
               <div className="space-y-1">
-                {questionnaire.map((page, globalIndex) => {
-                  const isVisible = evaluateCondition(
-                    page.showIf || "",
-                    responses,
-                    getComputedVariables(page)
-                  )
-
-                  // Find the visible page index for this page
-                  const visibleIndex = visiblePages.findIndex(
-                    (p) => p === page
-                  )
-                  const isCurrent = visibleIndex === currentVisiblePageIndex
+                {questionnaire.map((block, blockIndex) => {
+                  const blockVisible = isBlockVisible(block)
+                  const isExpanded = expandedBlocks.has(blockIndex)
 
                   return (
-                    <div
-                      key={globalIndex}
-                      className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
-                        isCurrent
-                          ? "bg-primary/10 border border-primary/20"
-                          : isVisible
-                          ? "hover:bg-muted cursor-pointer"
-                          : "opacity-50"
-                      }`}
-                      onClick={
-                        isVisible && visibleIndex !== -1
-                          ? () => onJumpToPage(visibleIndex)
-                          : undefined
-                      }
-                    >
-                      {/* Status indicator */}
-                      <div
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          isVisible ? "bg-green-500" : "bg-red-500"
-                        }`}
-                      />
-
-                      {/* Page info */}
-                      <div className="flex-1 min-w-0">
+                    <div key={blockIndex} className="space-y-1">
+                      {/* Block header */}
+                      {block.name && (
                         <div
-                          className={`truncate ${
-                            isCurrent ? "font-medium" : ""
+                          className={`flex items-center gap-2 p-2 rounded text-sm transition-all cursor-pointer ${
+                            blockVisible
+                              ? "bg-primary/5 hover:bg-primary/10"
+                              : "opacity-50 bg-muted/50"
                           }`}
+                          onClick={() => toggleBlockExpansion(blockIndex)}
                         >
-                          {page.title || `Page ${globalIndex + 1}`}
-                        </div>
-                        {page.showIf && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            SHOW_IF: {page.showIf}
+                          {/* Expand/collapse icon */}
+                          <div className="w-4 h-4 flex-shrink-0">
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
                           </div>
-                        )}
-                      </div>
+
+
+                          {/* Block info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-medium">
+                              BLOCK: {cleanTitle(block.name)}
+                            </div>
+                            {block.showIf && (
+                              <div className="text-xs text-muted-foreground truncate">
+                                SHOW_IF: {block.showIf}
+                              </div>
+                            )}
+                            {block.computedVariables.length > 0 && (
+                              <div className="text-xs text-primary/70">
+                                {block.computedVariables.length} computed variable(s)
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pages within block */}
+                      {(isExpanded || !block.name) && block.pages.map((page, pageIndex) => {
+                        const pageVisible = evaluateCondition(
+                          page.showIf || "",
+                          responses,
+                          getComputedVariables(page)
+                        )
+
+                        // Find the visible page index for this page
+                        const visibleIndex = visiblePages.findIndex(
+                          (p) => p === page
+                        )
+                        const isCurrent = visibleIndex === currentVisiblePageIndex
+
+                        // Calculate global page index
+                        const globalPageIndex = questionnaire
+                          .slice(0, blockIndex)
+                          .reduce((acc, b) => acc + b.pages.length, 0) + pageIndex
+
+                        return (
+                          <div
+                            key={`${blockIndex}-${pageIndex}`}
+                            className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
+                              block.name ? "ml-6" : ""
+                            } ${
+                              isCurrent
+                                ? "bg-muted font-medium"
+                                : pageVisible && blockVisible
+                                ? "hover:bg-muted cursor-pointer"
+                                : "opacity-50"
+                            }`}
+                            onClick={
+                              pageVisible && blockVisible && visibleIndex !== -1
+                                ? () => onJumpToPage(visibleIndex)
+                                : undefined
+                            }
+                          >
+                            {/* Page info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="truncate font-medium">
+                                {page.title ? cleanTitle(page.title) : `Page ${globalPageIndex + 1}`}
+                              </div>
+                              {page.showIf && (
+                                <div className="text-xs text-muted-foreground truncate">
+                                  SHOW_IF: {page.showIf}
+                                </div>
+                              )}
+                              {page.computedVariables.length > 0 && (
+                                <div className="text-xs text-primary/70">
+                                  {page.computedVariables.length} computed variable(s)
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   )
                 })}
@@ -196,16 +306,29 @@ export function PageNavigator({
             )}
 
             {/* Computed Variables */}
-            {Object.keys(currentPageComputedVars).length > 0 && (
+            {(Object.keys(currentBlockComputedVars).length > 0 || Object.keys(currentPageComputedVars).length > 0) && (
               <div>
-                <h3 className="text-sm font-medium mb-3">
-                  Computed Variables (Current Page)
-                </h3>
-                <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                  <pre>
-                    {JSON.stringify(currentPageComputedVars, null, 2)}
-                  </pre>
-                </div>
+                <h3 className="text-sm font-medium mb-3">Computed Variables</h3>
+                
+                {/* Block-level variables */}
+                {Object.keys(currentBlockComputedVars).length > 0 && (
+                  <div className="mb-3">
+                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">Current Block</h4>
+                    <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
+                      <pre>{JSON.stringify(currentBlockComputedVars, null, 2)}</pre>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Page-level variables */}
+                {Object.keys(currentPageComputedVars).length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">Current Page</h4>
+                    <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
+                      <pre>{JSON.stringify(currentPageComputedVars, null, 2)}</pre>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
