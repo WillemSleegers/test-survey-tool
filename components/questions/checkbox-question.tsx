@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { Question, Responses, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
+import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
 
 interface CheckboxQuestionProps {
@@ -50,6 +51,7 @@ export function CheckboxQuestion({
   computedVariables
 }: CheckboxQuestionProps) {
   const { t } = useLanguage()
+  
   // Get current response values (should be string array)
   const responseValue = responses[question.id]?.value
   const rawCheckboxValues = useMemo(() => 
@@ -57,32 +59,53 @@ export function CheckboxQuestion({
     [responseValue]
   )
   
-  // Parse values to separate base options from "other" text
-  const parsedValues = rawCheckboxValues.map(value => {
+  // Helper function to parse checkbox responses properly
+  const parseCheckboxValue = (value: string) => {
     const colonIndex = value.indexOf(": ")
-    return {
-      original: value,
-      baseValue: colonIndex > -1 ? value.substring(0, colonIndex) : value,
-      otherText: colonIndex > -1 ? value.substring(colonIndex + 2) : ""
+    if (colonIndex === -1) {
+      return { original: value, baseValue: value, otherText: "" }
     }
-  })
+    
+    const potentialBaseValue = value.substring(0, colonIndex)
+    const potentialOtherText = value.substring(colonIndex + 2)
+    
+    // Check if this base value corresponds to an option that allows other text
+    const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
+    if (matchingOption?.allowsOtherText) {
+      return { 
+        original: value, 
+        baseValue: potentialBaseValue, 
+        otherText: potentialOtherText 
+      }
+    }
+    
+    // Otherwise, treat the entire value as the base value
+    return { original: value, baseValue: value, otherText: "" }
+  }
   
+  // Parse values to separate base options from "other" text
+  const parsedValues = rawCheckboxValues.map(parseCheckboxValue)
   const selectedBaseValues = parsedValues.map(pv => pv.baseValue)
   const [otherTexts, setOtherTexts] = useState<Record<string, string>>({})
 
-  // Initialize other texts from parsed values
+  // Initialize other texts from raw values
   useEffect(() => {
     const initialOtherTexts: Record<string, string> = {}
     rawCheckboxValues.forEach(value => {
       const colonIndex = value.indexOf(": ")
       if (colonIndex > -1) {
-        const baseValue = value.substring(0, colonIndex)
-        const otherText = value.substring(colonIndex + 2)
-        initialOtherTexts[baseValue] = otherText
+        const potentialBaseValue = value.substring(0, colonIndex)
+        const potentialOtherText = value.substring(colonIndex + 2)
+        
+        // Check if this base value corresponds to an option that allows other text
+        const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
+        if (matchingOption?.allowsOtherText) {
+          initialOtherTexts[potentialBaseValue] = potentialOtherText
+        }
       }
     })
     setOtherTexts(initialOtherTexts)
-  }, [rawCheckboxValues])
+  }, [rawCheckboxValues, question.options])
 
   // Filter options based on conditions
   const visibleOptions = question.options.filter(option => {
@@ -103,9 +126,8 @@ export function CheckboxQuestion({
     } else {
       // Remove the option from the selected values (including any "other" variant)
       const filteredValues = rawCheckboxValues.filter(v => {
-        const colonIndex = v.indexOf(": ")
-        const baseValue = colonIndex > -1 ? v.substring(0, colonIndex) : v
-        return baseValue !== optionValue
+        const parsed = parseCheckboxValue(v)
+        return parsed.baseValue !== optionValue
       })
       onResponse(question.id, filteredValues)
       
@@ -123,10 +145,9 @@ export function CheckboxQuestion({
     
     // Update the response values
     const updatedValues = rawCheckboxValues.map(value => {
-      const colonIndex = value.indexOf(": ")
-      const baseValue = colonIndex > -1 ? value.substring(0, colonIndex) : value
+      const parsed = parseCheckboxValue(value)
       
-      if (baseValue === optionValue) {
+      if (parsed.baseValue === optionValue) {
         return text.trim() ? `${optionValue}: ${text}` : optionValue
       }
       return value
@@ -139,9 +160,19 @@ export function CheckboxQuestion({
     <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <div className="space-y-3">
         {visibleOptions.map((option, optionIndex) => {
-          // Calculate tab indices for sequential ordering
-          // Each option can take up to 2 tab slots: checkbox + optional text input
-          const checkboxTabIndex = startTabIndex + (optionIndex * 2)
+          // Calculate tab indices dynamically based on actual inputs
+          // Count how many slots are needed before this option
+          let slotsUsedBefore = 0
+          for (let i = 0; i < optionIndex; i++) {
+            const prevOption = visibleOptions[i]
+            slotsUsedBefore += 1 // checkbox
+            // Add slot for text input if this option has allowsOtherText AND is selected
+            if (prevOption.allowsOtherText && selectedBaseValues.includes(prevOption.value)) {
+              slotsUsedBefore += 1
+            }
+          }
+          
+          const checkboxTabIndex = startTabIndex + slotsUsedBefore
           const textTabIndex = checkboxTabIndex + 1
           
           return (
@@ -159,7 +190,7 @@ export function CheckboxQuestion({
                   htmlFor={`${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
-                  {option.label}
+                  {replacePlaceholders(option.label, responses, computedVariables)}
                 </Label>
               </div>
               {option.allowsOtherText && selectedBaseValues.includes(option.value) && (

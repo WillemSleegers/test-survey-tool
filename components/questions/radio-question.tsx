@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { Question, Responses, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
+import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
 
 interface RadioQuestionProps {
@@ -53,10 +54,27 @@ export function RadioQuestion({
   const responseValue = responses[question.id]?.value
   const responseString = typeof responseValue === "string" ? responseValue : ""
   
-  // Check if this is an "other" response (format: "OptionValue: otherText")
-  const colonIndex = responseString.indexOf(": ")
-  const baseValue = colonIndex > -1 ? responseString.substring(0, colonIndex) : responseString
-  const otherText = colonIndex > -1 ? responseString.substring(colonIndex + 2) : ""
+  // Parse response - only treat as "other text" if the base option actually allows it
+  const parseResponse = (response: string) => {
+    const colonIndex = response.indexOf(": ")
+    if (colonIndex === -1) {
+      return { baseValue: response, otherText: "" }
+    }
+    
+    const potentialBaseValue = response.substring(0, colonIndex)
+    const potentialOtherText = response.substring(colonIndex + 2)
+    
+    // Check if this base value corresponds to an option that allows other text
+    const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
+    if (matchingOption?.allowsOtherText) {
+      return { baseValue: potentialBaseValue, otherText: potentialOtherText }
+    }
+    
+    // Otherwise, treat the entire response as the base value
+    return { baseValue: response, otherText: "" }
+  }
+  
+  const { baseValue, otherText } = parseResponse(responseString)
   
   const [currentOtherText, setCurrentOtherText] = useState(otherText)
   const isAnswered = baseValue !== ""
@@ -127,7 +145,7 @@ export function RadioQuestion({
                   htmlFor={`${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
-                  {option.label}
+                  {replacePlaceholders(option.label, responses, computedVariables)}
                 </Label>
               </div>
               {option.allowsOtherText && option.value === baseValue && (

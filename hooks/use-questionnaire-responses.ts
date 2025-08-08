@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Responses, Section } from "@/lib/types"
+import { Responses, Page } from "@/lib/types"
 
 /**
  * Hook for managing questionnaire response state
@@ -8,10 +8,10 @@ import { Responses, Section } from "@/lib/types"
  * - Response storage and updates
  * - Question lookup and variable mapping
  * 
- * @param questionnaire - All questionnaire sections for question lookup
+ * @param questionnaire - All questionnaire pages for question lookup
  * @returns Response state and handlers
  */
-export function useQuestionnaireResponses(questionnaire: Section[]) {
+export function useQuestionnaireResponses(questionnaire: Page[]) {
   const [responses, setResponses] = useState<Responses>({})
 
   /**
@@ -23,10 +23,10 @@ export function useQuestionnaireResponses(questionnaire: Section[]) {
   ): void => {
     const question =
       questionnaire
-        ?.flatMap((s) => s.questions)
+        ?.flatMap((p) => p.questions)
         .find((q) => q.id === questionId) ||
       questionnaire
-        ?.flatMap((s) => s.subsections || [])
+        ?.flatMap((p) => p.sections || [])
         .flatMap((sub) => sub.questions)
         .find((q) => q.id === questionId)
 

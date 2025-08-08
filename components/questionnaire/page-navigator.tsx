@@ -4,44 +4,44 @@ import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { Section, Responses, ComputedVariables } from "@/lib/types"
+import { Page, Responses, ComputedVariables } from "@/lib/types"
 
-interface SectionNavigatorProps {
-  /** All questionnaire sections */
-  questionnaire: Section[]
-  /** Currently visible sections */
-  visibleSections: Section[]
-  /** Current visible section index */
-  currentVisibleSectionIndex: number
+interface PageNavigatorProps {
+  /** All questionnaire pages */
+  questionnaire: Page[]
+  /** Currently visible pages */
+  visiblePages: Page[]
+  /** Current visible page index */
+  currentVisiblePageIndex: number
   /** Current user responses */
   responses: Responses
-  /** Function to get computed variables for a section */
-  getComputedVariables: (section: Section) => ComputedVariables
-  /** Function to jump to a specific section */
-  onJumpToSection: (sectionIndex: number) => void
+  /** Function to get computed variables for a page */
+  getComputedVariables: (page: Page) => ComputedVariables
+  /** Function to jump to a specific page */
+  onJumpToPage: (pageIndex: number) => void
   /** Function to reset back to upload page */
   onResetToUpload: () => void
 }
 
 /**
- * Minimal section navigator for researchers
+ * Minimal page navigator for researchers
  *
  * Features:
  * - Nearly invisible toggle button that only shows on hover
- * - Collapsible panel with section overview
- * - Quick jump to any visible section
- * - Shows section visibility status and conditions
+ * - Collapsible panel with page overview
+ * - Quick jump to any visible page
+ * - Shows page visibility status and conditions
  * - Includes debug information (responses, computed variables)
  */
-export function SectionNavigator({
+export function PageNavigator({
   questionnaire,
-  visibleSections,
-  currentVisibleSectionIndex,
+  visiblePages,
+  currentVisiblePageIndex,
   responses,
   getComputedVariables,
-  onJumpToSection,
+  onJumpToPage,
   onResetToUpload,
-}: SectionNavigatorProps) {
+}: PageNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   // Close navigator on Escape key
@@ -68,9 +68,9 @@ export function SectionNavigator({
     }
   }, [isOpen])
 
-  const currentSection = visibleSections[currentVisibleSectionIndex]
-  const currentSectionComputedVars = currentSection
-    ? getComputedVariables(currentSection)
+  const currentPage = visiblePages[currentVisiblePageIndex]
+  const currentPageComputedVars = currentPage
+    ? getComputedVariables(currentPage)
     : {}
 
   return (
@@ -81,7 +81,7 @@ export function SectionNavigator({
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 right-4 z-40 w-8 h-8 p-0 opacity-20 hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
-        title={`Section Navigator (${
+        title={`Page Navigator (${
           typeof navigator !== "undefined" &&
           navigator.userAgent?.includes("Mac")
             ? "Cmd"
@@ -108,7 +108,7 @@ export function SectionNavigator({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold">Section Navigator</h2>
+            <h2 className="text-lg font-semibold">Page Navigator</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -121,25 +121,25 @@ export function SectionNavigator({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* Section List */}
+            {/* Page List */}
             <div>
               <h3 className="font-medium mb-3">
-                Sections ({visibleSections.length}/{questionnaire.length}{" "}
+                Pages ({visiblePages.length}/{questionnaire.length}{" "}
                 visible)
               </h3>
               <div className="space-y-1">
-                {questionnaire.map((section, globalIndex) => {
+                {questionnaire.map((page, globalIndex) => {
                   const isVisible = evaluateCondition(
-                    section.showIf || "",
+                    page.showIf || "",
                     responses,
-                    getComputedVariables(section)
+                    getComputedVariables(page)
                   )
 
-                  // Find the visible section index for this section
-                  const visibleIndex = visibleSections.findIndex(
-                    (s) => s === section
+                  // Find the visible page index for this page
+                  const visibleIndex = visiblePages.findIndex(
+                    (p) => p === page
                   )
-                  const isCurrent = visibleIndex === currentVisibleSectionIndex
+                  const isCurrent = visibleIndex === currentVisiblePageIndex
 
                   return (
                     <div
@@ -153,7 +153,7 @@ export function SectionNavigator({
                       }`}
                       onClick={
                         isVisible && visibleIndex !== -1
-                          ? () => onJumpToSection(visibleIndex)
+                          ? () => onJumpToPage(visibleIndex)
                           : undefined
                       }
                     >
@@ -164,18 +164,18 @@ export function SectionNavigator({
                         }`}
                       />
 
-                      {/* Section info */}
+                      {/* Page info */}
                       <div className="flex-1 min-w-0">
                         <div
                           className={`truncate ${
                             isCurrent ? "font-medium" : ""
                           }`}
                         >
-                          {section.title || `Section ${globalIndex + 1}`}
+                          {page.title || `Page ${globalIndex + 1}`}
                         </div>
-                        {section.showIf && (
+                        {page.showIf && (
                           <div className="text-xs text-muted-foreground truncate">
-                            SHOW_IF: {section.showIf}
+                            SHOW_IF: {page.showIf}
                           </div>
                         )}
                       </div>
@@ -196,14 +196,14 @@ export function SectionNavigator({
             )}
 
             {/* Computed Variables */}
-            {Object.keys(currentSectionComputedVars).length > 0 && (
+            {Object.keys(currentPageComputedVars).length > 0 && (
               <div>
                 <h3 className="text-sm font-medium mb-3">
-                  Computed Variables (Current Section)
+                  Computed Variables (Current Page)
                 </h3>
                 <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
                   <pre>
-                    {JSON.stringify(currentSectionComputedVars, null, 2)}
+                    {JSON.stringify(currentPageComputedVars, null, 2)}
                   </pre>
                 </div>
               </div>

@@ -1,19 +1,19 @@
 import React from "react"
 import Markdown from "react-markdown"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Section, Responses, ComputedVariables } from "@/lib/types"
+import { Page, Responses, ComputedVariables } from "@/lib/types"
 
-interface SectionHeaderProps {
-  /** The section to render header for */
-  section: Section
+interface PageHeaderProps {
+  /** The page to render header for */
+  page: Page
   /** User responses for placeholder replacement */
   responses: Responses
-  /** Computed variables from the current section */
+  /** Computed variables from the current page */
   computedVariables?: ComputedVariables
 }
 
 /**
- * Renders the header section of a questionnaire section
+ * Renders the header section of a questionnaire page
  * 
  * Features:
  * - Processes placeholders in title and content
@@ -22,14 +22,14 @@ interface SectionHeaderProps {
  * - Handles empty/whitespace-only content gracefully
  * 
  * @example
- * <SectionHeader section={currentSection} responses={responses} />
+ * <PageHeader page={currentPage} responses={responses} />
  */
-export function SectionHeader({ section, responses, computedVariables }: SectionHeaderProps) {
-  const processedTitle = section.title.trim() 
-    ? replacePlaceholders(section.title, responses, computedVariables).trim() 
+export function PageHeader({ page, responses, computedVariables }: PageHeaderProps) {
+  const processedTitle = page.title.trim() 
+    ? replacePlaceholders(page.title, responses, computedVariables).trim() 
     : ''
-  const processedContent = section.content.trim() 
-    ? replacePlaceholders(section.content, responses, computedVariables).trim() 
+  const processedContent = page.content.trim() 
+    ? replacePlaceholders(page.content, responses, computedVariables).trim() 
     : ''
   
   // Don't render anything if both title and content are empty

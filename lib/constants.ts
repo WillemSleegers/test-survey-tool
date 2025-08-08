@@ -113,7 +113,29 @@ SHOW_IF: rating >= 5
 
 **Try the section navigator** (menu icon, top-right) to jump between sections and see your responses!
 
+BLOCK: advanced_users
+SHOW_IF: rating >= 8
+
+# Advanced Features Demo
+
+## Block-Level Logic
+This section only shows for users who rated 8+.
+
+Q: Would you like to see more advanced features?
+- Yes, show me everything
+- Just the basics please
+
+Q: Which advanced topics interest you most?
+- Custom block logic
+- Complex conditionals  
+- Multi-language support
+CHECKBOX
+
+BLOCK: 
+
+# Final Question
+
 Q: Ready to create your own survey?
 - Definitely!
-- Need more practice
+- Need more practice  
 - Just exploring`

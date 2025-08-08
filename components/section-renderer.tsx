@@ -3,31 +3,31 @@
 import React from "react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
-import { VisibleSubsection, Responses, ComputedVariables } from "@/lib/types"
+import { VisibleSection, Responses, ComputedVariables } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 
-interface SubsectionRendererProps {
-  subsection: VisibleSubsection
+interface SectionRendererProps {
+  section: VisibleSection
   responses: Responses
   onResponse: (questionId: string, value: string | string[]) => void
   startTabIndex: number
   computedVariables?: ComputedVariables
 }
 
-export function SubsectionRenderer({
-  subsection,
+export function SectionRenderer({
+  section,
   responses,
   onResponse,
   startTabIndex,
   computedVariables,
-}: SubsectionRendererProps) {
+}: SectionRendererProps) {
   return (
     <div className="space-y-6">
-      {/* Subsection Header */}
+      {/* Section Header */}
       {(() => {
-        const processedTitle = replacePlaceholders(subsection.title, responses, computedVariables).trim()
-        const processedContent = subsection.content ? replacePlaceholders(subsection.content, responses, computedVariables).trim() : ''
+        const processedTitle = replacePlaceholders(section.title, responses, computedVariables).trim()
+        const processedContent = section.content ? replacePlaceholders(section.content, responses, computedVariables).trim() : ''
         
         if (!processedTitle && !processedContent) return null
         
@@ -39,13 +39,13 @@ export function SubsectionRenderer({
         )
       })()}
 
-      {/* Subsection Questions */}
+      {/* Section Questions */}
       <div className="space-y-6">
-        {subsection.questions.map((question, index) => {
+        {section.questions.map((question, index) => {
           // Calculate tab index for this question by counting inputs in previous questions
           let questionStartTabIndex = startTabIndex
           for (let i = 0; i < index; i++) {
-            const prevQuestion = subsection.questions[i]
+            const prevQuestion = section.questions[i]
             let inputCount
             if (prevQuestion.type === 'text' || prevQuestion.type === 'number') {
               inputCount = 1

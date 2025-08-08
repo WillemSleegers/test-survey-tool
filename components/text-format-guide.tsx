@@ -88,8 +88,8 @@ SHOW_IF: name`}
               conditionally (place after question)
             </li>
             <li>
-              <code>- TEXT</code> - Add text input to previous option
-              (flexible for any option)
+              <code>- TEXT</code> - Add text input to previous option (flexible
+              for any option)
             </li>
             <li>
               Conditions:
@@ -141,32 +141,41 @@ VARIABLE: tech_years
 ## Summary Section
 Based on your age of {age} and {tech_years} years in tech, your total experience score is {age + tech_years}.
 
-# Advanced Logic
+BLOCK: adult_tech
 COMPUTE: is_adult = age >= 18
 COMPUTE: likes_tech = interests == Technology
+SHOW_IF: is_adult AND likes_tech
+
+# Programming Experience
 
 Q: What programming languages do you know?
 - Basic scripting
 - JavaScript
-  - SHOW_IF: is_adult
 - Advanced frameworks
-  - SHOW_IF: likes_tech AND is_adult
 - Other
   - TEXT
 VARIABLE: programming
 
-# Advanced Topics
-SHOW_IF: is_adult AND likes_tech
+# Experience Level
 
 Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}}, what's your experience level?
 - Beginner
 - Intermediate  
-- Expert`}
+- Expert
+
+BLOCK: general_questions
+
+# General Topics
+These questions are for everyone.`}
           </div>
           <ul className="list-disc list-inside space-y-1 text-sm">
             <li>
+              <code>BLOCK: name</code> - Group related pages together for
+              conditional visibility
+            </li>
+            <li>
               <code>COMPUTE: var = expression</code> - Calculate variables from
-              responses
+              responses (block-level or section-level)
             </li>
             <li>
               <code>{`{{IF condition THEN text ELSE text}}`}</code> - Insert
@@ -181,12 +190,12 @@ Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}
               options (place after option)
             </li>
             <li>
-              <code>- TEXT</code> - Show text input when previous option
-              is selected (flexible for any option needing elaboration)
+              <code>- TEXT</code> - Show text input when previous option is
+              selected (flexible for any option needing elaboration)
             </li>
             <li>
-              <code>SHOW_IF: condition</code> - Hide/show pages/sections (place
-              after # or ## line)
+              <code>SHOW_IF: condition</code> - Hide/show pages/sections/blocks
+              (place after #, ##, or BLOCK line)
             </li>
             <li>
               Operators: Both symbols and text work (<code>== / IS</code>,{" "}
@@ -229,8 +238,8 @@ Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}
                   student
                 </li>
                 <li>
-                  <code>total != var1 + var2</code>: Total doesn&apos;t equal sum
-                  of var1 and var2
+                  <code>total != var1 + var2</code>: Total doesn&apos;t equal
+                  sum of var1 and var2
                 </li>
                 <li>
                   <code>NOT (completed && submitted)</code>: Either not

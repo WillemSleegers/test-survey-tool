@@ -13,11 +13,11 @@ export type Question = {
   options: Option[]
   variable?: string
   showIf?: string
-  subsectionTitle?: string
-  subsectionContent?: string
+  sectionTitle?: string
+  sectionContent?: string
 }
 
-export type Subsection = {
+export type Section = {
   title: string
   content: string
   questions: Question[]
@@ -29,11 +29,18 @@ export type ComputedVariable = {
   value?: boolean | string | number
 }
 
-export type Section = {
+export type Block = {
+  name: string
+  showIf?: string
+  pages: Page[]
+  computedVariables: ComputedVariable[]
+}
+
+export type Page = {
   title: string
   content: string
   questions: Question[]
-  subsections: Subsection[]
+  sections: Section[]
   showIf?: string
   computedVariables: ComputedVariable[]
 }
@@ -57,20 +64,20 @@ export type ConditionalPlaceholder = {
   falseText: string
 }
 
-export type VisibleSubsection = {
+export type VisibleSection = {
   title: string
   content: string
   questions: Question[]
 }
 
-export type VisibleSectionContent = {
+export type VisiblePageContent = {
   mainQuestions: Question[]
-  subsections: VisibleSubsection[]
+  sections: VisibleSection[]
 }
 
 // Parser-specific types with proper discriminated unions
+export type PageData = { title: string }
 export type SectionData = { title: string }
-export type SubsectionData = { title: string }
 export type QuestionData = { id: string; text: string }
 export type SubtextData = { subtext: string }
 export type OptionData = { text: string; showIf?: string }
@@ -81,10 +88,11 @@ export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }
 export type ContentData = { content: string }
 export type ComputeData = { name: string; expression: string }
+export type BlockData = { name: string }
 
 export type ParsedLine =
+  | { type: "page"; raw: string; data: PageData }
   | { type: "section"; raw: string; data: SectionData }
-  | { type: "subsection"; raw: string; data: SubsectionData }
   | { type: "question"; raw: string; data: QuestionData }
   | { type: "subtext"; raw: string; data: SubtextData }
   | { type: "option"; raw: string; data: OptionData }
@@ -95,11 +103,13 @@ export type ParsedLine =
   | { type: "show_if"; raw: string; data: ShowIfData }
   | { type: "content"; raw: string; data: ContentData }
   | { type: "compute"; raw: string; data: ComputeData }
+  | { type: "block"; raw: string; data: BlockData }
 
 export type ParserState = {
-  sections: Section[]
+  blocks: Block[]
+  currentBlock: Block | null
+  currentPage: Page | null
   currentSection: Section | null
-  currentSubsection: Subsection | null
   currentQuestion: Question | null
   subtextBuffer: string[] | null
   questionCounter: number

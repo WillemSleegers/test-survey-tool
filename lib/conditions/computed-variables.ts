@@ -1,22 +1,22 @@
-import { Section, Responses, ComputedVariables, ComputedVariable } from "@/lib/types"
+import { Page, Responses, ComputedVariables, ComputedVariable } from "@/lib/types"
 import { evaluateCondition } from "./condition-evaluator"
 
 /**
- * Evaluates all computed variables for a given section
+ * Evaluates all computed variables for a given page
  * 
- * @param section - The section containing computed variables
+ * @param page - The page containing computed variables
  * @param responses - Current user responses
  * @returns Object mapping computed variable names to their evaluated values
  */
 export function evaluateComputedVariables(
-  section: Section,
+  page: Page,
   responses: Responses
 ): ComputedVariables {
   const computedVars: ComputedVariables = {}
   
   // Sort computed variables to handle dependencies
   // Variables that depend on other computed variables should be evaluated after their dependencies
-  const sortedVariables = topologicalSort(section.computedVariables)
+  const sortedVariables = topologicalSort(page.computedVariables)
   
   for (const computedVar of sortedVariables) {
     try {

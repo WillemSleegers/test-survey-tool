@@ -3,23 +3,23 @@
 import React from "react"
 
 import { QuestionRenderer } from "@/components/questions/question-renderer"
-import { SubsectionRenderer } from "@/components/subsection-renderer"
+import { SectionRenderer } from "@/components/section-renderer"
 
-import { VisibleSectionContent, Responses, ComputedVariables } from "@/lib/types"
+import { VisiblePageContent, Responses, ComputedVariables } from "@/lib/types"
 
-interface SectionContentProps {
-  content: VisibleSectionContent
+interface PageContentProps {
+  content: VisiblePageContent
   responses: Responses
   onResponse: (questionId: string, value: string | string[]) => void
   computedVariables?: ComputedVariables
 }
 
-export function SectionContent({
+export function PageContent({
   content,
   responses,
   onResponse,
   computedVariables,
-}: SectionContentProps) {
+}: PageContentProps) {
   // Calculate the tab index for each question based on total inputs needed by previous questions
   let currentTabIndex = 1
   
@@ -57,12 +57,12 @@ export function SectionContent({
         )
       })}
 
-      {/* Render subsections */}
-      {content.subsections.map((subsection) => {
-        const subsectionStartTabIndex = currentTabIndex
+      {/* Render sections */}
+      {content.sections.map((section) => {
+        const sectionStartTabIndex = currentTabIndex
         
-        // Update currentTabIndex for this subsection's questions
-        subsection.questions.forEach(question => {
+        // Update currentTabIndex for this section's questions
+        section.questions.forEach(question => {
           let inputCount
           if (question.type === 'text' || question.type === 'number') {
             inputCount = 1
@@ -79,12 +79,12 @@ export function SectionContent({
         })
         
         return (
-          <SubsectionRenderer
-            key={subsection.title}
-            subsection={subsection}
+          <SectionRenderer
+            key={section.title}
+            section={section}
             responses={responses}
             onResponse={onResponse}
-            startTabIndex={subsectionStartTabIndex}
+            startTabIndex={sectionStartTabIndex}
             computedVariables={computedVariables}
           />
         )

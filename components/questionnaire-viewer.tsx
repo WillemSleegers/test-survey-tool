@@ -1,24 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { SectionContent } from "@/components/section-content"
+import { PageContent } from "@/components/page-content"
 import { useLanguage } from "@/contexts/language-context"
 
 import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation"
-import { useVisibleSections } from "@/hooks/use-visible-sections"
+import { useVisiblePages } from "@/hooks/use-visible-pages"
+import { evaluateCondition } from "@/lib/conditions/condition-evaluator" 
+import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
-import { useSectionCompletion } from "@/hooks/use-section-completion"
-import { SectionHeader } from "@/components/questionnaire/section-header"
+import { usePageCompletion } from "@/hooks/use-page-completion"
+import { PageHeader } from "@/components/questionnaire/page-header"
 import { NavigationButtons } from "@/components/questionnaire/navigation-buttons"
 import { CompletionDialog } from "@/components/questionnaire/completion-dialog"
-import { SectionNavigator } from "@/components/questionnaire/section-navigator"
+import { PageNavigator } from "@/components/questionnaire/page-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
-import { Section } from "@/lib/types"
+import { Block, Page } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
-  questionnaire: Section[]
+  questionnaire: Block[]
   onResetToUpload: () => void
 }
 
@@ -29,27 +31,58 @@ export function QuestionnaireViewer({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
 
-  // Response management - initialize first
-  const { responses, handleResponse } = useQuestionnaireResponses(questionnaire)
+  // Response management - get all pages first for response tracking
+  const allPages = questionnaire.flatMap(block => block.pages)
+  const { responses, handleResponse } = useQuestionnaireResponses(allPages)
   
-  // Get visible sections and content filtering based on current responses
-  const { visibleSections, getVisibleSectionContent, getComputedVariables } = useVisibleSections(questionnaire, responses)
+  // Filter blocks by visibility, then flatten to pages
+  const visibleBlockPages = useMemo(() => {
+    const visiblePages: Page[] = []
+    
+    questionnaire.forEach(block => {
+      // Evaluate block-level visibility  
+      const mockPage: Page = {
+        title: "",
+        content: "",
+        questions: [],
+        sections: [],
+        computedVariables: block.computedVariables
+      }
+      const blockComputedVars = evaluateComputedVariables(mockPage, responses)
+      
+      const blockVisible = evaluateCondition(
+        block.showIf || "",
+        responses,
+        blockComputedVars
+      )
+      
+      if (blockVisible) {
+        // If block is visible, add all its pages
+        visiblePages.push(...block.pages)
+      }
+    })
+    
+    return visiblePages
+  }, [questionnaire, responses])
+  
+  // Get visible pages and content filtering based on current responses  
+  const { visiblePages, getVisiblePageContent, getComputedVariables } = useVisiblePages(visibleBlockPages, responses)
   
   // Navigation state and actions
   const {
-    currentVisibleSectionIndex,
-    nextSection,
-    prevSection,
-    jumpToSection,
-  } = useQuestionnaireNavigation(visibleSections.length)
+    currentVisiblePageIndex,
+    nextPage,
+    prevPage,
+    jumpToPage,
+  } = useQuestionnaireNavigation(visiblePages.length)
 
-  // Get current section and its content
-  const currentSection = visibleSections[currentVisibleSectionIndex]
-  const sectionContent = currentSection ? getVisibleSectionContent(currentSection) : null
-  const currentSectionComputedVars = currentSection ? getComputedVariables(currentSection) : undefined
+  // Get current page and its content
+  const currentPage = visiblePages[currentVisiblePageIndex]
+  const pageContent = currentPage ? getVisiblePageContent(currentPage) : null
+  const currentPageComputedVars = currentPage ? getComputedVariables(currentPage) : undefined
   
   // Check completion status
-  const allQuestionsAnswered = useSectionCompletion(sectionContent, responses)
+  const allQuestionsAnswered = usePageCompletion(pageContent, responses)
 
   const handleComplete = (): void => {
     setShowCompletionDialog(true)
@@ -59,13 +92,13 @@ export function QuestionnaireViewer({
     return null
   }
 
-  if (visibleSections.length === 0) {
+  if (visiblePages.length === 0) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card>
           <CardContent className="text-center py-12">
             <p className="text-muted-foreground">
-              {t('errors.noSections')}
+              {t('errors.noPages')}
             </p>
           </CardContent>
         </Card>
@@ -73,50 +106,50 @@ export function QuestionnaireViewer({
     )
   }
 
-  // Safety check - if no current section, don't render anything
-  if (!currentSection || !sectionContent) {
+  // Safety check - if no current page, don't render anything
+  if (!currentPage || !pageContent) {
     return null
   }
   
   // Calculate total number of input elements for tab indexing
-  const totalInputs = calculateTotalTabInputs(sectionContent, responses)
+  const totalInputs = calculateTotalTabInputs(pageContent, responses)
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardContent className="space-y-6">
-          <SectionHeader 
-            section={currentSection} 
+          <PageHeader 
+            page={currentPage} 
             responses={responses} 
-            computedVariables={currentSectionComputedVars}
+            computedVariables={currentPageComputedVars}
           />
           
-          <SectionContent
-            content={sectionContent}
+          <PageContent
+            content={pageContent}
             responses={responses}
             onResponse={handleResponse}
-            computedVariables={currentSectionComputedVars}
+            computedVariables={currentPageComputedVars}
           />
 
           <NavigationButtons
-            currentSectionIndex={currentVisibleSectionIndex}
-            totalSections={visibleSections.length}
+            currentPageIndex={currentVisiblePageIndex}
+            totalPages={visiblePages.length}
             allQuestionsAnswered={allQuestionsAnswered}
             totalInputs={totalInputs}
-            onPrevious={prevSection}
-            onNext={nextSection}
+            onPrevious={prevPage}
+            onNext={nextPage}
             onComplete={handleComplete}
           />
         </CardContent>
       </Card>
 
-      <SectionNavigator
-        questionnaire={questionnaire}
-        visibleSections={visibleSections}
-        currentVisibleSectionIndex={currentVisibleSectionIndex}
+      <PageNavigator
+        questionnaire={allPages}
+        visiblePages={visiblePages}
+        currentVisiblePageIndex={currentVisiblePageIndex}
         responses={responses}
         getComputedVariables={getComputedVariables}
-        onJumpToSection={jumpToSection}
+        onJumpToPage={jumpToPage}
         onResetToUpload={onResetToUpload}
       />
 

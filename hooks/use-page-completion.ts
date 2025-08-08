@@ -1,27 +1,27 @@
-import { VisibleSectionContent, Responses } from "@/lib/types"
+import { VisiblePageContent, Responses } from "@/lib/types"
 
 /**
- * Hook for checking section completion status
+ * Hook for checking page completion status
  * 
- * Determines if all visible questions in a section have been answered
+ * Determines if all visible questions in a page have been answered
  * Handles different question types appropriately:
  * - Text/Number: Must have non-empty string value
  * - Checkbox: Must have at least one selected option
  * - Radio: Must have selected value
  * 
- * @param sectionContent - Visible content of current section
+ * @param pageContent - Visible content of current page
  * @param responses - Current user responses
  * @returns Whether all questions are answered
  */
-export function useSectionCompletion(
-  sectionContent: VisibleSectionContent | null,
+export function usePageCompletion(
+  pageContent: VisiblePageContent | null,
   responses: Responses
 ): boolean {
-  if (!sectionContent) return false
+  if (!pageContent) return false
 
   const allQuestions = [
-    ...sectionContent.mainQuestions,
-    ...sectionContent.subsections.flatMap(sub => sub.questions)
+    ...pageContent.mainQuestions,
+    ...pageContent.sections.flatMap(sub => sub.questions)
   ]
 
   return allQuestions.every(question => {

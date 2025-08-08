@@ -4,35 +4,35 @@ import { useState, useEffect } from "react"
  * Hook for managing questionnaire navigation state and actions
  * 
  * Handles:
- * - Current section tracking with bounds checking
+ * - Current page tracking with bounds checking
  * - Navigation actions (next/previous)
- * - Auto-scroll on section changes
+ * - Auto-scroll on page changes
  * - Focus management for navigation buttons
  * 
- * @param totalVisibleSections - Number of visible sections
+ * @param totalVisiblePages - Number of visible pages
  * @returns Navigation state and actions
  */
-export function useQuestionnaireNavigation(totalVisibleSections: number) {
-  const [currentVisibleSectionIndex, setCurrentVisibleSectionIndex] = useState<number>(0)
+export function useQuestionnaireNavigation(totalVisiblePages: number) {
+  const [currentVisiblePageIndex, setCurrentVisiblePageIndex] = useState<number>(0)
 
-  // Make sure current section index is valid when visible sections change
+  // Make sure current page index is valid when visible pages change
   useEffect(() => {
-    if (currentVisibleSectionIndex >= totalVisibleSections) {
-      setCurrentVisibleSectionIndex(Math.max(0, totalVisibleSections - 1))
+    if (currentVisiblePageIndex >= totalVisiblePages) {
+      setCurrentVisiblePageIndex(Math.max(0, totalVisiblePages - 1))
     }
-  }, [totalVisibleSections, currentVisibleSectionIndex])
+  }, [totalVisiblePages, currentVisiblePageIndex])
 
-  // Scroll to top when section changes
+  // Scroll to top when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [currentVisibleSectionIndex])
+  }, [currentVisiblePageIndex])
 
   /**
-   * Navigate to next section with focus management
+   * Navigate to next page with focus management
    */
-  const nextSection = (): void => {
-    if (currentVisibleSectionIndex < totalVisibleSections - 1) {
-      setCurrentVisibleSectionIndex(currentVisibleSectionIndex + 1)
+  const nextPage = (): void => {
+    if (currentVisiblePageIndex < totalVisiblePages - 1) {
+      setCurrentVisiblePageIndex(currentVisiblePageIndex + 1)
       // Remove focus from button after navigation
       setTimeout(() => {
         if (document.activeElement instanceof HTMLElement) {
@@ -43,11 +43,11 @@ export function useQuestionnaireNavigation(totalVisibleSections: number) {
   }
 
   /**
-   * Navigate to previous section with focus management
+   * Navigate to previous page with focus management
    */
-  const prevSection = (): void => {
-    if (currentVisibleSectionIndex > 0) {
-      setCurrentVisibleSectionIndex(currentVisibleSectionIndex - 1)
+  const prevPage = (): void => {
+    if (currentVisiblePageIndex > 0) {
+      setCurrentVisiblePageIndex(currentVisiblePageIndex - 1)
       // Remove focus from button after navigation
       setTimeout(() => {
         if (document.activeElement instanceof HTMLElement) {
@@ -58,11 +58,11 @@ export function useQuestionnaireNavigation(totalVisibleSections: number) {
   }
 
   /**
-   * Jump directly to a specific section by index
+   * Jump directly to a specific page by index
    */
-  const jumpToSection = (sectionIndex: number): void => {
-    if (sectionIndex >= 0 && sectionIndex < totalVisibleSections) {
-      setCurrentVisibleSectionIndex(sectionIndex)
+  const jumpToPage = (pageIndex: number): void => {
+    if (pageIndex >= 0 && pageIndex < totalVisiblePages) {
+      setCurrentVisiblePageIndex(pageIndex)
       // Remove focus from any active element after navigation
       setTimeout(() => {
         if (document.activeElement instanceof HTMLElement) {
@@ -73,11 +73,11 @@ export function useQuestionnaireNavigation(totalVisibleSections: number) {
   }
 
   return {
-    currentVisibleSectionIndex,
-    nextSection,
-    prevSection,
-    jumpToSection,
-    isFirstSection: currentVisibleSectionIndex === 0,
-    isLastSection: currentVisibleSectionIndex === totalVisibleSections - 1,
+    currentVisiblePageIndex,
+    nextPage,
+    prevPage,
+    jumpToPage,
+    isFirstPage: currentVisiblePageIndex === 0,
+    isLastPage: currentVisiblePageIndex === totalVisiblePages - 1,
   }
 }

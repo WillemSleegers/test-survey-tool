@@ -1,9 +1,10 @@
 import {
   Question,
+  Page,
+  Block,
+  PageData,
   Section,
   SectionData,
-  Subsection,
-  SubsectionData,
   QuestionData,
   SubtextData,
   OptionData,
@@ -14,6 +15,7 @@ import {
   ShowIfData,
   ContentData,
   ComputeData,
+  BlockData,
   ParsedLine,
   ParserState,
 } from "@/lib/types"
@@ -23,8 +25,8 @@ import {
 const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   const trimmed = line.trim()
 
-  if (trimmed.startsWith("# ") || trimmed === "#") return "section"
-  if (trimmed.startsWith("## ")) return "subsection"
+  if (trimmed.startsWith("# ") || trimmed === "#") return "page"
+  if (trimmed.startsWith("## ")) return "section"
   if (trimmed.match(/^Q\d+:/) || trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
@@ -42,13 +44,14 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
+  if (trimmed.startsWith("BLOCK:")) return "block"
 
   return "content"
 }
 
 // Line parsing functions
 
-const parseSection = (line: string): SectionData => {
+const parsePage = (line: string): PageData => {
   const trimmed = line.trim()
   if (trimmed === "#") {
     return { title: "" }
@@ -56,7 +59,7 @@ const parseSection = (line: string): SectionData => {
   return { title: trimmed.substring(2).trim() }
 }
 
-const parseSubsection = (line: string): SubsectionData => ({
+const parseSection = (line: string): SectionData => ({
   title: line.trim().substring(3).trim(),
 })
 
@@ -142,6 +145,12 @@ const parseContent = (line: string): ContentData => ({
   content: line,
 })
 
+const parseBlock = (line: string): BlockData => {
+  const trimmed = line.trim()
+  const name = trimmed.substring(6).trim() // Remove "BLOCK:" prefix
+  return { name }
+}
+
 const parseCompute = (line: string): ComputeData => {
   const trimmed = line.trim()
   const content = trimmed.substring(8).trim() // Remove "COMPUTE:" prefix
@@ -167,10 +176,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
   const type = classifyLine(line, state)
 
   switch (type) {
+    case "page":
+      return { type, raw: line, data: parsePage(line) }
     case "section":
       return { type, raw: line, data: parseSection(line) }
-    case "subsection":
-      return { type, raw: line, data: parseSubsection(line) }
     case "question":
       return { type, raw: line, data: parseQuestion(line, state.questionCounter) }
     case "subtext":
@@ -191,6 +200,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseContent(line) }
     case "compute":
       return { type, raw: line, data: parseCompute(line) }
+    case "block":
+      return { type, raw: line, data: parseBlock(line) }
     default:
       const _exhaustive: never = type
       throw new Error(`Unknown line type: ${_exhaustive}`)
@@ -206,15 +217,22 @@ const createQuestion = (id: string, text: string): Question => ({
   options: [],
 })
 
-const createSection = (title: string): Section => ({
-  title,
-  content: "",
-  questions: [],
-  subsections: [],
+const createBlock = (name: string): Block => ({
+  name,
+  showIf: undefined,
+  pages: [],
   computedVariables: [],
 })
 
-const createSubsection = (title: string): Subsection => ({
+const createPage = (title: string): Page => ({
+  title,
+  content: "",
+  questions: [],
+  sections: [],
+  computedVariables: [],
+})
+
+const createSection = (title: string): Section => ({
   title,
   content: "",
   questions: [],
@@ -224,25 +242,25 @@ const createSubsection = (title: string): Subsection => ({
 const saveCurrentQuestion = (state: ParserState): ParserState => {
   if (!state.currentQuestion) return state
 
-  if (state.currentSubsection) {
+  if (state.currentSection) {
     return {
       ...state,
-      currentSubsection: {
-        ...state.currentSubsection,
+      currentSection: {
+        ...state.currentSection,
         questions: [
-          ...state.currentSubsection.questions,
+          ...state.currentSection.questions,
           state.currentQuestion,
         ],
       },
     }
   }
 
-  if (state.currentSection) {
+  if (state.currentPage) {
     return {
       ...state,
-      currentSection: {
-        ...state.currentSection,
-        questions: [...state.currentSection.questions, state.currentQuestion],
+      currentPage: {
+        ...state.currentPage,
+        questions: [...state.currentPage.questions, state.currentQuestion],
       },
     }
   }
@@ -250,33 +268,9 @@ const saveCurrentQuestion = (state: ParserState): ParserState => {
   return state
 }
 
-// Save current subsection to current section
-const saveCurrentSubsection = (state: ParserState): ParserState => {
-  if (!state.currentSubsection || !state.currentSection) return state
-
-  // Normalize whitespace-only content to empty string
-  const normalizedSubsection = {
-    ...state.currentSubsection,
-    content: state.currentSubsection.content.trim() === "" 
-      ? "" 
-      : state.currentSubsection.content
-  }
-
-  return {
-    ...state,
-    currentSection: {
-      ...state.currentSection,
-      subsections: [
-        ...state.currentSection.subsections,
-        normalizedSubsection,
-      ],
-    },
-  }
-}
-
-// Save current section to sections array
+// Save current section to current page
 const saveCurrentSection = (state: ParserState): ParserState => {
-  if (!state.currentSection) return state
+  if (!state.currentSection || !state.currentPage) return state
 
   // Normalize whitespace-only content to empty string
   const normalizedSection = {
@@ -288,39 +282,106 @@ const saveCurrentSection = (state: ParserState): ParserState => {
 
   return {
     ...state,
-    sections: [...state.sections, normalizedSection],
+    currentPage: {
+      ...state.currentPage,
+      sections: [
+        ...state.currentPage.sections,
+        normalizedSection,
+      ],
+    },
+  }
+}
+
+// Save current page to current block
+const saveCurrentPage = (state: ParserState): ParserState => {
+  if (!state.currentPage) return state
+
+  // Normalize whitespace-only content to empty string
+  const normalizedPage = {
+    ...state.currentPage,
+    content: state.currentPage.content.trim() === "" 
+      ? "" 
+      : state.currentPage.content
+  }
+
+  // If no current block, create a default one
+  if (!state.currentBlock) {
+    return {
+      ...state,
+      currentBlock: {
+        name: "",
+        showIf: undefined,
+        pages: [normalizedPage],
+        computedVariables: []
+      }
+    }
+  }
+
+  return {
+    ...state,
+    currentBlock: {
+      ...state.currentBlock,
+      pages: [...state.currentBlock.pages, normalizedPage],
+    }
+  }
+}
+
+// Save current block to blocks array
+const saveCurrentBlock = (state: ParserState): ParserState => {
+  if (!state.currentBlock) return state
+
+  return {
+    ...state,
+    blocks: [...state.blocks, state.currentBlock],
   }
 }
 
 // State reducers for each line type
 
-const handleSection = (state: ParserState, data: SectionData): ParserState => {
+const handleBlock = (state: ParserState, data: BlockData): ParserState => {
   // Save everything that's currently being built
   let newState = saveCurrentQuestion(state)
-  newState = saveCurrentSubsection(newState)
+  newState = saveCurrentSection(newState)
+  newState = saveCurrentPage(newState)
+  newState = saveCurrentBlock(newState)
+
+  // Start new block
+  return {
+    ...newState,
+    currentBlock: createBlock(data.name),
+    currentPage: null,
+    currentSection: null,
+    currentQuestion: null,
+  }
+}
+
+const handlePage = (state: ParserState, data: PageData): ParserState => {
+  // Save everything that's currently being built
+  let newState = saveCurrentQuestion(state)
+  newState = saveCurrentSection(newState)
+  newState = saveCurrentPage(newState)
+
+  // Start new page
+  return {
+    ...newState,
+    currentPage: createPage(data.title),
+    currentSection: null,
+    currentQuestion: null,
+  }
+}
+
+const handleSection = (
+  state: ParserState,
+  data: SectionData
+): ParserState => {
+  // Save current question and section
+  let newState = saveCurrentQuestion(state)
   newState = saveCurrentSection(newState)
 
   // Start new section
   return {
     ...newState,
     currentSection: createSection(data.title),
-    currentSubsection: null,
-    currentQuestion: null,
-  }
-}
-
-const handleSubsection = (
-  state: ParserState,
-  data: SubsectionData
-): ParserState => {
-  // Save current question and subsection
-  let newState = saveCurrentQuestion(state)
-  newState = saveCurrentSubsection(newState)
-
-  // Start new subsection
-  return {
-    ...newState,
-    currentSubsection: createSubsection(data.title),
     currentQuestion: null,
   }
 }
@@ -462,11 +523,21 @@ const handleShowIf = (state: ParserState, data: ShowIfData): ParserState => {
     }
   }
 
-  if (state.currentSection) {
+  if (state.currentPage) {
     return {
       ...state,
-      currentSection: {
-        ...state.currentSection,
+      currentPage: {
+        ...state.currentPage,
+        showIf: data.showIf,
+      },
+    }
+  }
+
+  if (state.currentBlock) {
+    return {
+      ...state,
+      currentBlock: {
+        ...state.currentBlock,
         showIf: data.showIf,
       },
     }
@@ -496,18 +567,6 @@ const handleContent = (
   // If we have a current question but no subtext buffer, ignore content
   if (state.currentQuestion) return state
 
-  if (state.currentSubsection) {
-    return {
-      ...state,
-      currentSubsection: {
-        ...state.currentSubsection,
-        content: state.currentSubsection.content
-          ? state.currentSubsection.content + "\n" + originalLine
-          : originalLine,
-      },
-    }
-  }
-
   if (state.currentSection) {
     return {
       ...state,
@@ -520,22 +579,51 @@ const handleContent = (
     }
   }
 
+  if (state.currentPage) {
+    return {
+      ...state,
+      currentPage: {
+        ...state.currentPage,
+        content: state.currentPage.content
+          ? state.currentPage.content + "\n" + originalLine
+          : originalLine,
+      },
+    }
+  }
+
   return state
 }
 
 const handleCompute = (state: ParserState, data: ComputeData): ParserState => {
-  if (!state.currentSection) return state
-
-  return {
-    ...state,
-    currentSection: {
-      ...state.currentSection,
-      computedVariables: [
-        ...state.currentSection.computedVariables,
-        { name: data.name, expression: data.expression },
-      ],
-    },
+  // If we have a current page, add to page-level COMPUTE
+  if (state.currentPage) {
+    return {
+      ...state,
+      currentPage: {
+        ...state.currentPage,
+        computedVariables: [
+          ...state.currentPage.computedVariables,
+          { name: data.name, expression: data.expression },
+        ],
+      },
+    }
   }
+  
+  // If we have a current block but no current page, add to block-level COMPUTE
+  if (state.currentBlock) {
+    return {
+      ...state,
+      currentBlock: {
+        ...state.currentBlock,
+        computedVariables: [
+          ...state.currentBlock.computedVariables,
+          { name: data.name, expression: data.expression },
+        ],
+      },
+    }
+  }
+  
+  return state
 }
 
 // Main state reducer
@@ -545,10 +633,10 @@ const reduceParsedLine = (
   parsedLine: ParsedLine
 ): ParserState => {
   switch (parsedLine.type) {
+    case "page":
+      return handlePage(state, parsedLine.data)
     case "section":
       return handleSection(state, parsedLine.data)
-    case "subsection":
-      return handleSubsection(state, parsedLine.data)
     case "question":
       return handleQuestion(state, parsedLine.data)
     case "subtext":
@@ -569,6 +657,8 @@ const reduceParsedLine = (
       return handleContent(state, parsedLine.data, parsedLine.raw)
     case "compute":
       return handleCompute(state, parsedLine.data)
+    case "block":
+      return handleBlock(state, parsedLine.data)
     default:
       // Exhaustiveness check - TypeScript will error if we miss a case
       const _exhaustive: never = parsedLine
@@ -578,14 +668,15 @@ const reduceParsedLine = (
 
 // Main function
 
-export const parseQuestionnaire = (text: string): Section[] => {
+export const parseQuestionnaire = (text: string): Block[] => {
   try {
     const lines = text.split("\n")
 
     const initialState: ParserState = {
-      sections: [],
+      blocks: [],
+      currentBlock: null,
+      currentPage: null,
       currentSection: null,
-      currentSubsection: null,
       currentQuestion: null,
       subtextBuffer: null,
       questionCounter: 1,
@@ -598,10 +689,35 @@ export const parseQuestionnaire = (text: string): Section[] => {
 
     // Save any remaining work
     let result = saveCurrentQuestion(finalState)
-    result = saveCurrentSubsection(result)
     result = saveCurrentSection(result)
+    result = saveCurrentPage(result)
+    result = saveCurrentBlock(result)
 
-    return result.sections
+    // If no blocks were defined, create a default block with all pages
+    if (result.blocks.length === 0 && result.currentPage) {
+      result = saveCurrentPage(result)
+      result = {
+        ...result,
+        blocks: [{
+          name: "",
+          showIf: undefined,
+          pages: result.currentPage ? [result.currentPage] : [],
+          computedVariables: []
+        }]
+      }
+    } else if (result.blocks.length === 0) {
+      result = {
+        ...result,
+        blocks: [{
+          name: "",
+          showIf: undefined,
+          pages: [],
+          computedVariables: []
+        }]
+      }
+    }
+
+    return result.blocks
   } catch (err) {
     throw new Error(
       "Failed to parse questionnaire format: " + (err as Error).message

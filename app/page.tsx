@@ -11,12 +11,12 @@ import { Settings } from "@/components/settings"
 
 import { parseQuestionnaire } from "@/lib/parser"
 
-import { Section } from "@/lib/types"
+import { Block } from "@/lib/types"
 
 import { SAMPLE_TEXT } from "@/lib/constants"
 
 const QuestionnaireApp = () => {
-  const [questionnaire, setQuestionnaire] = useState<Section[] | null>(null)
+  const [questionnaire, setQuestionnaire] = useState<Block[] | null>(null)
   const [error, setError] = useState<string>("")
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
 
