@@ -132,7 +132,7 @@ export function QuestionnaireViewer({
 
   if (visiblePages.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto pt-16 px-6 pb-6 text-center py-12">
+      <div className="max-w-4xl mx-auto px-6 py-6 text-center">
         <p className="text-muted-foreground">
           {t('errors.noPages')}
         </p>
@@ -150,7 +150,7 @@ export function QuestionnaireViewer({
 
   return (
     <>
-      <div className="max-w-4xl mx-auto pt-16 px-6 pb-6 space-y-6">
+      <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
         <PageHeader 
           page={currentPage} 
           responses={responses} 

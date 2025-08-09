@@ -21,7 +21,7 @@ import {
   evaluateOrCondition,
   evaluateAndCondition
 } from "./logical-operators"
-import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
+import { evaluateExpression, isArithmeticExpression, evaluateWildcardComparison } from "./expression-evaluator"
 import { convertValueToNumber } from "./value-converter"
 
 /**
@@ -96,6 +96,11 @@ export function evaluateCondition(
     if (!parsed) return true // Invalid condition defaults to true
 
     const { leftSide, operator, rightSide } = parsed
+
+    // Handle wildcard patterns in comparisons
+    if (leftSide.includes('*')) {
+      return evaluateWildcardComparison(leftSide, operator, rightSide, extendedResponses)
+    }
 
     // Handle arithmetic expressions vs simple variable comparisons
     if (isArithmeticExpression(leftSide) || isArithmeticExpression(rightSide)) {

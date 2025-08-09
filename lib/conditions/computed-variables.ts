@@ -11,8 +11,8 @@ import { evaluateExpression, isArithmeticExpression } from "./expression-evaluat
  */
 function isComparisonExpression(expression: string): boolean {
   const trimmed = expression.trim()
-  // Check for comparison operators
-  return /[><=!]=?|[><]/.test(trimmed)
+  // Check for comparison operators or wildcard patterns
+  return /[><=!]=?|[><]/.test(trimmed) || trimmed.includes('*')
 }
 
 /**
