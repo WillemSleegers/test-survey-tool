@@ -16,30 +16,31 @@ import { Page, Responses, VisiblePageContent, ComputedVariables } from "@/lib/ty
  * @param blockComputedVariables - Computed variables from block level (optional)
  * @returns Visible pages and content getter function
  */
-export function useVisiblePages(questionnaire: Page[], responses: Responses, blockComputedVariables?: ComputedVariables) {
-  // Compute all computed variables for all pages once
-  const allComputedVariables = useMemo(() => {
-    const computedVars: Map<Page, ComputedVariables> = new Map()
-    questionnaire.forEach(page => {
-      // Pass block computed variables so page-level computations can reference them
-      const mergedComputedVars = evaluateComputedVariables(page, responses, blockComputedVariables)
-      computedVars.set(page, mergedComputedVars)
-    })
-    return computedVars
-  }, [questionnaire, responses, blockComputedVariables])
-
+export function useVisiblePages(
+  questionnaire: Page[], 
+  responses: Responses, 
+  blockComputedVariables?: ComputedVariables,
+  getPageComputedVars?: (page: Page) => ComputedVariables
+) {
   // Get only visible pages - based purely on SHOW_IF conditions and computed variables
   const visiblePages = useMemo(() => {
     return questionnaire.filter((page) => {
-      const pageComputedVars = allComputedVariables.get(page) || {}
+      // Use lazy computed variables if provided, otherwise fall back to eager evaluation
+      const pageComputedVars = getPageComputedVars ? 
+        getPageComputedVars(page) : 
+        evaluateComputedVariables(page, responses, blockComputedVariables)
+      
       return evaluateCondition(page.showIf || "", responses, pageComputedVars)
     })
-  }, [questionnaire, responses, allComputedVariables])
+  }, [questionnaire, responses, blockComputedVariables, getPageComputedVars])
 
   // Get visible content for a page
   const getVisiblePageContent = useCallback(
     (page: Page): VisiblePageContent => {
-      const pageComputedVars = allComputedVariables.get(page) || {}
+      // Use lazy computed variables if provided, otherwise fall back to eager evaluation
+      const pageComputedVars = getPageComputedVars ? 
+        getPageComputedVars(page) : 
+        evaluateComputedVariables(page, responses, blockComputedVariables)
       
       // Filter main page questions based on their individual SHOW_IF conditions
       const mainQuestions = page.questions.filter((question) =>
@@ -60,12 +61,11 @@ export function useVisiblePages(questionnaire: Page[], responses: Responses, blo
         sections: visibleSections,
       }
     },
-    [responses, allComputedVariables]
+    [responses, blockComputedVariables, getPageComputedVars]
   )
 
   return {
     visiblePages,
     getVisiblePageContent,
-    getComputedVariables: (page: Page) => allComputedVariables.get(page) || {},
   }
 }

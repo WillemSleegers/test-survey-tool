@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { PageContent } from "@/components/page-content"
 import { useLanguage } from "@/contexts/language-context"
 
 import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation"
 import { useVisiblePages } from "@/hooks/use-visible-pages"
+import { useLazyComputedVariables } from "@/hooks/use-lazy-computed-variables"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator" 
-import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
 import { usePageCompletion } from "@/hooks/use-page-completion"
 import { PageHeader } from "@/components/questionnaire/page-header"
@@ -34,21 +34,20 @@ export function QuestionnaireViewer({
   const allPages = questionnaire.flatMap(block => block.pages)
   const { responses, handleResponse } = useQuestionnaireResponses(allPages)
   
+  // Initialize lazy computed variables system
+  const { 
+    getBlockComputedVariables, 
+    getPageComputedVariables, 
+    invalidateCache
+  } = useLazyComputedVariables(questionnaire, responses)
+
   // Filter blocks by visibility, then flatten to pages
-  const { visibleBlockPages, allBlockComputedVariables } = useMemo(() => {
+  const visibleBlockPages = useMemo(() => {
     const visiblePages: Page[] = []
-    const blockComputedVars: ComputedVariables = {}
     
     questionnaire.forEach(block => {
-      // Evaluate block-level visibility  
-      const mockPage: Page = {
-        title: "",
-        content: "",
-        questions: [],
-        sections: [],
-        computedVariables: block.computedVariables
-      }
-      const currentBlockComputedVars = evaluateComputedVariables(mockPage, responses)
+      // Get block-level computed variables (lazy evaluation)
+      const currentBlockComputedVars = getBlockComputedVariables(block)
       
       const blockVisible = evaluateCondition(
         block.showIf || "",
@@ -57,17 +56,26 @@ export function QuestionnaireViewer({
       )
       
       if (blockVisible) {
-        // If block is visible, add all its pages and collect its computed variables
+        // If block is visible, add all its pages
         visiblePages.push(...block.pages)
-        Object.assign(blockComputedVars, currentBlockComputedVars)
       }
     })
     
-    return { visibleBlockPages: visiblePages, allBlockComputedVariables: blockComputedVars }
-  }, [questionnaire, responses])
+    return visiblePages
+  }, [questionnaire, responses, getBlockComputedVariables])
   
+  // Invalidate computed variable cache when responses change
+  useEffect(() => {
+    invalidateCache()
+  }, [responses, invalidateCache])
+
   // Get visible pages and content filtering based on current responses  
-  const { visiblePages, getVisiblePageContent, getComputedVariables } = useVisiblePages(visibleBlockPages, responses, allBlockComputedVariables)
+  const { visiblePages, getVisiblePageContent } = useVisiblePages(
+    visibleBlockPages, 
+    responses, 
+    {}, 
+    getPageComputedVariables
+  )
   
   // Navigation state and actions
   const {
@@ -81,43 +89,32 @@ export function QuestionnaireViewer({
   const currentPage = visiblePages[currentVisiblePageIndex]
   const pageContent = currentPage ? getVisiblePageContent(currentPage) : null
   
-  // Get current block and its computed variables
-  const currentBlockComputedVars: ComputedVariables = (() => {
+  // Get current block and page computed variables using lazy evaluation
+  const currentBlockComputedVars: ComputedVariables = useMemo(() => {
     if (!currentPage) return {}
     
     // Find which block contains the current page
-    for (const block of questionnaire) {
-      if (block.pages.includes(currentPage)) {
-        // Evaluate this block's computed variables with current responses
-        const mockPage: Page = {
-          title: "",
-          content: "",
-          questions: [],
-          sections: [],
-          computedVariables: block.computedVariables
-        }
-        return evaluateComputedVariables(mockPage, responses)
-      }
-    }
-    return {}
-  })()
+    const containingBlock = questionnaire.find(block => block.pages.includes(currentPage))
+    return containingBlock ? getBlockComputedVariables(containingBlock) : {}
+  }, [currentPage, questionnaire, getBlockComputedVariables])
   
-  // Get page-level computed variables (excluding block variables)
-  const currentPageComputedVars: ComputedVariables = (() => {
+  // Get page-level computed variables
+  const currentPageComputedVars: ComputedVariables = useMemo(() => {
     if (!currentPage) return {}
     
-    const allVars = getComputedVariables(currentPage)
-    const pageOnlyVars: ComputedVariables = {}
+    // Get all computed variables for this page (includes block-level variables)
+    const allPageVars = getPageComputedVariables(currentPage)
     
-    // Only include variables that are defined at page level
+    // Extract only the page-level ones
+    const pageOnlyVars: ComputedVariables = {}
     currentPage.computedVariables.forEach(computedVar => {
-      if (computedVar.name in allVars) {
-        pageOnlyVars[computedVar.name] = allVars[computedVar.name]
+      if (computedVar.name in allPageVars) {
+        pageOnlyVars[computedVar.name] = allPageVars[computedVar.name]
       }
     })
     
     return pageOnlyVars
-  })()
+  }, [currentPage, getPageComputedVariables])
   
   // Check completion status
   const allQuestionsAnswered = usePageCompletion(pageContent, responses)
@@ -181,7 +178,7 @@ export function QuestionnaireViewer({
         visiblePages={visiblePages}
         currentVisiblePageIndex={currentVisiblePageIndex}
         responses={responses}
-        getComputedVariables={getComputedVariables}
+        getComputedVariables={getPageComputedVariables}
         currentBlockComputedVars={currentBlockComputedVars}
         currentPageComputedVars={currentPageComputedVars}
         onJumpToPage={jumpToPage}
