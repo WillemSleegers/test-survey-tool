@@ -41,7 +41,8 @@ export function processVariablePlaceholders(
         const result = evaluateExpression(trimmedContent, responses)
         return String(result)
       } catch {
-        return match // Return unchanged if expression evaluation fails
+        // Escape curly braces to prevent react-markdown from interpreting them as JSX
+        return match.replace(/[{}]/g, '\\$&') // Return escaped if expression evaluation fails
       }
     } else {
       // Handle simple variables like "name" or "age"
@@ -54,7 +55,8 @@ export function processVariablePlaceholders(
       const value = responseEntry?.value
 
       if (value === undefined) {
-        return match // Return unchanged if variable not found
+        // Escape curly braces to prevent react-markdown from interpreting them as JSX
+        return match.replace(/[{}]/g, '\\$&') // Return escaped if variable not found
       }
 
       // Handle array values (from checkbox questions)

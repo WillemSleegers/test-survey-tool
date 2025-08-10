@@ -48,37 +48,28 @@ export function parseConditionalContent(content: string): ConditionalPlaceholder
     return null
   }
 
-  // Find the condition part (everything between IF and THEN)
-  const thenMatch = trimmed.match(/^IF\s+/i)
-  if (!thenMatch) return null
+  // Use proper keyword finding that handles nested braces
+  if (!trimmed.startsWith('IF ')) return null
   
-  let pos = thenMatch[0].length // Start after "IF "
-  const thenIndex = findKeyword(trimmed, 'THEN', pos)
-  
+  const thenIndex = findKeyword(trimmed, 'THEN', 0)
   if (thenIndex === -1) return null
   
-  const condition = trimmed.slice(pos, thenIndex).trim()
-  pos = thenIndex + 4 // Move past "THEN"
+  const elseIndex = findKeyword(trimmed, 'ELSE', thenIndex)
   
-  // Skip whitespace after THEN
-  while (pos < trimmed.length && /\s/.test(trimmed[pos])) {
-    pos++
-  }
-  
-  // Find ELSE keyword (if it exists), accounting for nested braces
-  const elseIndex = findKeyword(trimmed, 'ELSE', pos)
+  // Extract parts - findKeyword finds the keyword position, account for surrounding spaces
+  const condition = trimmed.slice(3, thenIndex - 1) // After "IF " and before " THEN"
   
   let trueText: string
   let falseText: string
   
   if (elseIndex === -1) {
     // No ELSE part
-    trueText = trimmed.slice(pos).trim()
+    trueText = trimmed.slice(thenIndex + 5) // After " THEN "
     falseText = ""
   } else {
     // Has ELSE part
-    trueText = trimmed.slice(pos, elseIndex).trim()
-    falseText = trimmed.slice(elseIndex + 4).trim() // Move past "ELSE"
+    trueText = trimmed.slice(thenIndex + 5, elseIndex - 1) // Between " THEN " and " ELSE"
+    falseText = trimmed.slice(elseIndex + 5) // After " ELSE "
   }
 
   return {

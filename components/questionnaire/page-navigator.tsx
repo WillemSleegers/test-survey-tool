@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Menu, X, ChevronDown, ChevronRight } from "lucide-react"
+import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
@@ -55,17 +55,23 @@ export function PageNavigator({
   const [isOpen, setIsOpen] = useState(false)
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set())
 
-  // Auto-expand blocks containing the current page
+  // Auto-expand only the current block, collapse others
   useEffect(() => {
     const currentPage = visiblePages[currentVisiblePageIndex]
     if (!currentPage) return
 
     // Find which block contains the current page
+    let currentBlockIndex = -1
     questionnaire.forEach((block, blockIndex) => {
       if (block.pages.includes(currentPage)) {
-        setExpandedBlocks(prev => new Set([...prev, blockIndex]))
+        currentBlockIndex = blockIndex
       }
     })
+
+    // Only expand the current block
+    if (currentBlockIndex !== -1) {
+      setExpandedBlocks(new Set([currentBlockIndex]))
+    }
   }, [currentVisiblePageIndex, visiblePages, questionnaire])
 
   // Helper function to check if a block is visible
@@ -217,7 +223,7 @@ export function PageNavigator({
                           {/* Block info */}
                           <div className="flex-1 min-w-0">
                             <div className="truncate font-medium">
-                              BLOCK: {cleanTitle(block.name)}
+                              {cleanTitle(block.name)}
                             </div>
                             {block.showIf && (
                               <div className="text-xs text-muted-foreground truncate">
@@ -256,8 +262,6 @@ export function PageNavigator({
                           <div
                             key={`${blockIndex}-${pageIndex}`}
                             className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
-                              block.name ? "ml-6" : ""
-                            } ${
                               isCurrent
                                 ? "bg-muted font-medium"
                                 : pageVisible && blockVisible
@@ -270,10 +274,17 @@ export function PageNavigator({
                                 : undefined
                             }
                           >
+                            {/* Current page indicator */}
+                            <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                              {isCurrent && (
+                                <Circle className="w-3 h-3 fill-primary text-primary" />
+                              )}
+                            </div>
+
                             {/* Page info */}
                             <div className="flex-1 min-w-0">
                               <div className="truncate font-medium">
-                                {page.title ? cleanTitle(page.title) : `Page ${globalPageIndex + 1}`}
+                                {page.title ? `Page ${globalPageIndex + 1}: ${cleanTitle(page.title)}` : `Page ${globalPageIndex + 1}`}
                               </div>
                               {page.showIf && (
                                 <div className="text-xs text-muted-foreground truncate">

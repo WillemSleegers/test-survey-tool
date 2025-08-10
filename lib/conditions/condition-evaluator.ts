@@ -206,6 +206,7 @@ function evaluateVariableComparison(
     const leftNum = convertValueToNumber(responseValue)
     const rightNum = convertValueToNumber(rightVariableEntry.value)
     
+    
     // Perform numeric comparison
     switch (operator) {
       case "==": return leftNum === rightNum
