@@ -24,20 +24,36 @@ Q: What is your age?
           </div>
           <ul className="list-disc list-inside space-y-1 text-sm">
             <li>
-              <code># Title</code> - Create pages (each # starts a new page)
+              <code># Title</code>
+              <ul>
+                <li>Creates a page with an (optional) title</li>
+                <li>Each # starts a new page</li>
+              </ul>
             </li>
             <li>
-              <code>## Section</code> - Create sections within a page
+              <code>## Section</code>
+            </li>
+            <ul>
+              <li>Creates a section within a page</li>
+            </ul>
+            <li>
+              <code>Q: Question text?</code>
+              <ul>
+                <li>Creates a question</li>
+              </ul>
             </li>
             <li>
-              <code>Q: Question text?</code> - Add questions (auto-numbered)
+              <code>TEXT / ESSAY / NUMBER / CHECKBOX</code>
+              <ul>
+                <li>Defines the question type</li>
+                <li>By default a question is multiple choice</li>
+              </ul>
             </li>
             <li>
-              <code>- Option text</code> - Multiple choice options (default:
-              radio buttons)
-            </li>
-            <li>
-              <code>TEXT / ESSAY / NUMBER / CHECKBOX</code> - Input types
+              <code>- Option text</code>
+              <ul>
+                <li>Creates a multiple-choice option</li>
+              </ul>
             </li>
           </ul>
         </div>
