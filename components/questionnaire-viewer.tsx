@@ -178,7 +178,6 @@ export function QuestionnaireViewer({
         visiblePages={visiblePages}
         currentVisiblePageIndex={currentVisiblePageIndex}
         responses={responses}
-        getComputedVariables={getPageComputedVariables}
         currentBlockComputedVars={currentBlockComputedVars}
         currentPageComputedVars={currentPageComputedVars}
         onJumpToPage={jumpToPage}

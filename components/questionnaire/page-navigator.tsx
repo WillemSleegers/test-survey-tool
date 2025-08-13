@@ -18,8 +18,6 @@ interface PageNavigatorProps {
   currentVisiblePageIndex: number
   /** Current user responses */
   responses: Responses
-  /** Function to get computed variables for a page */
-  getComputedVariables: (page: Page) => ComputedVariables
   /** Current block's computed variables */
   currentBlockComputedVars: ComputedVariables
   /** Current page's computed variables (page-level only) */
@@ -46,7 +44,6 @@ export function PageNavigator({
   visiblePages,
   currentVisiblePageIndex,
   responses,
-  getComputedVariables,
   currentBlockComputedVars,
   currentPageComputedVars,
   onJumpToPage,
