@@ -88,3 +88,25 @@ Strong TypeScript usage throughout:
 - Components follow a consistent pattern with shared wrapper components
 - State management is deliberately kept simple with React hooks rather than external libraries
 - The app is designed to work entirely client-side with no backend requirements
+
+## React Compiler Guidelines
+
+**IMPORTANT**: This project uses React 19 with experimental React Compiler. Follow these guidelines:
+
+### ❌ DO NOT USE:
+- `useMemo()` - React Compiler handles memoization automatically
+- `useCallback()` - React Compiler optimizes function references
+- `React.memo()` - Compiler optimizes component re-renders
+- Manual optimization patterns that interfere with compiler analysis
+
+### ✅ DO USE:
+- Simple, clean component code - let the compiler optimize
+- Standard React hooks (`useState`, `useEffect`, etc.)
+- Pure functions and predictable state updates
+- Avoid side effects during render (compiler expects pure render functions)
+
+### Key Principles:
+- Write code as if there's no performance optimization needed
+- React Compiler will handle memoization and re-render optimization
+- Focus on correctness and readability over manual performance tuning
+- Avoid setState calls during render cycles - they interfere with compiler analysis
