@@ -21,7 +21,7 @@ import {
   evaluateOrCondition,
   evaluateAndCondition
 } from "./logical-operators"
-import { evaluateExpression, isArithmeticExpression, evaluateWildcardComparison } from "./expression-evaluator"
+import { evaluateExpression, isArithmeticExpression, evaluateStartsWithComparison } from "./expression-evaluator"
 import { convertValueToNumber } from "./value-converter"
 
 /**
@@ -34,6 +34,7 @@ import { convertValueToNumber } from "./value-converter"
  * - Negation: "NOT completed"
  * - Arithmetic: "age + years >= 21"
  * - Array operations: "selections >= 2" (for checkboxes)
+ * - STARTS_WITH patterns: "STARTS_WITH crime == Yes"
  * - Computed variables: References to computed variables defined in sections
  * 
  * @param condition - The condition string to evaluate
@@ -97,9 +98,10 @@ export function evaluateCondition(
 
     const { leftSide, operator, rightSide } = parsed
 
-    // Handle wildcard patterns in comparisons
-    if (leftSide.includes('*')) {
-      return evaluateWildcardComparison(leftSide, operator, rightSide, extendedResponses)
+    // Handle STARTS_WITH patterns in comparisons
+    if (leftSide.trim().startsWith('STARTS_WITH ')) {
+      const prefix = leftSide.trim().substring('STARTS_WITH '.length).trim()
+      return evaluateStartsWithComparison(prefix, operator, rightSide, extendedResponses)
     }
 
     // Handle arithmetic expressions vs simple variable comparisons

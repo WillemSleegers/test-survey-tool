@@ -74,45 +74,36 @@ export function isArithmeticExpression(expression: string): boolean {
 }
 
 /**
- * Evaluates wildcard comparison expressions like "fraude_* == Ja, in de afgelopen 12 maanden"
+ * Evaluates STARTS_WITH comparison expressions like "STARTS_WITH fraude == Ja, in de afgelopen 12 maanden"
  * This allows matching multiple variables with a common prefix against the same value
  * 
- * @param leftSide - The left side containing the wildcard pattern (e.g., "fraude_*")
+ * @param prefix - The variable prefix to match (e.g., "fraude")
  * @param operator - The comparison operator (==, !=, etc.)
  * @param rightSide - The value to compare against
  * @param responses - The responses object containing variable values
  * @returns True if any matching variables satisfy the condition (OR logic)
  * 
  * @example
- * evaluateWildcardComparison("fraude_*", "==", "Ja, in de afgelopen 12 maanden", responses)
- * // Returns true if any variable starting with "fraude_" equals the specified value
+ * evaluateStartsWithComparison("fraude", "==", "Ja, in de afgelopen 12 maanden", responses)
+ * // Returns true if any variable starting with "fraude" equals the specified value
  */
-export function evaluateWildcardComparison(
-  leftSide: string,
+export function evaluateStartsWithComparison(
+  prefix: string,
   operator: string,
   rightSide: string,
   responses: Responses
 ): boolean {
-  // Extract the wildcard pattern
-  const wildcardPattern = leftSide.trim()
+  const prefixPattern = prefix.trim()
   
-  if (!wildcardPattern.includes('*')) {
-    return false // Not a wildcard pattern
+  if (!prefixPattern) {
+    return false // Empty prefix
   }
   
-  // Convert wildcard pattern to regex
-  // Replace * with .* and escape other regex special characters
-  const regexPattern = wildcardPattern
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special chars
-    .replace(/\\\*/g, '.*') // Convert \* back to .*
-  
-  const regex = new RegExp(`^${regexPattern}$`)
-  
-  // Find all variables that match the pattern
+  // Find all variables that start with the prefix
   const matchingVariables: string[] = []
   
   Object.values(responses).forEach(responseEntry => {
-    if (responseEntry.variable && regex.test(responseEntry.variable)) {
+    if (responseEntry.variable && responseEntry.variable.startsWith(prefixPattern)) {
       matchingVariables.push(responseEntry.variable)
     }
   })

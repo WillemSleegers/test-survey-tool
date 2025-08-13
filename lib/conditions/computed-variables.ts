@@ -11,8 +11,8 @@ import { evaluateExpression, isArithmeticExpression } from "./expression-evaluat
  */
 function isComparisonExpression(expression: string): boolean {
   const trimmed = expression.trim()
-  // Check for comparison operators or wildcard patterns
-  return /[><=!]=?|[><]/.test(trimmed) || trimmed.includes('*')
+  // Check for comparison operators or STARTS_WITH patterns
+  return /[><=!]=?|[><]/.test(trimmed) || trimmed.includes('STARTS_WITH ')
 }
 
 /**
@@ -193,7 +193,7 @@ function extractVariableReferences(expression: string): string[] {
  */
 function isKeywordOrOperator(word: string): boolean {
   const keywords = new Set([
-    'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF',
+    'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'STARTS_WITH',
     'true', 'false', 'null', 'undefined'
   ])
   
