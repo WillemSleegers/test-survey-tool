@@ -19,6 +19,7 @@ import {
   ParsedLine,
   ParserState,
 } from "@/lib/types"
+import { normalizeOperators } from "@/lib/conditions/condition-parser"
 
 // Line classification functions
 
@@ -903,11 +904,14 @@ function validateComputedVariableReferences(blocks: Block[]): void {
 function findUndefinedVariables(expression: string, definedVariables: Set<string>): string[] {
   const undefinedVars: string[] = []
   
+  // Normalize operators first (convert IS to ==, etc.)
+  const normalizedExpression = normalizeOperators(expression)
+  
   // Handle different types of expressions
-  if (expression.includes('==') || expression.includes('!=') || expression.includes('>=') || 
-      expression.includes('<=') || expression.includes('>') || expression.includes('<')) {
+  if (normalizedExpression.includes('==') || normalizedExpression.includes('!=') || normalizedExpression.includes('>=') || 
+      normalizedExpression.includes('<=') || normalizedExpression.includes('>') || normalizedExpression.includes('<')) {
     // This is a comparison - only check the left side (variable name)
-    const comparisonMatch = expression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
+    const comparisonMatch = normalizedExpression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
     if (comparisonMatch) {
       const leftSide = comparisonMatch[1].trim()
       // Only validate the left side as a variable, right side could be a literal value
