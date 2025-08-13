@@ -26,8 +26,8 @@ Q: What is your age?
             <li>
               <code># Title</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Creates a page with an (optional) title</li>
-                <li>Each # starts a new page</li>
+                <li>Each # starts a new page with an (optional) title</li>
+                <li>Not including a title simply creates a new page</li>
               </ul>
             </li>
             <li>
@@ -54,7 +54,7 @@ Q: What is your age?
                   Should be placed immediately below the question or last
                   question option
                 </li>
-                <li>By default a question is multiple choice</li>
+                <li>By default a question is a multiple choice question</li>
               </ul>
             </li>
             <li>
@@ -78,6 +78,13 @@ Q: What is your name?
 TEXT
 VARIABLE: name
 
+Q: What is your age?
+- Under 18
+- 18-25
+- Over 25
+
+#
+
 Q: Hello {name}, what are your interests?
 HINT: Select all that apply
 - Sports
@@ -88,10 +95,17 @@ HINT: Select all that apply
 CHECKBOX
 VARIABLE: interests
 
-Q: Do you like programming?
-- Yes
-- No
-SHOW_IF: interests IS Technology`}
+#
+SHOW_IF: interests IS Technology
+
+You indicated that technology is one of your interests.
+
+Q: To what extent do you like programming?
+- Not at all
+- Somewhat
+- Moderately
+- Very much
+- A great deal`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -110,8 +124,10 @@ SHOW_IF: interests IS Technology`}
             <li>
               <code>{`{name}`}</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Inserts saved variables into question text or content</li>
-                <li>Variables can be used anywhere in text</li>
+                <li>
+                  Replaces the variable text with the value of the variable
+                </li>
+                <li>Variables can be used in page texts and question texts.</li>
               </ul>
             </li>
             <li>
@@ -135,28 +151,27 @@ SHOW_IF: interests IS Technology`}
                   Useful to allow respondents to elaborate on a question option
                 </li>
                 <li>
-                  Should be placed directly under the option with 2 indented
+                  Should be placed directly under the option with two indented
                   spaces
                 </li>
               </ul>
             </li>
-
             <li>
               <code>SHOW_IF: condition</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Hides/shows questions conditionally</li>
                 <li>
-                  Place after a question to only show the question when the
-                  condition is true
+                  Should be placed below a question or below the question
+                  options to apply to the question
                 </li>
                 <li>
-                  Can also be placed after pages and blocks to hide entire pages
-                  and blocks
+                  Can also be placed after blocks, pages, or individual question
+                  options (see the Advanced section below)
                 </li>
               </ul>
             </li>
             <li>
-              Basic Conditions:
+              Basic conditions:
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
                   <code>name IS John</code>: Variable equals or includes
@@ -177,7 +192,9 @@ SHOW_IF: interests IS Technology`}
         <div>
           <h4 className="text-base font-medium mb-3">Advanced</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`# Personal Information
+            {`BLOCK: Personal information
+
+# Personal Information
 
 ## Basic Details
 Please answer the following questions about yourself.
@@ -190,6 +207,8 @@ Q: What is your age?
 NUMBER
 VARIABLE: age
 
+#
+
 Q: Hello {name}, what are your interests?
 HINT: Select all that apply
 - Sports
@@ -198,62 +217,82 @@ HINT: Select all that apply
 CHECKBOX
 VARIABLE: interests
 
-Q: How many years have you worked in tech?
-NUMBER
-VARIABLE: tech_years
+BLOCK: Technology  
+SHOW_IF: interests IS Technology
 
-## Summary Section
-Based on your age of {age} and {tech_years} years in tech, your total experience score is {age + tech_years}.
+#
 
-BLOCK: adult_tech
-COMPUTE: is_adult = age >= 18
-COMPUTE: likes_tech = interests == Technology
-SHOW_IF: is_adult AND likes_tech
+You indicated that technology is one of your interests.
 
-# Programming Experience
+Q: To what extent do you like programming?
+- Not at all
+- Somewhat
+- Moderately
+- Very much
+- A great deal
 
-Q: What programming languages do you know?
-- Basic scripting
-- JavaScript
-- Advanced frameworks
-- Other
-  - TEXT
+Q: Do you know any programming languages?
+- Yes
+- No
 VARIABLE: programming
 
-# Experience Level
+# Programming Experience
+SHOW_IF: programming == Yes
 
-Q: {{IF likes_tech THEN As a tech enthusiast ELSE As someone interested in tech}}, what's your experience level?
-- Beginner
-- Intermediate  
-- Expert
+Q: Which programming languages do you know?
+- C#
+- Java
+- Python
+- JavaScript
+- R
+- Other
+  - TEXT
+VARIABLE: programming_languages
 
-BLOCK: general_questions
+BLOCK: General_questions
 
-# General Topics
-These questions are for everyone.`}
+# Survey evaluation
+
+Q: Which of the questions did you like?
+- The personal information questions
+- The interests question
+- The technology questions
+  - SHOW_IF: interests == Technology
+
+Q: Two years from now, would you want to participate in this survey again, when you are {age + 2} years old?`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
               <code>BLOCK: name</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Group related pages together for conditional visibility</li>
-                <li>Place at the beginning of a section</li>
-                <li>All pages until next BLOCK belong to this block</li>
+                <li>Groups pages together</li>
+                <li>All pages until the next BLOCK belong to this block</li>
+                <li>
+                  Can be used in combination with SHOW_IF to hide multiple pages
+                  at once
+                </li>
+                <li>
+                  Can also be used to more easily navigate between sections of
+                  the survey
+                </li>
               </ul>
             </li>
             <li>
               <code>COMPUTE: var = expression</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Calculate variables from responses</li>
-                <li>Can be block-level or section-level</li>
-                <li>Use arithmetic expressions and conditions</li>
+                <li>Calculates a variable based on the expression</li>
+                <li>Can be block-level or page-level</li>
+                <li>Uses arithmetic expressions and conditions</li>
               </ul>
             </li>
             <li>
               <code>{`{{IF condition THEN text ELSE text}}`}</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Insert conditional text within question text</li>
-                <li>Dynamically change question wording based on responses</li>
+                <li>Inserts conditional text within question text</li>
+                <li>
+                  Can be used to dynamically change question wording based on
+                  previous responses
+                </li>
                 <li>ELSE part is optional</li>
               </ul>
             </li>
@@ -271,21 +310,12 @@ These questions are for everyone.`}
             <li>
               <code>- SHOW_IF: condition</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Conditionally show question options</li>
-                <li>Place after option with two-space indent</li>
-                <li>Option only appears when condition is true</li>
+                <li>Conditionally shows question options</li>
+                <li>Should be placed after option with two indented spaces</li>
               </ul>
             </li>
             <li>
-              <code>SHOW_IF: condition</code>
-              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Hide/show pages/sections/blocks</li>
-                <li>Place after #, ##, or BLOCK line</li>
-                <li>Entire section only appears when condition is true</li>
-              </ul>
-            </li>
-            <li>
-              Condition Operators:
+              Condition operators:
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
                   <code>== / IS</code>: Equal comparison
@@ -306,21 +336,28 @@ These questions are for everyone.`}
               </ul>
             </li>
             <li>
-              STARTS_WITH Patterns:
+              STARTS_WITH
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
-                  <code>STARTS_WITH crime == Yes</code>: Any variable starting with &quot;crime&quot; equals &quot;Yes&quot;
+                  Can be used to select and test multiple variables at once
                 </li>
                 <li>
-                  <code>STARTS_WITH fraud != No</code>: Any variable starting with &quot;fraud&quot; doesn&apos;t equal &quot;No&quot;
+                  <code>STARTS_WITH crime == Yes</code>: Any variable starting
+                  with &quot;crime&quot; equals &quot;Yes&quot;
                 </li>
-                <li>Uses OR logic: true if ANY matching variable meets the condition</li>
+                <li>
+                  <code>STARTS_WITH fraud != No</code>: Any variable starting
+                  with &quot;fraud&quot; doesn&apos;t equal &quot;No&quot;
+                </li>
+                <li>
+                  Uses OR logic: true if ANY matching variable meets the
+                  condition
+                </li>
                 <li>Useful for grouped questions with common prefixes</li>
-                <li>No conflicts with markdown or JSX formatting</li>
               </ul>
             </li>
             <li>
-              More Condition Examples:
+              More condition examples:
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
                   <code>interests == Technology</code>: Checkbox contains

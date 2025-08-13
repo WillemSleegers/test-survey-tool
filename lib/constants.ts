@@ -1,141 +1,69 @@
-export const SAMPLE_TEXT = `# Tutorial: Creating Surveys
+export const SAMPLE_TEXT = `BLOCK: Personal information
 
-## Welcome to the Test Survey Tool
-This tool converts structured text into interactive surveys for testing question logic.
+# **Personal Information**
 
-**Basic Syntax:**
-- # Page Title - Creates new pages
-- ## Section Title - Creates sections within pages  
-- Q: Question text? - Creates questions (auto-numbered)
-- TEXT / ESSAY / NUMBER / CHECKBOX - Question types
-- VARIABLE: name - Stores responses for later use
+Please answer the following questions about yourself.
 
-Q: What's your name?
+Q: What is your name?
 TEXT
-VARIABLE: user_name
+VARIABLE: name
 
-# Question Types
-
-## Basic Question Types
-**Multiple Choice:** List options with - Option text (no extra commands needed)
-**Numbers:** Add NUMBER after the question
-**Checkboxes:** List options, then add CHECKBOX 
-**Text:** TEXT (short) or ESSAY (long)
-**Hints:** Add HINT: helpful text after questions
-
-Q: How did you find this tool?
-- Search engine
-- Recommendation  
-- Social media
-- Other
-  - TEXT
-
-Q: Rate your survey experience (1-10):
+Q: What is your age?
 NUMBER
-VARIABLE: rating
+VARIABLE: age
 
-Q: How many surveys have you created before?
-NUMBER
-VARIABLE: previous_surveys
+#
 
-Q: What interests you most?
+Q: Hello {name}, what are your interests?
 HINT: Select all that apply
-You can choose multiple options from the list below.
-This helps us understand your preferences better.
-- Question design
-- Logic and branching
-- Data collection
+- Sports
+- Music
+- Technology
 CHECKBOX
 VARIABLE: interests
 
-Q: Any suggestions for improvement?
-ESSAY
-VARIABLE: suggestions
+BLOCK: Technology
+SHOW_IF: interests == Technology
 
-# Variables & Logic
+#
 
-## Using Your Responses
-Hi {user_name}! Your answers can personalize later questions.
+You indicated that technology is one of your interests.
 
-Based on your experience rating of {rating} and having created {previous_surveys} surveys before, your total experience score would be {rating + previous_surveys}.
+Q: To what extent do you like programming?
+- Not at all
+- Somewhat
+- Moderately
+- Very much
+- A great deal
 
-**Variable Substitution:** Use {variable_name} anywhere in text
-**Arithmetic Expressions:** Use {var1 + var2} for calculations
-**Conditional Questions:** Add SHOW_IF: condition after questions  
-**Conditional Text:** Use {{IF condition THEN text ELSE text}}
+Q: Do you know any programming languages?
+- Yes
+- No
+VARIABLE: programming
 
-Q: Tell us about your survey needs:
-TEXT
-SHOW_IF: rating >= 7
+# Programming Experience
+SHOW_IF: programming == Yes
 
-Q: Is your combined experience score accurate?
-HINT: This should match rating + previous surveys
-- Yes, it matches {rating + previous_surveys}
-- No, something seems wrong
-SHOW_IF: rating + previous_surveys != 0
-
-Q: {{IF rating >= 8 THEN Excellent! What specific features do you love ELSE What would make this tool better for you}}?
-TEXT
-
-# Advanced Features
-
-## Computed Logic
-**Computed Variables:** Use COMPUTE: name = expression to calculate values
-**Conditional Options:** Add - SHOW_IF: condition after specific options
-**Page Conditions:** Add SHOW_IF: condition after page titles
-
-COMPUTE: is_interested = interests == Question design OR interests == Logic and branching
-COMPUTE: high_rating = rating >= 8
-
-Q: Advanced features you'd like to see:
-- Multi-language support
-- API integration
-  - SHOW_IF: high_rating
-- Advanced analytics
-  - SHOW_IF: is_interested
+Q: Which programming languages do you know?
+- C#
+- Java
+- Python
+- JavaScript
+- R
 - Other
   - TEXT
+
+BLOCK: General_questions
+
+# Survey evaluation
+
+Q: Which of the questions did you like?
+- The personal information questions
+- The interests question
+- The technology questions
+  - SHOW_IF: interests == Technology
 CHECKBOX
 
-# Complete!
-SHOW_IF: rating >= 5
-
-## Thanks {user_name}!
-{{IF high_rating THEN You're clearly a survey expert ELSE Thanks for trying this out}}!
-
-**What you learned:**
-- Pages (#) and sections (##)
-- Question types: TEXT, ESSAY, NUMBER, CHECKBOX, Multiple Choice
-- Variables: VARIABLE: name and {name}
-- Conditions: SHOW_IF: condition
-- Conditional text: {{IF condition THEN text ELSE text}}
-- Computed variables: COMPUTE: name = expression
-
-**Try the section navigator** (menu icon, top-right) to jump between sections and see your responses!
-
-BLOCK: advanced_users
-SHOW_IF: rating >= 8
-
-# Advanced Features Demo
-
-## Block-Level Logic
-This section only shows for users who rated 8+.
-
-Q: Would you like to see more advanced features?
-- Yes, show me everything
-- Just the basics please
-
-Q: Which advanced topics interest you most?
-- Custom block logic
-- Complex conditionals  
-- Multi-language support
-CHECKBOX
-
-BLOCK: 
-
-# Final Question
-
-Q: Ready to create your own survey?
-- Definitely!
-- Need more practice  
-- Just exploring`
+Q: Two years from now, would you want to participate in this survey again, when you are {age + 2} years old?
+- Yes
+- No`
