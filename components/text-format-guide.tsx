@@ -22,36 +22,44 @@ Q: What is your age?
 - 18-25
 - Over 25`}
           </div>
-          <ul className="list-disc list-inside space-y-1 text-sm">
+          <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
               <code># Title</code>
-              <ul>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Creates a page with an (optional) title</li>
                 <li>Each # starts a new page</li>
               </ul>
             </li>
             <li>
               <code>## Section</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Creates a section within a page</li>
+                <li>
+                  This is usually followed by text to provide additional
+                  instructions
+                </li>
+              </ul>
             </li>
-            <ul>
-              <li>Creates a section within a page</li>
-            </ul>
             <li>
               <code>Q: Question text?</code>
-              <ul>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Creates a question</li>
               </ul>
             </li>
             <li>
               <code>TEXT / ESSAY / NUMBER / CHECKBOX</code>
-              <ul>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Defines the question type</li>
+                <li>
+                  Should be placed immediately below the question or last
+                  question option
+                </li>
                 <li>By default a question is multiple choice</li>
               </ul>
             </li>
             <li>
               <code>- Option text</code>
-              <ul>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Creates a multiple-choice option</li>
               </ul>
             </li>
@@ -83,43 +91,83 @@ VARIABLE: interests
 Q: Do you like programming?
 - Yes
 - No
-SHOW_IF: name`}
+SHOW_IF: interests IS Technology`}
           </div>
-          <ul className="list-disc list-inside space-y-1 text-sm">
+          <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
-              <code>VARIABLE: name</code> - Store responses for later use
-            </li>
-            <li>
-              <code>HINT: Extra info</code> - Add muted text below question for
-              additional instructions
-            </li>
-            <li>
-              <code>{`{name}`}</code> - Insert saved variables
-            </li>
-            <li>
-              <code>{`{age + 5}`}</code> - Arithmetic expressions with variables
-            </li>
-            <li>
-              <code>SHOW_IF: condition</code> - Hide/show questions
-              conditionally (place after question)
-            </li>
-            <li>
-              <code>- TEXT</code> - Add text input to previous option (flexible
-              for any option)
-            </li>
-            <li>
-              Conditions:
-              <ul className="list-disc list-inside ml-4 mt-1">
+              <code>VARIABLE: name</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Stores the response to the question into a variable</li>
                 <li>
-                  <code>name IS John</code>: Text equals &quot;John&quot;
-                  exactly
+                  Can be used to insert the response into texts later in the
+                  survey or for use in conditions
                 </li>
                 <li>
-                  <code>name IS NOT Admin</code>: Text does not equal
-                  &quot;Admin&quot;
+                  Should be placed after the question or last question option
+                </li>
+              </ul>
+            </li>
+            <li>
+              <code>{`{name}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Inserts saved variables into question text or content</li>
+                <li>Variables can be used anywhere in text</li>
+              </ul>
+            </li>
+            <li>
+              <code>HINT: Extra info</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  Adds muted text below question for additional instructions
                 </li>
                 <li>
-                  <code>NOT completed</code>: Question is empty/unanswered
+                  Place immediately after the question line; before question
+                  options
+                </li>
+              </ul>
+            </li>
+            <li>
+              <code>- TEXT</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Adds text input to a question option</li>
+                <li>Shows up when the question option is selected</li>
+                <li>
+                  Useful to allow respondents to elaborate on a question option
+                </li>
+                <li>
+                  Should be placed directly under the option with 2 indented
+                  spaces
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <code>SHOW_IF: condition</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Hides/shows questions conditionally</li>
+                <li>
+                  Place after a question to only show the question when the
+                  condition is true
+                </li>
+                <li>
+                  Can also be placed after pages and blocks to hide entire pages
+                  and blocks
+                </li>
+              </ul>
+            </li>
+            <li>
+              Basic Conditions:
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  <code>name IS John</code>: Variable equals or includes
+                  &quot;John&quot; exactly
+                </li>
+                <li>
+                  <code>interests IS NOT Sports</code>: Variable does not equal
+                  or include &quot;Sports&quot;
+                </li>
+                <li>
+                  <code>NOT interests</code>: Variable is empty/unanswered
                 </li>
               </ul>
             </li>
@@ -184,43 +232,96 @@ BLOCK: general_questions
 # General Topics
 These questions are for everyone.`}
           </div>
-          <ul className="list-disc list-inside space-y-1 text-sm">
+          <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
-              <code>BLOCK: name</code> - Group related pages together for
-              conditional visibility
+              <code>BLOCK: name</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Group related pages together for conditional visibility</li>
+                <li>Place at the beginning of a section</li>
+                <li>All pages until next BLOCK belong to this block</li>
+              </ul>
             </li>
             <li>
-              <code>COMPUTE: var = expression</code> - Calculate variables from
-              responses (block-level or section-level)
+              <code>COMPUTE: var = expression</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Calculate variables from responses</li>
+                <li>Can be block-level or section-level</li>
+                <li>Use arithmetic expressions and conditions</li>
+              </ul>
             </li>
             <li>
-              <code>{`{{IF condition THEN text ELSE text}}`}</code> - Insert
-              conditional text within question text
+              <code>{`{{IF condition THEN text ELSE text}}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Insert conditional text within question text</li>
+                <li>Dynamically change question wording based on responses</li>
+                <li>ELSE part is optional</li>
+              </ul>
             </li>
             <li>
-              <code>{`{var1 + var2}`}</code> - Arithmetic expressions: add,
-              subtract, multiply, divide variables
+              <code>{`{var1 + var2}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  Arithmetic expressions: add, subtract, multiply, divide
+                  variables
+                </li>
+                <li>Can be used in question text or computed variables</li>
+                <li>Supports parentheses for complex operations</li>
+              </ul>
             </li>
             <li>
-              <code>- SHOW_IF: condition</code> - Conditionally show question
-              options (place after option)
+              <code>- SHOW_IF: condition</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Conditionally show question options</li>
+                <li>Place after option with two-space indent</li>
+                <li>Option only appears when condition is true</li>
+              </ul>
             </li>
             <li>
-              <code>- TEXT</code> - Show text input when previous option is
-              selected (flexible for any option needing elaboration)
+              <code>SHOW_IF: condition</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Hide/show pages/sections/blocks</li>
+                <li>Place after #, ##, or BLOCK line</li>
+                <li>Entire section only appears when condition is true</li>
+              </ul>
             </li>
             <li>
-              <code>SHOW_IF: condition</code> - Hide/show pages/sections/blocks
-              (place after #, ##, or BLOCK line)
+              Condition Operators:
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  <code>== / IS</code>: Equal comparison
+                </li>
+                <li>
+                  <code>!= / IS_NOT</code>: Not equal comparison
+                </li>
+                <li>
+                  <code>&& / AND</code>: Logical AND
+                </li>
+                <li>
+                  <code>|| / OR</code>: Logical OR
+                </li>
+                <li>
+                  <code>NOT</code>: Logical negation
+                </li>
+                <li>Both symbols and text work interchangeably</li>
+              </ul>
             </li>
             <li>
-              Operators: Both symbols and text work (<code>== / IS</code>,{" "}
-              <code>!= / IS_NOT</code>, <code>&& / AND</code>,{" "}
-              <code>|| / OR</code>)
+              STARTS_WITH Patterns:
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  <code>STARTS_WITH crime == Yes</code>: Any variable starting with &quot;crime&quot; equals &quot;Yes&quot;
+                </li>
+                <li>
+                  <code>STARTS_WITH fraud != No</code>: Any variable starting with &quot;fraud&quot; doesn&apos;t equal &quot;No&quot;
+                </li>
+                <li>Uses OR logic: true if ANY matching variable meets the condition</li>
+                <li>Useful for grouped questions with common prefixes</li>
+                <li>No conflicts with markdown or JSX formatting</li>
+              </ul>
             </li>
             <li>
-              Complex conditions:
-              <ul className="list-disc list-inside ml-4 mt-1">
+              More Condition Examples:
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
                   <code>interests == Technology</code>: Checkbox contains
                   &quot;Technology&quot;
