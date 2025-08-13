@@ -241,11 +241,9 @@ export function PageNavigator({
 
                       {/* Pages within block */}
                       {(isExpanded || !block.name) && block.pages.map((page, pageIndex) => {
-                        const pageVisible = evaluateCondition(
-                          page.showIf || "",
-                          responses,
-                          getComputedVariables(page)
-                        )
+                        // Skip expensive computation during render for non-visible pages
+                        // Just check if page is in visible pages list
+                        const pageVisible = visiblePages.includes(page)
 
                         // Find the visible page index for this page
                         const visibleIndex = visiblePages.findIndex(
