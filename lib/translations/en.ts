@@ -12,7 +12,7 @@ export const en = {
   completion: {
     title: "Survey Complete!",
     description:
-      "Thank you for completing the questionnaire. Your responses have been recorded.",
+      "Thank you for completing the questionnaire.",
     close: "Close",
   },
   errors: {

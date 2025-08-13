@@ -12,7 +12,7 @@ export const nl = {
   completion: {
     title: "Vragenlijst voltooid!",
     description:
-      "Bedankt voor het invullen van de vragenlijst. Uw antwoorden zijn vastgelegd.",
+      "Bedankt voor het invullen van de vragenlijst.",
     close: "Sluiten",
   },
   errors: {
