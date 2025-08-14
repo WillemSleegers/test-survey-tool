@@ -1,5 +1,3 @@
-"use client"
-
 export function TextFormatGuide() {
   return (
     <div className="space-y-2">
@@ -9,18 +7,30 @@ export function TextFormatGuide() {
         <div>
           <h4 className="text-base font-medium mb-3">Basic</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`# Personal Information
+            {`# Survey Tool Evaluation
 
-## Basic Details
-Please answer the following questions about yourself.
+## About This Survey
+Help us improve our survey creation tool by sharing your experience using it.
 
-Q: What is your name?
-TEXT
+Q: How did you first learn about this survey tool?
+- Online search
+- Recommendation from colleague
+- Social media
+- Documentation or tutorial
+- Other
 
-Q: What is your age?
-- Under 18
-- 18-25
-- Over 25`}
+Q: Which features have you tried so far?
+- Creating basic surveys
+- Using conditional logic
+- Adding computed variables
+- Testing surveys with others
+CHECKBOX
+
+Q: On a scale of 1-10, how easy was it to create your first survey?
+NUMBER
+
+Q: What has been your biggest challenge or frustration with the tool?
+ESSAY`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -69,43 +79,48 @@ Q: What is your age?
         <div>
           <h4 className="text-base font-medium mb-3">Intermediate</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`# Personal Information
+            {`# Survey Tool Evaluation
 
-## Basic Details
-Please answer the following questions about yourself.
+## About This Survey
+Help us improve our survey creation tool by sharing your experience using it.
 
-Q: What is your name?
-TEXT
-VARIABLE: name
+Q: How long have you been using this survey tool?
+- Just started today
+- A few days
+- About a week
+- Several weeks or more
+VARIABLE: usage_time
 
-Q: What is your age?
-- Under 18
-- 18-25
-- Over 25
-
-#
-
-Q: Hello {name}, what are your interests?
+Q: Which features have you tried so far?
 HINT: Select all that apply
-- Sports
-- Music
-- Technology
-- Other
+- Creating basic surveys
+- Using conditional logic (SHOW_IF)
+- Adding computed variables
+- Variable interpolation in text
+- Other advanced features
   - TEXT
 CHECKBOX
-VARIABLE: interests
+VARIABLE: features_tried
 
 #
-SHOW_IF: interests IS Technology
 
-You indicated that technology is one of your interests.
+Q: Overall, how would you rate the learning curve?
+- Very easy to learn
+- Somewhat easy
+- Moderate difficulty
+- Quite difficult
+- Very difficult
 
-Q: To what extent do you like programming?
-- Not at all
-- Somewhat
-- Moderately
-- Very much
-- A great deal`}
+#
+SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
+
+Since you've tried conditional logic, we'd love your specific feedback.
+
+Q: How intuitive did you find the SHOW_IF syntax?
+- Very intuitive
+- Mostly intuitive
+- Somewhat confusing
+- Very confusing`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -192,74 +207,72 @@ Q: To what extent do you like programming?
         <div>
           <h4 className="text-base font-medium mb-3">Advanced</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`BLOCK: Personal information
+            {`BLOCK: User Background
 
-# Personal Information
+# Survey Tool Evaluation
 
-## Basic Details
-Please answer the following questions about yourself.
+## About This Survey
+Help us improve our survey creation tool by sharing your experience using it.
 
-Q: What is your name?
-TEXT
-VARIABLE: name
+Q: How long have you been using this survey tool?
+- Just started today
+- A few days
+- About a week
+- Several weeks or more
+VARIABLE: usage_time
 
-Q: What is your age?
+Q: How many surveys have you created so far?
 NUMBER
-VARIABLE: age
+VARIABLE: surveys_created
 
 #
 
-Q: Hello {name}, what are your interests?
+Q: Which features have you tried so far?
 HINT: Select all that apply
-- Sports
-- Music
-- Technology
+- Creating basic surveys
+- Using conditional logic (SHOW_IF)
+- Adding computed variables
+- Variable interpolation in text
 CHECKBOX
-VARIABLE: interests
+VARIABLE: features_tried
 
-BLOCK: Technology  
-SHOW_IF: interests IS Technology
+COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
+
+BLOCK: Feature Feedback
+SHOW_IF: features_tried
 
 #
 
-You indicated that technology is one of your interests.
+We'd like detailed feedback on the features you've used.
 
-Q: To what extent do you like programming?
-- Not at all
-- Somewhat
-- Moderately
-- Very much
-- A great deal
+Q: How would you rate each feature you've used?
+- Creating basic surveys
+  - SHOW_IF: features_tried IS Creating basic surveys
+- Using conditional logic (SHOW_IF)
+  - SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
+- Adding computed variables
+  - SHOW_IF: features_tried IS Adding computed variables
+- Variable interpolation in text
+  - SHOW_IF: features_tried IS Variable interpolation in text
 
-Q: Do you know any programming languages?
+Q: {{IF experienced_user THEN As an experienced user ELSE As someone still learning}}, what would help you most?
+- Better documentation
+- More examples
+- Video tutorials
+- Simplified syntax
+
+BLOCK: Overall Assessment
+SHOW_IF: experienced_user
+
+# Advanced User Feedback
+
+Q: Would you recommend this tool to others?
 - Yes
 - No
-VARIABLE: programming
+VARIABLE: recommend
 
-# Programming Experience
-SHOW_IF: programming == Yes
-
-Q: Which programming languages do you know?
-- C#
-- Java
-- Python
-- JavaScript
-- R
-- Other
-  - TEXT
-VARIABLE: programming_languages
-
-BLOCK: General_questions
-
-# Survey evaluation
-
-Q: Which of the questions did you like?
-- The personal information questions
-- The interests question
-- The technology questions
-  - SHOW_IF: interests == Technology
-
-Q: Two years from now, would you want to participate in this survey again, when you are {age + 2} years old?`}
+Q: You've created {surveys_created} surveys so far. {{IF recommend IS Yes THEN Thank you for being willing to recommend our tool! ELSE We hope we can improve your experience.}} What's the most important improvement we could make?
+ESSAY`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
