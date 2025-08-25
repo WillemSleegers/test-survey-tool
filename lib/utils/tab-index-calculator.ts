@@ -5,8 +5,8 @@ import { VisiblePageContent, Responses, Question } from "@/lib/types"
  * 
  * Tab index logic:
  * - Text/Number questions: Always 1 input
- * - Radio questions: 1 input if answered (+ 1 for text if selected option has TEXT), all options if not answered
- * - Checkbox questions: Always all options (+ 1 for text per selected option with TEXT)
+ * - Radio questions: 1 input if answered (+ 1 for text if selected option has TEXT), all options + text inputs if not answered
+ * - Checkbox questions: All options + text inputs for options with TEXT
  * 
  * @param pageContent - Visible content of the page
  * @param responses - Current user responses for answered state checking
@@ -76,32 +76,19 @@ function calculateQuestionInputCount(
       // Radio: 1 for selection + 1 for text input if option allows it
       return selectedOption?.allowsOtherText ? 2 : 1
     } else {
-      // Not answered: all options are tabbable
-      return question.options.length
+      // Not answered: all options are tabbable + any text inputs for options with TEXT
+      const typedQuestion = question as Question
+      const textInputCount = typedQuestion.options.filter(opt => opt.allowsOtherText).length
+      return question.options.length + textInputCount
     }
   } else if (question.type === 'checkbox') {
-    // For checkboxes, count actual slots needed: 1 per checkbox + 1 per selected "other" text input
+    // For checkboxes, count actual slots needed: 1 per checkbox + 1 per text input
     const typedQuestion = question as Question
     let totalSlots = typedQuestion.options.length // All checkboxes
     
-    // Add slots for text inputs that are currently showing
-    typedQuestion.options.forEach(option => {
-      if (option.allowsOtherText) {
-        // Check if this option is selected by looking at responses
-        const response = responses[question.id]?.value
-        if (Array.isArray(response)) {
-          const isSelected = response.some(value => {
-            // Parse the response to get the base value
-            const colonIndex = value.indexOf(': ')
-            const baseValue = colonIndex > -1 ? value.substring(0, colonIndex) : value
-            return baseValue === option.value
-          })
-          if (isSelected) {
-            totalSlots += 1 // Add slot for text input
-          }
-        }
-      }
-    })
+    // Add slots for all text inputs
+    const textInputCount = typedQuestion.options.filter(opt => opt.allowsOtherText).length
+    totalSlots += textInputCount
     
     return totalSlots
   } else {

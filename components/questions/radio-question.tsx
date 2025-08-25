@@ -107,14 +107,21 @@ export function RadioQuestion({
   }
 
   // Handle other text input change
-  const handleOtherTextChange = (text: string) => {
+  const handleOtherTextChange = (optionValue: string, text: string) => {
     setCurrentOtherText(text)
     if (text.trim()) {
       // Update response with combined value
-      onResponse(question.id, `${baseValue}: ${text}`)
-    } else if (baseValue) {
-      // If text is empty but option is selected, just store the option
-      onResponse(question.id, baseValue)
+      onResponse(question.id, `${optionValue}: ${text}`)
+    } else if (baseValue === optionValue) {
+      // If text is empty but this option is selected, just store the option
+      onResponse(question.id, optionValue)
+    }
+  }
+
+  // Handle text input focus - auto-select the option
+  const handleTextInputFocus = (optionValue: string) => {
+    if (baseValue !== optionValue) {
+      handleRadioChange(optionValue)
     }
   }
 
@@ -129,9 +136,11 @@ export function RadioQuestion({
             ? (option.value === baseValue ? startTabIndex : -1)
             : startTabIndex + optionIndex
           
-          const textTabIndex = isAnswered && option.value === baseValue
-            ? startTabIndex + 1  // Text input immediately follows selected radio
-            : -1  // Not accessible if option not selected
+          const textTabIndex = option.allowsOtherText
+            ? (isAnswered && option.value === baseValue
+                ? startTabIndex + 1  // Text input immediately follows selected radio
+                : startTabIndex + optionIndex + 1)  // Sequential tab order for unselected
+            : -1  // Not applicable if no other text allowed
           
           return (
             <div key={option.value} className="space-y-2">
@@ -148,13 +157,14 @@ export function RadioQuestion({
                   {replacePlaceholders(option.label, responses, computedVariables)}
                 </Label>
               </div>
-              {option.allowsOtherText && option.value === baseValue && (
+              {option.allowsOtherText && (
                 <div className="ml-6">
                   <Input
                     type="text"
                     placeholder={t('placeholders.otherText')}
-                    value={currentOtherText}
-                    onChange={(e) => handleOtherTextChange(e.target.value)}
+                    value={option.value === baseValue ? currentOtherText : ""}
+                    onChange={(e) => handleOtherTextChange(option.value, e.target.value)}
+                    onFocus={() => handleTextInputFocus(option.value)}
                     className="mt-2"
                     tabIndex={textTabIndex}
                   />

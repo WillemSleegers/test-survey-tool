@@ -110,3 +110,11 @@ Strong TypeScript usage throughout:
 - React Compiler will handle memoization and re-render optimization
 - Focus on correctness and readability over manual performance tuning
 - Avoid setState calls during render cycles - they interfere with compiler analysis
+
+## Code Style Guidelines
+
+### Comments:
+- Keep comments concise and factual
+- Avoid referential comments that mention previous versions or changes
+- Comments should describe current behavior, not historical context
+- Example: Use "Add slots for text inputs" not "Add slots for text inputs (now always visible)"
