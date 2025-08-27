@@ -116,11 +116,17 @@ SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
 
 Since you've tried conditional logic, we'd love your specific feedback.
 
-Q: How intuitive did you find the SHOW_IF syntax?
-- Very intuitive
-- Mostly intuitive
-- Somewhat confusing
-- Very confusing`}
+Q: To what extent do you like programming?
+- Not at all
+- Somewhat
+- Moderately
+- Very much
+- A great deal
+
+#
+
+Q: {{IF interests THEN You previously selected {interests AS INLINE_LIST} as your interests. Are there any other hobbies you enjoy? ELSE What hobbies do you enjoy?}}
+TEXT`}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -143,6 +149,26 @@ Q: How intuitive did you find the SHOW_IF syntax?
                   Replaces the variable text with the value of the variable
                 </li>
                 <li>Variables can be used in page texts and question texts.</li>
+              </ul>
+            </li>
+            <li>
+              <code>{`{interests AS LIST}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  Formats checkbox variables as bullet lists (same as default behavior)
+                </li>
+                <li>Useful for explicitly showing list formatting</li>
+              </ul>
+            </li>
+            <li>
+              <code>{`{interests AS INLINE_LIST}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  Formats checkbox variables as comma-separated inline text
+                </li>
+                <li>Automatically lowercases items for natural sentence flow</li>
+                <li>Uses Oxford commas: &quot;sports, music, and technology&quot;</li>
+                <li>Perfect for inserting lists within question text</li>
               </ul>
             </li>
             <li>

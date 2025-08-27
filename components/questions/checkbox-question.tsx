@@ -156,6 +156,13 @@ export function CheckboxQuestion({
     onResponse(question.id, updatedValues)
   }
 
+  // Handle text input focus - auto-select the checkbox
+  const handleTextInputFocus = (optionValue: string) => {
+    if (!selectedBaseValues.includes(optionValue)) {
+      handleCheckboxChange(optionValue, true)
+    }
+  }
+
   return (
     <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
       <div className="space-y-3">
@@ -166,8 +173,8 @@ export function CheckboxQuestion({
           for (let i = 0; i < optionIndex; i++) {
             const prevOption = visibleOptions[i]
             slotsUsedBefore += 1 // checkbox
-            // Add slot for text input if this option has allowsOtherText AND is selected
-            if (prevOption.allowsOtherText && selectedBaseValues.includes(prevOption.value)) {
+            // Add slot for text input if this option has allowsOtherText
+            if (prevOption.allowsOtherText) {
               slotsUsedBefore += 1
             }
           }
@@ -193,13 +200,14 @@ export function CheckboxQuestion({
                   {replacePlaceholders(option.label, responses, computedVariables)}
                 </Label>
               </div>
-              {option.allowsOtherText && selectedBaseValues.includes(option.value) && (
+              {option.allowsOtherText && (
                 <div className="ml-6">
                   <Input
                     type="text"
                     placeholder={t('placeholders.otherText')}
                     value={otherTexts[option.value] || ""}
                     onChange={(e) => handleOtherTextChange(option.value, e.target.value)}
+                    onFocus={() => handleTextInputFocus(option.value)}
                     className="mt-2"
                     tabIndex={textTabIndex}
                   />
