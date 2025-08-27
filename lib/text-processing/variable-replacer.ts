@@ -9,6 +9,8 @@ import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/exp
  * - Arithmetic expressions: {age + 5} -> "30" (if age = 25)
  * - Multiple variables: {count1 + count2} -> "7" (if count1 = 3, count2 = 4)
  * - Array values: {colors} -> "Red\n- Blue\n- Green" (markdown list)
+ * - Array as list: {colors AS LIST} -> "Red\n- Blue\n- Green" (markdown list)
+ * - Array as inline: {colors AS INLINE_LIST} -> "red, blue, and green" (lowercase, comma-separated)
  * - Empty arrays: {selections} -> "none"
  * - Missing variables: {unknown} -> "{unknown}" (unchanged)
  * 
@@ -25,6 +27,9 @@ import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/exp
  * 
  * processVariablePlaceholders("You selected: {colors}", responses)  
  * // Returns "You selected:\n- Red\n- Blue\n\n" if colors = ["Red", "Blue"]
+ * 
+ * processVariablePlaceholders("You reported: {crimes AS INLINE_LIST}", responses)
+ * // Returns "You reported: theft, fraud, and violence" if crimes = ["THEFT", "FRAUD", "VIOLENCE"]
  */
 export function processVariablePlaceholders(
   text: string,
@@ -33,6 +38,40 @@ export function processVariablePlaceholders(
   // Updated regex to capture any content inside braces (including expressions with spaces and operators)
   return text.replace(/\{([^}]+)\}/g, (match, content) => {
     const trimmedContent = content.trim()
+    
+    // Check for format modifiers (e.g., "variable AS LIST" or "variable AS INLINE_LIST")
+    const formatMatch = trimmedContent.match(/^(.+?)\s+AS\s+(LIST|INLINE_LIST)$/i)
+    if (formatMatch) {
+      const [, variablePart, format] = formatMatch
+      const variable = variablePart.trim()
+      
+      // Find response by variable name
+      const responseEntry = Object.values(responses).find(
+        (r) => r.variable === variable
+      )
+      const value = responseEntry?.value
+
+      if (value === undefined) {
+        // Escape curly braces to prevent react-markdown from interpreting them as JSX
+        return match.replace(/[{}]/g, '\\$&') // Return escaped if variable not found
+      }
+
+      // Handle array values with formatting
+      if (Array.isArray(value)) {
+        return formatArrayValue(value, format.toLowerCase() as 'list' | 'inline_list')
+      }
+
+      // For non-array values, just return as string regardless of format
+      if (typeof value === 'boolean') {
+        return value ? 'true' : 'false'
+      }
+      
+      if (typeof value === 'number') {
+        return String(value)
+      }
+      
+      return String(value)
+    }
     
     // Check if this is an arithmetic expression or a simple variable
     if (isArithmeticExpression(trimmedContent)) {
@@ -83,20 +122,38 @@ export function processVariablePlaceholders(
  * Formats array values for display in text
  * 
  * @param value - Array of selected values
+ * @param format - Optional format type ('list' or 'inline_list')
  * @returns Formatted string representation
  * 
  * @example
  * formatArrayValue([]) // "none"
  * formatArrayValue(["Red"]) // "Red"
  * formatArrayValue(["Red", "Blue"]) // "\n- Red\n- Blue\n\n"
+ * formatArrayValue(["Red", "Blue", "Green"], "inline_list") // "red, blue, and green"
  */
-function formatArrayValue(value: string[]): string {
+function formatArrayValue(value: string[], format?: 'list' | 'inline_list'): string {
   if (value.length === 0) {
     return "none"
   } else if (value.length === 1) {
+    // For inline_list with single item, lowercase it
+    if (format === 'inline_list') {
+      return value[0].toLowerCase()
+    }
     return value[0]
   } else {
-    // Convert to markdown unordered list with surrounding newlines
-    return '\n' + value.map(item => `- ${item}`).join('\n') + '\n\n'
+    if (format === 'inline_list') {
+      // Convert to comma-separated list with Oxford comma and lowercase
+      const lowercaseItems = value.map(item => item.toLowerCase())
+      if (lowercaseItems.length === 2) {
+        return `${lowercaseItems[0]} and ${lowercaseItems[1]}`
+      } else {
+        const allButLast = lowercaseItems.slice(0, -1)
+        const last = lowercaseItems[lowercaseItems.length - 1]
+        return `${allButLast.join(', ')}, and ${last}`
+      }
+    } else {
+      // Convert to markdown unordered list with surrounding newlines (default behavior)
+      return '\n' + value.map(item => `- ${item}`).join('\n') + '\n\n'
+    }
   }
 }
