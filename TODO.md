@@ -11,6 +11,7 @@
 - [ ] Reconsider necessity of Sections feature
   - Evaluate if Sections are redundant given current Block structure
   - Consider simplifying by removing Sections or clarifying their distinct purpose
+- [ ] Update the README
 
 ## Low Priority
 
