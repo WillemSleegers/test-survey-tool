@@ -124,3 +124,15 @@ Strong TypeScript usage throughout:
 - Avoid legacy aliases or deprecated exports
 - Remove unused code rather than commenting it out
 - Refactor directly rather than adding workarounds
+
+### Documentation and Examples:
+- Keep survey examples realistic and purposeful - avoid forced feature demonstrations
+- Use progressive examples that build naturally (Basic → Intermediate → Advanced)
+- Centralize reusable content in constants.ts rather than duplicating
+- Maintain consistent terminology ("survey" vs "questionnaire") throughout user-facing text
+
+### Development Workflow:
+- Always build (`npm run build`) after significant changes to catch TypeScript errors
+- Check TODO.md for prioritized development items
+- Test core functionality after parser or component changes
+- Commit frequently with descriptive messages explaining the "why" not just the "what"
