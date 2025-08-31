@@ -198,7 +198,7 @@ export function CheckboxQuestion({
                   htmlFor={`${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
-                  <Markdown className="inline">
+                  <Markdown>
                     {replacePlaceholders(option.label, responses, computedVariables)}
                   </Markdown>
                 </Label>
