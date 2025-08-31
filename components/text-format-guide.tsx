@@ -1,3 +1,5 @@
+import { BASIC_SURVEY, INTERMEDIATE_SURVEY, ADVANCED_SURVEY } from "@/lib/constants"
+
 export function TextFormatGuide() {
   return (
     <div className="space-y-2">
@@ -7,30 +9,7 @@ export function TextFormatGuide() {
         <div>
           <h4 className="text-base font-medium mb-3">Basic</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`# Survey Tool Evaluation
-
-## About This Survey
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How did you first learn about this survey tool?
-- Online search
-- Recommendation from colleague
-- Social media
-- Documentation or tutorial
-- Other
-
-Q: Which features have you tried so far?
-- Creating basic surveys
-- Using conditional logic
-- Adding computed variables
-- Testing surveys with others
-CHECKBOX
-
-Q: On a scale of 1-10, how easy was it to create your first survey?
-NUMBER
-
-Q: What has been your biggest challenge or frustration with the tool?
-ESSAY`}
+            {BASIC_SURVEY}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -54,6 +33,7 @@ ESSAY`}
               <code>Q: Question text?</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Creates a question</li>
+                <li>Content on following lines gets appended to question text</li>
               </ul>
             </li>
             <li>
@@ -73,60 +53,21 @@ ESSAY`}
                 <li>Creates a multiple-choice option</li>
               </ul>
             </li>
+            <li>
+              All text supports Markdown formatting
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>**bold text** for emphasis</li>
+                <li>*italic text* for subtle emphasis</li>
+                <li>- bullet points and other formatting</li>
+              </ul>
+            </li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-base font-medium mb-3">Intermediate</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`# Survey Tool Evaluation
-
-## About This Survey
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How long have you been using this survey tool?
-- Just started today
-- A few days
-- About a week
-- Several weeks or more
-VARIABLE: usage_time
-
-Q: Which features have you tried so far?
-HINT: Select all that apply
-- Creating basic surveys
-- Using conditional logic (SHOW_IF)
-- Adding computed variables
-- Variable interpolation in text
-- Other advanced features
-  - TEXT
-CHECKBOX
-VARIABLE: features_tried
-
-#
-
-Q: Overall, how would you rate the learning curve?
-- Very easy to learn
-- Somewhat easy
-- Moderate difficulty
-- Quite difficult
-- Very difficult
-
-#
-SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
-
-Since you've tried conditional logic, we'd love your specific feedback.
-
-Q: To what extent do you like programming?
-- Not at all
-- Somewhat
-- Moderately
-- Very much
-- A great deal
-
-#
-
-Q: {{IF interests THEN You previously selected {interests AS INLINE_LIST} as your interests. Are there any other hobbies you enjoy? ELSE What hobbies do you enjoy?}}
-TEXT`}
+            {INTERMEDIATE_SURVEY}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -152,12 +93,22 @@ TEXT`}
               </ul>
             </li>
             <li>
-              <code>{`{interests AS LIST}`}</code>
+              <code>{`{count1 + count2}`}</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
-                  Formats checkbox variables as bullet lists (same as default behavior)
+                  Arithmetic expressions: add, subtract, multiply, divide
+                  variables
                 </li>
-                <li>Useful for explicitly showing list formatting</li>
+                <li>Supports parentheses for complex operations</li>
+              </ul>
+            </li>
+            <li>
+              <code>{`{interests AS LIST}`}</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Formats checkbox variables as bullet lists.</li>
+                <li>
+                  Without AS LIST, checkbox variables display as bullet lists by default
+                </li>
               </ul>
             </li>
             <li>
@@ -166,8 +117,12 @@ TEXT`}
                 <li>
                   Formats checkbox variables as comma-separated inline text
                 </li>
-                <li>Automatically lowercases items for natural sentence flow</li>
-                <li>Uses Oxford commas: &quot;sports, music, and technology&quot;</li>
+                <li>
+                  Automatically lowercases items for natural sentence flow
+                </li>
+                <li>
+                  Uses Oxford commas: &quot;sports, music, and technology&quot;
+                </li>
                 <li>Perfect for inserting lists within question text</li>
               </ul>
             </li>
@@ -180,6 +135,9 @@ TEXT`}
                 <li>
                   Place immediately after the question line; before question
                   options
+                </li>
+                <li>
+                  Content on following lines gets appended to the hint text
                 </li>
               </ul>
             </li>
@@ -233,72 +191,7 @@ TEXT`}
         <div>
           <h4 className="text-base font-medium mb-3">Advanced</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {`BLOCK: User Background
-
-# Survey Tool Evaluation
-
-## About This Survey
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How long have you been using this survey tool?
-- Just started today
-- A few days
-- About a week
-- Several weeks or more
-VARIABLE: usage_time
-
-Q: How many surveys have you created so far?
-NUMBER
-VARIABLE: surveys_created
-
-#
-
-Q: Which features have you tried so far?
-HINT: Select all that apply
-- Creating basic surveys
-- Using conditional logic (SHOW_IF)
-- Adding computed variables
-- Variable interpolation in text
-CHECKBOX
-VARIABLE: features_tried
-
-COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
-
-BLOCK: Feature Feedback
-SHOW_IF: features_tried
-
-#
-
-We'd like detailed feedback on the features you've used.
-
-Q: How would you rate each feature you've used?
-- Creating basic surveys
-  - SHOW_IF: features_tried IS Creating basic surveys
-- Using conditional logic (SHOW_IF)
-  - SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
-- Adding computed variables
-  - SHOW_IF: features_tried IS Adding computed variables
-- Variable interpolation in text
-  - SHOW_IF: features_tried IS Variable interpolation in text
-
-Q: {{IF experienced_user THEN As an experienced user ELSE As someone still learning}}, what would help you most?
-- Better documentation
-- More examples
-- Video tutorials
-- Simplified syntax
-
-BLOCK: Overall Assessment
-SHOW_IF: experienced_user
-
-# Advanced User Feedback
-
-Q: Would you recommend this tool to others?
-- Yes
-- No
-VARIABLE: recommend
-
-Q: You've created {surveys_created} surveys so far. {{IF recommend IS Yes THEN Thank you for being willing to recommend our tool! ELSE We hope we can improve your experience.}} What's the most important improvement we could make?
-ESSAY`}
+            {ADVANCED_SURVEY}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -375,10 +268,10 @@ ESSAY`}
               </ul>
             </li>
             <li>
-              STARTS_WITH
+              <code>STARTS_WITH</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>
-                  Can be used to select and test multiple variables at once
+                  Tests multiple variables with a common prefix at once
                 </li>
                 <li>
                   <code>STARTS_WITH crime == Yes</code>: Any variable starting
@@ -408,6 +301,15 @@ ESSAY`}
                 </li>
                 <li>
                   <code>age {">"}= 18</code>: Age is 18 or older
+                </li>
+                <li>
+                  <code>age {"<"}= 65</code>: Age is 65 or younger
+                </li>
+                <li>
+                  <code>rating {">"} 3</code>: Rating greater than 3
+                </li>
+                <li>
+                  <code>score {"<"} 50</code>: Score less than 50
                 </li>
                 <li>
                   <code>selections {">"}= 2</code>: At least 2 checkbox options

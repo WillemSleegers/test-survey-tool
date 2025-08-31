@@ -28,7 +28,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
 
   if (trimmed.startsWith("# ") || trimmed === "#") return "page"
   if (trimmed.startsWith("## ")) return "section"
-  if (trimmed.match(/^Q\d+:/) || trimmed.match(/^Q:/)) return "question"
+  if (trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a conditional option modifier
@@ -66,25 +66,10 @@ const parseSection = (line: string): SectionData => ({
 
 const parseQuestion = (line: string, questionCounter: number): QuestionData => {
   const trimmed = line.trim()
-  const numberedMatch = trimmed.match(/^(Q\d+):/)
-  const unnumberedMatch = trimmed.match(/^Q:/)
   
-  if (numberedMatch) {
-    return {
-      id: numberedMatch[1],
-      text: trimmed.substring(trimmed.indexOf(":") + 1).trim(),
-    }
-  } else if (unnumberedMatch) {
-    return {
-      id: `Q${questionCounter}`,
-      text: trimmed.substring(2).trim(),
-    }
-  }
-  
-  // Fallback (shouldn't happen with proper classification)
   return {
     id: `Q${questionCounter}`,
-    text: trimmed.substring(trimmed.indexOf(":") + 1).trim(),
+    text: trimmed.substring(2).trim(),
   }
 }
 

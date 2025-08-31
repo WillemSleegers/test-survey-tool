@@ -13,7 +13,7 @@ import { parseQuestionnaire } from "@/lib/parser"
 
 import { Block } from "@/lib/types"
 
-import { SAMPLE_TEXT } from "@/lib/constants"
+import { ADVANCED_SURVEY } from "@/lib/constants"
 
 const QuestionnaireApp = () => {
   const [questionnaire, setQuestionnaire] = useState<Block[] | null>(null)
@@ -34,7 +34,7 @@ const QuestionnaireApp = () => {
 
   const loadSample = (): void => {
     try {
-      const parsed = parseQuestionnaire(SAMPLE_TEXT)
+      const parsed = parseQuestionnaire(ADVANCED_SURVEY)
       console.log(parsed)
       setQuestionnaire(parsed)
       setError("")
@@ -74,7 +74,7 @@ const QuestionnaireApp = () => {
 
         <div className="space-y-4 flex justify-center">
           <Button onClick={loadSample} variant="outline">
-            Load Sample Questionnaire
+            Load Sample Survey
           </Button>
         </div>
 
