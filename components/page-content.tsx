@@ -10,7 +10,7 @@ import { VisiblePageContent, Responses, ComputedVariables } from "@/lib/types"
 interface PageContentProps {
   content: VisiblePageContent
   responses: Responses
-  onResponse: (questionId: string, value: string | string[]) => void
+  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
   computedVariables?: ComputedVariables
 }
 

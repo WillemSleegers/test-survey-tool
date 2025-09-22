@@ -3,7 +3,7 @@ import { Responses } from "@/lib/types"
 /**
  * Represents a response value that can be converted to numeric
  */
-export type ResponseValue = string | string[] | boolean | number | undefined | null
+export type ResponseValue = string | string[] | boolean | number | undefined | null | Record<string, string | string[]>
 
 /**
  * Converts any response value to a numeric representation
@@ -45,11 +45,16 @@ export function convertValueToNumber(value: ResponseValue): number {
     if (lowerValue === "false" || lowerValue === "no" || lowerValue === "nee") {
       return 0
     }
-    
+
     const numValue = parseFloat(value)
     return isNaN(numValue) ? 0 : numValue
   }
-  
+
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    // Matrix object - return the count of answered rows
+    return Object.keys(value).length
+  }
+
   return 0
 }
 

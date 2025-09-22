@@ -13,7 +13,7 @@ import { parseQuestionnaire } from "@/lib/parser"
 
 import { Block } from "@/lib/types"
 
-import { SAMPLE_TEXT } from "@/lib/constants"
+import { ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
 
 const QuestionnaireApp = () => {
   const [questionnaire, setQuestionnaire] = useState<Block[] | null>(null)
@@ -34,7 +34,7 @@ const QuestionnaireApp = () => {
 
   const loadSample = (): void => {
     try {
-      const parsed = parseQuestionnaire(SAMPLE_TEXT)
+      const parsed = parseQuestionnaire(ADVANCED_SAMPLE_TEXT)
       console.log(parsed)
       setQuestionnaire(parsed)
       setError("")

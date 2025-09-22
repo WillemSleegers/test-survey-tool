@@ -19,7 +19,7 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
    */
   const handleResponse = (
     questionId: string,
-    value: string | string[]
+    value: string | string[] | Record<string, string | string[]>
   ): void => {
     const question =
       questionnaire

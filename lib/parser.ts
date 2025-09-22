@@ -10,6 +10,7 @@ import {
   OptionData,
   OptionShowIfData,
   OptionOtherTextData,
+  MatrixRowData,
   InputTypeData,
   VariableData,
   ShowIfData,
@@ -31,6 +32,10 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.match(/^Q\d+:/) || trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
+    // Check if this is a matrix row (- Q: ...)
+    if (trimmed.match(/^-\s*Q:/)) {
+      return state.currentQuestion ? "matrix_row" : "content"
+    }
     // Check if this is a conditional option modifier
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
       return state.currentQuestion ? "option_show_if" : "content"
@@ -105,6 +110,15 @@ const parseOption = (line: string): OptionData => {
 
   const optionText = trimmed.substring(1).trim()
   return { text: optionText }
+}
+
+const parseMatrixRow = (line: string, _questionCounter: number): MatrixRowData => { // eslint-disable-line @typescript-eslint/no-unused-vars
+  const trimmed = line.trim()
+  // Remove "- Q:" prefix
+  const text = trimmed.replace(/^-\s*Q:\s*/, '').trim()
+  // Generate a unique ID for the matrix row based on the text
+  const id = text.toLowerCase().replace(/[^a-z0-9]/g, '_')
+  return { id, text }
 }
 
 const parseInputType = (line: string): InputTypeData => {
@@ -191,6 +205,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionShowIf(line) }
     case "option_other_text":
       return { type, raw: line, data: parseOptionOtherText() }
+    case "matrix_row":
+      return { type, raw: line, data: parseMatrixRow(line, state.questionCounter) }
     case "input_type":
       return { type, raw: line, data: parseInputType(line) }
     case "variable":
@@ -216,6 +232,7 @@ const createQuestion = (id: string, text: string): Question => ({
   text,
   type: "multiple_choice",
   options: [],
+  matrixRows: [],
 })
 
 const createBlock = (name: string): Block => ({
@@ -392,7 +409,15 @@ const handleQuestion = (
   data: QuestionData
 ): ParserState => {
   // Save current question
-  const newState = saveCurrentQuestion(state)
+  let newState = saveCurrentQuestion(state)
+
+  // If no page exists, create a default one
+  if (!newState.currentPage) {
+    newState = {
+      ...newState,
+      currentPage: createPage(""),
+    }
+  }
 
   // Start new question and increment counter
   return {
@@ -478,18 +503,50 @@ const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): P
   }
 }
 
+const handleMatrixRow = (state: ParserState, data: MatrixRowData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Set question type to matrix when we encounter the first matrix row
+  const updatedType = state.currentQuestion.matrixRows?.length === 0 ? "matrix" : state.currentQuestion.type
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      type: updatedType,
+      matrixRows: [
+        ...(state.currentQuestion.matrixRows || []),
+        {
+          id: data.id,
+          text: data.text
+        },
+      ],
+    },
+    // Clear subtext buffer when we encounter structured elements
+    subtextBuffer: null,
+  }
+}
+
 const handleInputType = (
   state: ParserState,
   data: InputTypeData
 ): ParserState => {
   if (!state.currentQuestion) return state
 
+  // For matrix questions, preserve the matrix type but store the input behavior
+  const isMatrixQuestion = state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0
+
+  const questionType = isMatrixQuestion ? "matrix" : data.type
+
   return {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
-      type: data.type,
-      options: data.type === "checkbox" ? state.currentQuestion.options : [],
+      type: questionType,
+      // Store the actual input type for matrix questions to know if it should be radio or checkbox
+      ...(isMatrixQuestion && data.type !== "matrix" && { inputType: data.type }),
+      // For matrix questions, always preserve options. For regular checkbox questions, preserve options too.
+      options: (data.type === "checkbox" || isMatrixQuestion) ? state.currentQuestion.options : [],
     },
     // Clear subtext buffer when we encounter structured elements
     subtextBuffer: null,
@@ -656,6 +713,8 @@ const reduceParsedLine = (
       return handleOptionShowIf(state, parsedLine.data)
     case "option_other_text":
       return handleOptionOtherText(state, parsedLine.data)
+    case "matrix_row":
+      return handleMatrixRow(state, parsedLine.data)
     case "input_type":
       return handleInputType(state, parsedLine.data)
     case "variable":

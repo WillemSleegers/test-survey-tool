@@ -10,7 +10,7 @@ import Markdown from "react-markdown"
 interface SectionRendererProps {
   section: VisibleSection
   responses: Responses
-  onResponse: (questionId: string, value: string | string[]) => void
+  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
   startTabIndex: number
   computedVariables?: ComputedVariables
 }
