@@ -21,14 +21,6 @@ HINT: Select all that apply
 - Text/essay questions
 - Number questions
 - Matrix questions
-CHECKBOX
-
-Q: Which features have you tried so far?
-HINT: Select all that apply
-- Creating basic surveys
-- Using conditional logic (SHOW_IF)
-- Adding computed variables
-- Variable interpolation in text
 CHECKBOX`
 
 export const INTERMEDIATE_SAMPLE_TEXT = `# **Survey Tool Evaluation**
