@@ -5,12 +5,20 @@ export type Option = {
   allowsOtherText?: boolean
 }
 
+export type MatrixRow = {
+  id: string
+  text: string
+  variable?: string
+}
+
 export type Question = {
   id: string
   text: string
   subtext?: string
-  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
+  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix"
   options: Option[]
+  matrixRows?: MatrixRow[]
+  inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   variable?: string
   showIf?: string
   sectionTitle?: string
@@ -46,7 +54,7 @@ export type Page = {
 }
 
 export type Response = {
-  value: string | string[] | boolean | number
+  value: string | string[] | boolean | number | Record<string, string | string[]>
   variable?: string
 }
 
@@ -90,6 +98,8 @@ export type ContentData = { content: string }
 export type ComputeData = { name: string; expression: string }
 export type BlockData = { name: string }
 
+export type MatrixRowData = { id: string; text: string }
+
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
   | { type: "section"; raw: string; data: SectionData }
@@ -98,6 +108,7 @@ export type ParsedLine =
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
   | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
+  | { type: "matrix_row"; raw: string; data: MatrixRowData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }

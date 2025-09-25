@@ -1,4 +1,4 @@
-import { BASIC_SURVEY, INTERMEDIATE_SURVEY, ADVANCED_SURVEY } from "@/lib/constants"
+import { BASIC_SAMPLE_TEXT, INTERMEDIATE_SAMPLE_TEXT, ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
 
 export function TextFormatGuide() {
   return (
@@ -9,7 +9,7 @@ export function TextFormatGuide() {
         <div>
           <h4 className="text-base font-medium mb-3">Basic</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {BASIC_SURVEY}
+            {BASIC_SAMPLE_TEXT}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -67,7 +67,7 @@ export function TextFormatGuide() {
         <div>
           <h4 className="text-base font-medium mb-3">Intermediate</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {INTERMEDIATE_SURVEY}
+            {INTERMEDIATE_SAMPLE_TEXT}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>
@@ -185,13 +185,23 @@ export function TextFormatGuide() {
                 </li>
               </ul>
             </li>
+            <li>
+              <code>- Q: Matrix row text</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Creates a matrix question row (sub-question)</li>
+                <li>Multiple <code>- Q:</code> lines create multiple rows sharing the same options</li>
+                <li>Regular <code>- Option</code> lines after matrix rows become shared response options</li>
+                <li>Can be used with CHECKBOX for multiple selections per row</li>
+                <li>Creates a table layout where each row is a separate question</li>
+              </ul>
+            </li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-base font-medium mb-3">Advanced</h4>
           <div className="bg-muted p-3 rounded mb-3 text-sm font-mono whitespace-pre-wrap">
-            {ADVANCED_SURVEY}
+            {ADVANCED_SAMPLE_TEXT}
           </div>
           <ul className="list-disc list-inside space-y-2 text-sm">
             <li>

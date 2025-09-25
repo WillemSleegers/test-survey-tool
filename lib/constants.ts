@@ -1,174 +1,176 @@
-export const BASIC_SURVEY = `# **Survey Tool Evaluation**
+export const BASIC_SAMPLE_TEXT = `# **Survey Tool Evaluation**
 
-## **About This Survey**
+## About This Survey
 Help us improve our survey creation tool by sharing your experience using it.
 
-Q: How did you first learn about this survey tool?
-- Online search
-- Recommendation from colleague
-- Social media
-- Documentation or tutorial
-- Other
+Q: How long have you been using this survey tool?
+- Just started today
+- A few days
+- About a week
+- Several weeks or more
 
-Q: Which features have you tried so far?
-HINT: *Select all that apply*
-- Creating **basic surveys**
-- Using conditional logic
-- Adding computed variables
-- Testing surveys with others
-CHECKBOX
-
-Q: On a scale of 1-10, how easy was it to create your first survey?
+Q: How many surveys have you created so far?
 NUMBER
-
-Q: What has been your **biggest challenge** or frustration with the tool?
-ESSAY`
-
-export const INTERMEDIATE_SURVEY = `# **Survey Tool Evaluation**
-
-## **About This Survey**
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How did you first learn about this survey tool?
-- Online search
-- Recommendation from colleague
-- Social media
-- Documentation or tutorial
-- Other
-VARIABLE: discovery_method
-
-Q: Which features have you tried so far?
-HINT: *Select all that apply*
-- Creating **basic surveys**
-- Using conditional logic
-- Adding computed variables
-- Testing surveys with others
-CHECKBOX
-VARIABLE: features_tried
-
-Q: On a scale of 1-10, how easy was it to create your first survey?
-NUMBER
-VARIABLE: ease_rating
-
-Q: What has been your **biggest challenge** or frustration with the tool?
-ESSAY
-VARIABLE: main_challenge
 
 #
 
-## Follow-up Questions
+Q: Which types of questions do you use in your surveys?
+HINT: Select all that apply
+- Multiple choice questions
+- Checkbox questions
+- Text/essay questions
+- Number questions
+- Matrix questions
+CHECKBOX`
 
-Since you discovered us through {discovery_method}, we'd like to know more about your experience.
+export const INTERMEDIATE_SAMPLE_TEXT = `# **Survey Tool Evaluation**
 
-Q: {{IF ease_rating >= 8 THEN Given your positive experience ELSE To help improve your experience}}, what would be most helpful?
+## About This Survey
+Help us improve our survey creation tool by sharing your experience using it.
+
+Q: How long have you been using this survey tool?
+- Just started today
+- A few days
+- About a week
+- Several weeks or more
+VARIABLE: usage_time
+
+Q: How many surveys have you created so far?
+NUMBER
+VARIABLE: surveys_created
+
+#
+
+Q: Which types of questions do you use in your surveys?
+HINT: Select all that apply
+- Multiple choice questions
+- Checkbox questions
+- Text/essay questions
+- Number questions
+- Matrix questions
+CHECKBOX
+
+Q: Which features have you tried so far?
+HINT: Select all that apply
+- Creating basic surveys
+- Using conditional logic (SHOW_IF)
+- Adding computed variables
+- Variable interpolation in text
+- Other advanced features
+  - TEXT
+CHECKBOX
+VARIABLE: features_tried
+
+Q: How would you rate each aspect of the survey tool?
+- Q: Ease of use
+- Q: Documentation quality
+- Q: Feature completeness
+- Excellent
+- Good
+- Fair
+- Poor
+
+#
+SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
+
+Since you've tried conditional logic, we'd love your specific feedback.
+
+Q: You've created {surveys_created} surveys so far. What would help you most?
 - Better documentation
-- More example templates
+- More examples
 - Video tutorials
-- Live support chat
-VARIABLE: preferred_help
+- Simplified syntax
 
-Q: Would you recommend this tool to a colleague?
-HINT: *Based on your rating of {ease_rating}/10*
-- Definitely yes
-- Probably yes
-- Not sure
-- Probably not
-- Definitely not
-SHOW_IF: ease_rating`
+#
 
-export const ADVANCED_SURVEY = `BLOCK: Initial Assessment
+Q: Overall, how would you rate the learning curve?
+- Very easy to learn
+- Somewhat easy
+- Moderate difficulty
+- Quite difficult
+- Very difficult`
+
+export const ADVANCED_SAMPLE_TEXT = `BLOCK: User Background
 
 # **Survey Tool Evaluation**
 
-## **About This Survey**
+## About This Survey
 Help us improve our survey creation tool by sharing your experience using it.
 
-Q: How did you first learn about this survey tool?
-- Online search
-- Recommendation from colleague
-- Social media
-- Documentation or tutorial
-- Other
-VARIABLE: discovery_method
+Q: How long have you been using this survey tool?
+- Just started today
+- A few days
+- About a week
+- Several weeks or more
+VARIABLE: usage_time
+
+Q: How many surveys have you created so far?
+NUMBER
+VARIABLE: surveys_created
+
+#
+
+Q: Which types of questions do you use in your surveys?
+HINT: Select all that apply
+- Multiple choice questions
+- Checkbox questions
+- Text/essay questions
+- Number questions
+- Matrix questions
+CHECKBOX
 
 Q: Which features have you tried so far?
-HINT: *Select all that apply*
-- Creating **basic surveys**
-- Using conditional logic
+HINT: Select all that apply
+- Creating basic surveys
+- Using conditional logic (SHOW_IF)
 - Adding computed variables
-- Testing surveys with others
+- Variable interpolation in text
 CHECKBOX
 VARIABLE: features_tried
 
-Q: On a scale of 1-10, how easy was it to create your first survey?
-NUMBER
-VARIABLE: ease_rating
+Q: How would you rate each aspect of the survey tool?
+- Q: Ease of use
+- Q: Documentation quality
+- Q: Feature completeness
+- Excellent
+- Good
+- Fair
+- Poor
 
-Q: What has been your **biggest challenge** or frustration with the tool?
-ESSAY
-VARIABLE: main_challenge
+COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
 
-COMPUTE: satisfied_user = ease_rating >= 7
-COMPUTE: experienced_user = features_tried >= 2
-
-BLOCK: Follow-up Questions
+BLOCK: Feature Feedback
+SHOW_IF: features_tried
 
 #
 
-## Follow-up Questions
+We'd like detailed feedback on the features you've used.
 
-Since you discovered us through {discovery_method}, we'd like to know more about your experience.
-
-Q: {{IF ease_rating >= 8 THEN Given your positive experience ELSE To help improve your experience}}, what would be most helpful?
+Q: {{IF experienced_user THEN As an experienced user ELSE As someone still learning}}, what would help you most?
 - Better documentation
-- More example templates
+- More examples
 - Video tutorials
-- Live support chat
-VARIABLE: preferred_help
+- Simplified syntax
 
-Q: Would you recommend this tool to a colleague?
-HINT: *Based on your rating of {ease_rating}/10*
-- Definitely yes
-- Probably yes
-- Not sure
-- Probably not
-- Definitely not
-SHOW_IF: ease_rating
-VARIABLE: recommendation
+BLOCK: Overall Assessment
+SHOW_IF: experienced_user
 
-BLOCK: Detailed Feedback
-SHOW_IF: satisfied_user
+# **Advanced User Feedback**
 
-#
+Q: Would you recommend this tool to others?
+- Yes
+- No
+VARIABLE: recommend
 
-## **Additional Feedback**
+Q: You've created {surveys_created} surveys so far. {{IF recommend IS Yes THEN Thank you for being willing to recommend our tool! ELSE We hope we can improve your experience.}} What's the most important improvement we could make?
+ESSAY
 
-{{IF satisfied_user THEN Thank you for your positive feedback! ELSE We appreciate your honest feedback.}} We'd love to learn more.
-
-Q: How likely are you to use this tool for future projects?
-- Very likely
-- Somewhat likely
-- Not sure
-- Unlikely
-- Very unlikely
-
-Q: You mentioned {features_tried AS INLINE_LIST} as features you've tried. Which was most valuable?
-- Creating **basic surveys**
-  - SHOW_IF: features_tried IS Creating **basic surveys**
-- Using conditional logic
-  - SHOW_IF: features_tried IS Using conditional logic
-- Adding computed variables
-  - SHOW_IF: features_tried IS Adding computed variables
-- Testing surveys with others
-  - SHOW_IF: features_tried IS Testing surveys with others
-
-BLOCK: Final Thoughts
-SHOW_IF: experienced_user OR recommendation IS Definitely yes
+BLOCK: Final Page
 
 # **Thank You**
 
-{{IF experienced_user THEN As an experienced user ELSE Based on your willingness to recommend us}}, your insights are especially valuable.
+Thank you for taking the time to complete our survey! Your feedback helps us improve the survey creation tool and make it better for everyone.
 
-Q: What's the **one thing** we could improve that would make the biggest difference?
-ESSAY`
+{{IF recommend IS Yes THEN We appreciate your willingness to recommend the tool to others. ELSE The improvements you've suggesed will be used to improve the tool.}}
 
+Your responses have not been recorded, because that's not what this tool does.`

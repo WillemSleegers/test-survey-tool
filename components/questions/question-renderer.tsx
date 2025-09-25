@@ -4,6 +4,7 @@ import { RadioQuestion } from "./radio-question"
 import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
 import { NumberQuestion } from "./number-question"
+import { MatrixQuestion } from "./matrix-question"
 
 interface QuestionRendererProps {
   /** The question to render */
@@ -11,7 +12,7 @@ interface QuestionRendererProps {
   /** All user responses */
   responses: Responses
   /** Callback when user provides a response */
-  onResponse: (questionId: string, value: string | string[]) => void
+  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -23,10 +24,11 @@ interface QuestionRendererProps {
  * 
  * Supported question types:
  * - "multiple_choice": Radio buttons for single selection
- * - "checkbox": Checkboxes for multiple selections  
+ * - "checkbox": Checkboxes for multiple selections
  * - "text": Single-line input for short text responses
  * - "essay": Multi-line textarea for longer text responses
  * - "number": Number input for numeric values
+ * - "matrix": Matrix/table format with multiple sub-questions sharing options
  * 
  * This component acts as a dispatcher, routing each question to its specialized
  * component while maintaining a consistent interface for parent components.
@@ -88,6 +90,17 @@ export function QuestionRenderer({
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
+          computedVariables={computedVariables}
+        />
+      )
+
+    case "matrix":
+      return (
+        <MatrixQuestion
+          question={question}
+          responses={responses}
+          onResponse={(questionId, value) => onResponse(questionId, value)}
+          startTabIndex={startTabIndex}
           computedVariables={computedVariables}
         />
       )
