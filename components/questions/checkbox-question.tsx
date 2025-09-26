@@ -92,12 +92,14 @@ export function CheckboxQuestion({
   // Initialize other texts from raw values
   useEffect(() => {
     const initialOtherTexts: Record<string, string> = {}
-    rawCheckboxValues.forEach(value => {
+    const currentValues = Array.isArray(responseValue) ? responseValue : []
+
+    currentValues.forEach(value => {
       const colonIndex = value.indexOf(": ")
       if (colonIndex > -1) {
         const potentialBaseValue = value.substring(0, colonIndex)
         const potentialOtherText = value.substring(colonIndex + 2)
-        
+
         // Check if this base value corresponds to an option that allows other text
         const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
         if (matchingOption?.allowsOtherText) {
@@ -106,7 +108,7 @@ export function CheckboxQuestion({
       }
     })
     setOtherTexts(initialOtherTexts)
-  }, [rawCheckboxValues, question.options])
+  }, [responseValue, question.options])
 
   // Filter options based on conditions
   const visibleOptions = question.options.filter(option => {
