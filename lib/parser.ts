@@ -882,6 +882,14 @@ function validateConditionReferences(blocks: Block[]): void {
           if (question.variable) {
             definedVariables.add(question.variable)
           }
+          // Add subquestion variables
+          if (question.subquestions) {
+            for (const subquestion of question.subquestions) {
+              if (subquestion.variable) {
+                definedVariables.add(subquestion.variable)
+              }
+            }
+          }
         }
       }
     }
