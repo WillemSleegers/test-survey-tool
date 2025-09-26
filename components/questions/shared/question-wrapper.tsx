@@ -1,12 +1,12 @@
 import React from "react"
 import { QuestionHeader } from "./question-header"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Variables, ComputedVariables } from "@/lib/types"
 
 interface QuestionWrapperProps {
   /** The question data containing text and subtext */
   question: Question
-  /** User responses for placeholder replacement */
-  responses: Responses
+  /** User variables for placeholder replacement */
+  variables: Variables
   /** The input component to render */
   children: React.ReactNode
   /** Computed variables from the current section */
@@ -26,13 +26,13 @@ interface QuestionWrapperProps {
  *   <RadioGroup>...</RadioGroup>
  * </QuestionWrapper>
  */
-export function QuestionWrapper({ question, responses, children, computedVariables }: QuestionWrapperProps) {
+export function QuestionWrapper({ question, variables, children, computedVariables }: QuestionWrapperProps) {
   return (
     <div className="space-y-3">
-      <QuestionHeader 
+      <QuestionHeader
         text={question.text}
         subtext={question.subtext}
-        responses={responses}
+        variables={variables}
         computedVariables={computedVariables}
       />
       {children}

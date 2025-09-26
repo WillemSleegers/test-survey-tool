@@ -1,15 +1,15 @@
 import React from "react"
 import Markdown from "react-markdown"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Responses, ComputedVariables } from "@/lib/types"
+import { Variables, ComputedVariables } from "@/lib/types"
 
 interface QuestionHeaderProps {
   /** The main question text */
   text: string
   /** Optional additional description/hint text */
   subtext?: string
-  /** User responses for placeholder replacement */
-  responses: Responses
+  /** User variables for placeholder replacement */
+  variables: Variables
   /** Computed variables from the current section */
   computedVariables?: ComputedVariables
 }
@@ -29,9 +29,9 @@ interface QuestionHeaderProps {
  *   responses={responses}
  * />
  */
-export function QuestionHeader({ text, subtext, responses, computedVariables }: QuestionHeaderProps) {
-  const processedText = replacePlaceholders(text, responses, computedVariables)
-  const processedSubtext = subtext ? replacePlaceholders(subtext, responses, computedVariables) : undefined
+export function QuestionHeader({ text, subtext, variables, computedVariables }: QuestionHeaderProps) {
+  const processedText = replacePlaceholders(text, variables, computedVariables)
+  const processedSubtext = subtext ? replacePlaceholders(subtext, variables, computedVariables) : undefined
 
   return (
     <div className="space-y-1">

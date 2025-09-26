@@ -1,4 +1,4 @@
-import { Page, Responses, ComputedVariables, ComputedVariable } from "@/lib/types"
+import { Page, Variables, ComputedVariables, ComputedVariable } from "@/lib/types"
 import { evaluateCondition } from "./condition-evaluator"
 import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
 
@@ -17,19 +17,19 @@ function isComparisonExpression(expression: string): boolean {
 
 /**
  * Evaluates all computed variables for a given page
- * 
+ *
  * Supports both boolean and numeric computed variables:
  * - Boolean: "age >= 18" -> true/false
  * - Numeric: "count + 5" -> number
  * - Ternary: "age >= 18 ? 1 : 0" -> number (1 or 0)
- * 
+ *
  * @param page - The page containing computed variables
- * @param responses - Current user responses
+ * @param variables - Current user variables
  * @returns Object mapping computed variable names to their evaluated values
  */
 export function evaluateComputedVariables(
   page: Page,
-  responses: Responses,
+  variables: Variables,
   existingComputedVariables?: ComputedVariables
 ): ComputedVariables {
   // Start with existing computed variables (e.g., from block level)
@@ -41,21 +41,21 @@ export function evaluateComputedVariables(
   
   for (const computedVar of sortedVariables) {
     try {
-      // Create a responses object that includes computed variables evaluated so far
-      const extendedResponses = createExtendedResponses(responses, computedVars)
+      // Create a variables object that includes computed variables evaluated so far
+      const extendedVariables = createExtendedVariables(variables, computedVars)
       
       // Determine if this is a pure arithmetic expression (numeric) or a condition (boolean)
       let result: boolean | number
       
       if (isComparisonExpression(computedVar.expression)) {
         // Expression contains comparison operators, evaluate as boolean condition
-        result = evaluateCondition(computedVar.expression, extendedResponses)
+        result = evaluateCondition(computedVar.expression, extendedVariables)
       } else if (isArithmeticExpression(computedVar.expression)) {
         // Pure arithmetic expression, evaluate as numeric
-        result = evaluateExpression(computedVar.expression, extendedResponses)
+        result = evaluateExpression(computedVar.expression, extendedVariables)
       } else {
         // Simple condition (variable name, etc.), evaluate as boolean
-        result = evaluateCondition(computedVar.expression, extendedResponses)
+        result = evaluateCondition(computedVar.expression, extendedVariables)
       }
       
       computedVars[computedVar.name] = result
@@ -75,25 +75,20 @@ export function evaluateComputedVariables(
 }
 
 /**
- * Creates an extended responses object that includes computed variables as pseudo-responses
+ * Creates an extended variables object that includes computed variables
  * This allows computed variables to be referenced in conditions just like regular variables
  */
-function createExtendedResponses(
-  responses: Responses,
+function createExtendedVariables(
+  variables: Variables,
   computedVars: ComputedVariables
-): Responses {
-  const extended = { ...responses }
-  
-  // Add computed variables as pseudo-responses
+): Variables {
+  const extended = { ...variables }
+
+  // Add computed variables directly
   Object.entries(computedVars).forEach(([name, value]) => {
-    // Create a synthetic question ID for the computed variable
-    const pseudoQuestionId = `__computed_${name}`
-    extended[pseudoQuestionId] = {
-      value: value,
-      variable: name
-    }
+    extended[name] = value
   })
-  
+
   return extended
 }
 

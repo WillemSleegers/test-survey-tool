@@ -1,4 +1,4 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 
 /**
  * Represents a parsed condition with its components
@@ -105,12 +105,11 @@ export function isSimpleBooleanTest(condition: string): boolean {
  * Evaluates a simple boolean condition (variable existence/non-emptiness)
  * 
  * @param variable - The variable name to check
- * @param responses - The responses object
+ * @param variables - The variables object containing all the variables
  * @returns True if variable exists and has a non-empty value
  */
-export function evaluateSimpleBooleanTest(variable: string, responses: Responses): boolean {
-  const responseEntry = Object.values(responses).find(r => r.variable === variable)
-  const value = responseEntry?.value
+export function evaluateSimpleBooleanTest(variable: string, variables: Variables): boolean {
+  const value = variables[variable]
   
   if (value === undefined || value === null) return false
   

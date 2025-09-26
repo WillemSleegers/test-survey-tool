@@ -5,7 +5,7 @@ import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Block, Page, Responses, ComputedVariables } from "@/lib/types"
+import { Block, Page, Variables, ComputedVariables } from "@/lib/types"
 
 interface PageNavigatorProps {
   /** All questionnaire blocks */
@@ -16,8 +16,8 @@ interface PageNavigatorProps {
   visiblePages: Page[]
   /** Current visible page index */
   currentVisiblePageIndex: number
-  /** Current user responses */
-  responses: Responses
+  /** Current user variables */
+  variables: Variables
   /** Current block's computed variables */
   currentBlockComputedVars: ComputedVariables
   /** Current page's computed variables (page-level only) */
@@ -43,7 +43,7 @@ export function PageNavigator({
   allPages,
   visiblePages,
   currentVisiblePageIndex,
-  responses,
+  variables,
   currentBlockComputedVars,
   currentPageComputedVars,
   onJumpToPage,
@@ -81,9 +81,9 @@ export function PageNavigator({
       sections: [],
       computedVariables: block.computedVariables
     }
-    const blockComputedVars = evaluateComputedVariables(mockPage, responses)
-    
-    return evaluateCondition(block.showIf, responses, blockComputedVars)
+    const blockComputedVars = evaluateComputedVariables(mockPage, variables)
+
+    return evaluateCondition(block.showIf, variables, blockComputedVars)
   }
 
   // Toggle block expansion
@@ -299,12 +299,12 @@ export function PageNavigator({
               </div>
             </div>
 
-            {/* Current Responses */}
-            {Object.keys(responses).length > 0 && (
+            {/* Current Variables */}
+            {Object.keys(variables).length > 0 && (
               <div>
-                <h3 className="text-sm font-medium mb-3">Current Responses</h3>
+                <h3 className="text-sm font-medium mb-3">Current Variables</h3>
                 <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                  <pre>{JSON.stringify(responses, null, 2)}</pre>
+                  <pre>{JSON.stringify(variables, null, 2)}</pre>
                 </div>
               </div>
             )}

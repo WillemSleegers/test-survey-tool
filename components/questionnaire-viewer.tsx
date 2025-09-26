@@ -32,14 +32,14 @@ export function QuestionnaireViewer({
 
   // Response management - get all pages first for response tracking
   const allPages = questionnaire.flatMap(block => block.pages)
-  const { responses, handleResponse } = useQuestionnaireResponses(allPages)
-  
+  const { responses, variables, handleResponse } = useQuestionnaireResponses(allPages)
+
   // Initialize lazy computed variables system
-  const { 
-    getBlockComputedVariables, 
-    getPageComputedVariables, 
+  const {
+    getBlockComputedVariables,
+    getPageComputedVariables,
     invalidateCache
-  } = useLazyComputedVariables(questionnaire, responses)
+  } = useLazyComputedVariables(questionnaire, variables)
 
   // Filter blocks by visibility, then flatten to pages
   const visibleBlockPages = useMemo(() => {
@@ -51,7 +51,7 @@ export function QuestionnaireViewer({
       
       const blockVisible = evaluateCondition(
         block.showIf || "",
-        responses,
+        variables,
         currentBlockComputedVars
       )
       
@@ -62,17 +62,17 @@ export function QuestionnaireViewer({
     })
     
     return visiblePages
-  }, [questionnaire, responses, getBlockComputedVariables])
+  }, [questionnaire, variables, getBlockComputedVariables])
   
-  // Invalidate computed variable cache when responses change
+  // Invalidate computed variable cache when variables change
   useEffect(() => {
     invalidateCache()
-  }, [responses, invalidateCache])
+  }, [variables, invalidateCache])
 
-  // Get visible pages and content filtering based on current responses  
+  // Get visible pages and content filtering based on current variables  
   const { visiblePages, getVisiblePageContent } = useVisiblePages(
     visibleBlockPages, 
-    responses, 
+    variables, 
     {}, 
     getPageComputedVariables
   )
@@ -117,7 +117,7 @@ export function QuestionnaireViewer({
   }, [currentPage, getPageComputedVariables])
   
   // Check completion status
-  const allQuestionsAnswered = usePageCompletion(pageContent, responses)
+  const allQuestionsAnswered = usePageCompletion(pageContent, variables)
 
   const handleComplete = (): void => {
     setShowCompletionDialog(true)
@@ -143,20 +143,21 @@ export function QuestionnaireViewer({
   }
   
   // Calculate total number of input elements for tab indexing
-  const totalInputs = calculateTotalTabInputs(pageContent, responses)
+  const totalInputs = calculateTotalTabInputs(pageContent, variables)
 
   return (
     <>
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
         <PageHeader 
           page={currentPage} 
-          responses={responses} 
+          variables={variables} 
           computedVariables={currentPageComputedVars}
         />
         
         <PageContent
           content={pageContent}
           responses={responses}
+          variables={variables}
           onResponse={handleResponse}
           computedVariables={{ ...currentBlockComputedVars, ...currentPageComputedVars }}
         />
@@ -177,7 +178,7 @@ export function QuestionnaireViewer({
         allPages={allPages}
         visiblePages={visiblePages}
         currentVisiblePageIndex={currentVisiblePageIndex}
-        responses={responses}
+        variables={variables}
         currentBlockComputedVars={currentBlockComputedVars}
         currentPageComputedVars={currentPageComputedVars}
         onJumpToPage={jumpToPage}

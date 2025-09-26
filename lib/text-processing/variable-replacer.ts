@@ -1,4 +1,4 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/expression-evaluator"
 
 /**
@@ -15,25 +15,25 @@ import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/exp
  * - Missing variables: {unknown} -> "{unknown}" (unchanged)
  * 
  * @param text - Text containing variable placeholders and expressions
- * @param responses - User responses to get variable values from
+ * @param variables - User variables to get variable values from
  * @returns Text with placeholders replaced with actual values or computed results
  * 
  * @example
- * processVariablePlaceholders("Hello {name}!", responses)
+ * processVariablePlaceholders("Hello {name}!", variables)
  * // Returns "Hello John!" if name variable = "John"
- * 
- * processVariablePlaceholders("Total: {count1 + count2}", responses)
+ *
+ * processVariablePlaceholders("Total: {count1 + count2}", variables)
  * // Returns "Total: 7" if count1 = 3 and count2 = 4
- * 
- * processVariablePlaceholders("You selected: {colors}", responses)  
+ *
+ * processVariablePlaceholders("You selected: {colors}", variables)
  * // Returns "You selected:\n- Red\n- Blue\n\n" if colors = ["Red", "Blue"]
- * 
- * processVariablePlaceholders("You reported: {crimes AS INLINE_LIST}", responses)
+ *
+ * processVariablePlaceholders("You reported: {crimes AS INLINE_LIST}", variables)
  * // Returns "You reported: theft, fraud, and violence" if crimes = ["THEFT", "FRAUD", "VIOLENCE"]
  */
 export function processVariablePlaceholders(
   text: string,
-  responses: Responses
+  variables: Variables
 ): string {
   // Updated regex to capture any content inside braces (including expressions with spaces and operators)
   return text.replace(/\{([^}]+)\}/g, (match, content) => {
@@ -45,11 +45,8 @@ export function processVariablePlaceholders(
       const [, variablePart, format] = formatMatch
       const variable = variablePart.trim()
       
-      // Find response by variable name
-      const responseEntry = Object.values(responses).find(
-        (r) => r.variable === variable
-      )
-      const value = responseEntry?.value
+      // Get variable value directly
+      const value = variables[variable]
 
       if (value === undefined) {
         // Escape curly braces to prevent react-markdown from interpreting them as JSX
@@ -77,7 +74,7 @@ export function processVariablePlaceholders(
     if (isArithmeticExpression(trimmedContent)) {
       // Handle arithmetic expressions like "age + 5" or "count1 + count2"
       try {
-        const result = evaluateExpression(trimmedContent, responses)
+        const result = evaluateExpression(trimmedContent, variables)
         return String(result)
       } catch {
         // Escape curly braces to prevent react-markdown from interpreting them as JSX
@@ -87,11 +84,8 @@ export function processVariablePlaceholders(
       // Handle simple variables like "name" or "age"
       const variable = trimmedContent
       
-      // Find response by variable name
-      const responseEntry = Object.values(responses).find(
-        (r) => r.variable === variable
-      )
-      const value = responseEntry?.value
+      // Get variable value directly
+      const value = variables[variable]
 
       if (value === undefined) {
         // Escape curly braces to prevent react-markdown from interpreting them as JSX

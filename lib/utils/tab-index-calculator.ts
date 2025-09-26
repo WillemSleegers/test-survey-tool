@@ -1,4 +1,4 @@
-import { VisiblePageContent, Responses, Question } from "@/lib/types"
+import { VisiblePageContent, Variables, Question } from "@/lib/types"
 
 /**
  * Calculates the total number of tab-accessible inputs in a page
@@ -9,24 +9,24 @@ import { VisiblePageContent, Responses, Question } from "@/lib/types"
  * - Checkbox questions: All options + text inputs for options with TEXT
  * 
  * @param pageContent - Visible content of the page
- * @param responses - Current user responses for answered state checking
+ * @param variables - Current user variables for answered state checking
  * @returns Total number of tab-accessible inputs
  * 
  * @example
  * // Page with 2 text, 1 answered radio (3 options, selected has TEXT), 1 checkbox (2 options)
- * calculateTotalTabInputs(content, responses) // Returns: 2 + 2 + 4 = 8
+ * calculateTotalTabInputs(content, variables) // Returns: 2 + 2 + 4 = 8
  */
 export function calculateTotalTabInputs(
   pageContent: VisiblePageContent,
-  responses: Responses
+  variables: Variables
 ): number {
   const mainInputs = pageContent.mainQuestions.reduce((sum, question) => {
-    return sum + calculateQuestionInputCount(question, responses)
+    return sum + calculateQuestionInputCount(question, variables)
   }, 0)
 
   const sectionInputs = pageContent.sections.reduce((sum, sub) => {
     return sum + sub.questions.reduce((subSum, question) => {
-      return subSum + calculateQuestionInputCount(question, responses)
+      return subSum + calculateQuestionInputCount(question, variables)
     }, 0)
   }, 0)
 
@@ -37,14 +37,14 @@ export function calculateTotalTabInputs(
  * Calculates input count for a single question based on type and answer state
  */
 function calculateQuestionInputCount(
-  question: { type: string; options: Array<unknown>; id: string },
-  responses: Responses
+  question: { type: string; options: Array<unknown>; id: string; variable?: string },
+  variables: Variables
 ): number {
   if (question.type === 'text' || question.type === 'number') {
     return 1
   } else if (question.type === 'multiple_choice') {
-    const response = responses[question.id]?.value
-    const responseString = typeof response === 'string' ? response : ''
+    const variableValue = question.variable ? variables[question.variable] : undefined
+    const responseString = typeof variableValue === 'string' ? variableValue : ''
     const isAnswered = responseString !== ""
     
     if (isAnswered) {

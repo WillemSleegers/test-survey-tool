@@ -1,10 +1,10 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 
 /**
  * Evaluates a condition. This is forward-declared to avoid circular imports
  * The actual implementation will be provided by the condition-evaluator
  */
-export type ConditionEvaluator = (condition: string, responses: Responses) => boolean
+export type ConditionEvaluator = (condition: string, variables: Variables) => boolean
 
 /**
  * Checks if a condition contains NOT operator
@@ -76,49 +76,49 @@ export function splitOnAnd(condition: string): string[] {
  * Evaluates a NOT condition by negating the inner condition result
  * 
  * @param condition - The condition with NOT operator
- * @param responses - The responses object
+ * @param variables - The variables object
  * @param evaluateCondition - Function to evaluate the inner condition
  * @returns The negated result
  */
 export function evaluateNotCondition(
   condition: string,
-  responses: Responses,
+  variables: Variables,
   evaluateCondition: ConditionEvaluator
 ): boolean {
   const innerCondition = removeNotOperator(condition)
-  return !evaluateCondition(innerCondition, responses)
+  return !evaluateCondition(innerCondition, variables)
 }
 
 /**
  * Evaluates an OR condition (returns true if any part is true)
  * 
  * @param condition - The condition with OR operators
- * @param responses - The responses object  
+ * @param variables - The variables object  
  * @param evaluateCondition - Function to evaluate each part
  * @returns True if any part evaluates to true
  */
 export function evaluateOrCondition(
   condition: string,
-  responses: Responses,
+  variables: Variables,
   evaluateCondition: ConditionEvaluator
 ): boolean {
   const parts = splitOnOr(condition)
-  return parts.some(part => evaluateCondition(part.trim(), responses))
+  return parts.some(part => evaluateCondition(part.trim(), variables))
 }
 
 /**
  * Evaluates an AND condition (returns true only if all parts are true)
  * 
  * @param condition - The condition with AND operators
- * @param responses - The responses object
+ * @param variables - The variables object
  * @param evaluateCondition - Function to evaluate each part  
  * @returns True only if all parts evaluate to true
  */
 export function evaluateAndCondition(
   condition: string,
-  responses: Responses,
+  variables: Variables,
   evaluateCondition: ConditionEvaluator
 ): boolean {
   const parts = splitOnAnd(condition)
-  return parts.every(part => evaluateCondition(part.trim(), responses))
+  return parts.every(part => evaluateCondition(part.trim(), variables))
 }

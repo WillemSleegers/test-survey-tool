@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
@@ -14,6 +14,8 @@ interface RadioQuestionProps {
   question: Question
   /** User responses */
   responses: Responses
+  /** User variables */
+  variables: Variables
   /** Callback when user selects an option */
   onResponse: (questionId: string, value: string) => void
   /** Starting tab index for accessibility */
@@ -43,16 +45,17 @@ interface RadioQuestionProps {
  *   startTabIndex={1}
  * />
  */
-export function RadioQuestion({ 
-  question, 
-  responses, 
-  onResponse, 
+export function RadioQuestion({
+  question,
+  responses,
+  variables,
+  onResponse,
   startTabIndex,
   computedVariables
 }: RadioQuestionProps) {
   const { t } = useLanguage()
   // Get current response value and parse it
-  const responseValue = responses[question.id]?.value
+  const responseValue = responses[question.id]
   const responseString = typeof responseValue === "string" ? responseValue : ""
   
   // Parse response - only treat as "other text" if the base option actually allows it
@@ -88,7 +91,7 @@ export function RadioQuestion({
   // Filter options based on conditions
   const visibleOptions = question.options.filter(option => {
     if (!option.showIf) return true
-    return evaluateCondition(option.showIf, responses, computedVariables)
+    return evaluateCondition(option.showIf, variables, computedVariables)
   })
 
   // Handle radio selection change
@@ -127,7 +130,7 @@ export function RadioQuestion({
   }
 
   return (
-    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
+    <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       <RadioGroup
         value={baseValue}
         onValueChange={handleRadioChange}
@@ -156,7 +159,7 @@ export function RadioQuestion({
                   className="cursor-pointer text-base font-normal"
                 >
                   <Markdown>
-                    {replacePlaceholders(option.label, responses, computedVariables)}
+                    {replacePlaceholders(option.label, variables, computedVariables)}
                   </Markdown>
                 </Label>
               </div>

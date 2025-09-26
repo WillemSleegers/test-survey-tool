@@ -1,25 +1,25 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 import { getKnownVariables, getVariableNumericValue } from "./value-converter"
 
 /**
  * Evaluates arithmetic expressions by substituting variables with their values
  * 
  * @param expression - The arithmetic expression containing variables
- * @param responses - The responses object to get variable values from
+ * @param variables - The variables object to get variable values from
  * @returns The numeric result of the expression evaluation
  * 
  * @example
- * evaluateExpression("age + 5", responses) // If age = 25, returns 30
- * evaluateExpression("count * 2", responses) // If count = 3, returns 6
+ * evaluateExpression("age + 5", variables) // If age = 25, returns 30
+ * evaluateExpression("count * 2", variables) // If count = 3, returns 6
  */ 
-export function evaluateExpression(expression: string, responses: Responses): number {
+export function evaluateExpression(expression: string, variables: Variables): number {
   // Get all known variable names, sorted by length to avoid partial matches
-  const knownVariables = getKnownVariables(responses)
+  const knownVariables = getKnownVariables(variables)
   
   // Replace each known variable with its numeric value
   let substituted = expression
   for (const variable of knownVariables) {
-    const numericValue = getVariableNumericValue(variable, responses).toString()
+    const numericValue = getVariableNumericValue(variable, variables).toString()
     
     // Replace all occurrences of this variable name with its numeric value
     // Use word boundaries to avoid partial matches
@@ -80,18 +80,18 @@ export function isArithmeticExpression(expression: string): boolean {
  * @param prefix - The variable prefix to match (e.g., "fraude")
  * @param operator - The comparison operator (==, !=, etc.)
  * @param rightSide - The value to compare against
- * @param responses - The responses object containing variable values
+ * @param variables - The variables object containing variable values
  * @returns True if any matching variables satisfy the condition (OR logic)
  * 
  * @example
- * evaluateStartsWithComparison("fraude", "==", "Ja, in de afgelopen 12 maanden", responses)
+ * evaluateStartsWithComparison("fraude", "==", "Ja, in de afgelopen 12 maanden", variables)
  * // Returns true if any variable starting with "fraude" equals the specified value
  */
 export function evaluateStartsWithComparison(
   prefix: string,
   operator: string,
   rightSide: string,
-  responses: Responses
+  variables: Variables
 ): boolean {
   const prefixPattern = prefix.trim()
   
@@ -101,10 +101,10 @@ export function evaluateStartsWithComparison(
   
   // Find all variables that start with the prefix
   const matchingVariables: string[] = []
-  
-  Object.values(responses).forEach(responseEntry => {
-    if (responseEntry.variable && responseEntry.variable.startsWith(prefixPattern)) {
-      matchingVariables.push(responseEntry.variable)
+
+  Object.keys(variables).forEach(variableName => {
+    if (variableName.startsWith(prefixPattern)) {
+      matchingVariables.push(variableName)
     }
   })
   
@@ -115,8 +115,7 @@ export function evaluateStartsWithComparison(
   // Evaluate the condition for each matching variable
   // Use OR logic - return true if any variable satisfies the condition
   return matchingVariables.some(variable => {
-    const responseEntry = Object.values(responses).find(r => r.variable === variable)
-    const responseValue = responseEntry?.value
+    const responseValue = variables[variable]
     
     // Handle different comparison operators
     switch (operator) {

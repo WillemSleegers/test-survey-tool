@@ -3,13 +3,15 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
 
 interface TextQuestionProps {
   /** The question configuration */
   question: Question
   /** User responses */
   responses: Responses
+  /** User variables */
+  variables: Variables
   /** Callback when user types in the textarea */
   onResponse: (questionId: string, value: string) => void
   /** Tab index for accessibility */
@@ -37,21 +39,22 @@ interface TextQuestionProps {
  *   tabIndex={7}
  * />
  */
-export function TextQuestion({ 
-  question, 
-  responses, 
-  onResponse, 
+export function TextQuestion({
+  question,
+  responses,
+  variables,
+  onResponse,
   tabIndex,
   computedVariables
 }: TextQuestionProps) {
   const { t } = useLanguage()
   
   // Get current response value (should be string)
-  const responseValue = responses[question.id]?.value
+  const responseValue = responses[question.id]
   const textValue = typeof responseValue === "string" ? responseValue : ""
 
   return (
-    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
+    <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       {question.type === "text" ? (
         <Input
           type="text"

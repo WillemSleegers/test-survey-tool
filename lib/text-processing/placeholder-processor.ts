@@ -1,4 +1,4 @@
-import { Responses, ConditionalPlaceholder, ComputedVariables } from "@/lib/types"
+import { Variables, ConditionalPlaceholder, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "../conditions/condition-evaluator"
 
 /**
@@ -133,20 +133,20 @@ function findKeyword(text: string, keyword: string, startPos: number): number {
  * - Computed variables from sections
  * 
  * @param text - Text containing conditional placeholders
- * @param responses - User responses to evaluate conditions against
+ * @param variables - User variables to evaluate conditions against
  * @param computedVariables - Optional computed variables from current section
  * @returns Text with conditional placeholders resolved
  * 
  * @example
  * processConditionalPlaceholders(
- *   "{{IF age >= 18 THEN Welcome adult ELSE Access denied}}", 
- *   responses
+ *   "{{IF age >= 18 THEN Welcome adult ELSE Access denied}}",
+ *   variables
  * )
  * // Returns "Welcome adult" if age >= 18, otherwise "Access denied"  
  */
 export function processConditionalPlaceholders(
   text: string,
-  responses: Responses,
+  variables: Variables,
   computedVariables?: ComputedVariables
 ): string {
   let result = text
@@ -166,7 +166,7 @@ export function processConditionalPlaceholders(
 
     const parsed = parseConditionalContent(content)
     if (parsed) {
-      const conditionResult = evaluateCondition(parsed.condition, responses, computedVariables)
+      const conditionResult = evaluateCondition(parsed.condition, variables, computedVariables)
       const replacement = conditionResult ? parsed.trueText : parsed.falseText
       result =
         result.slice(0, startIndex) + replacement + result.slice(endIndex + 1)

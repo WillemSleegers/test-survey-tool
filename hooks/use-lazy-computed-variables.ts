@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo } from "react"
-import { Block, Page, Responses, ComputedVariables } from "@/lib/types"
+import { Block, Page, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
 
 /**
  * Manages computed variables with lazy evaluation
  * Variables are only calculated when their scope (block/page) is entered
  */
-export function useLazyComputedVariables(questionnaire: Block[], responses: Responses) {
+export function useLazyComputedVariables(questionnaire: Block[], variables: Variables) {
   // Store computed variables by scope identifier
   const [computedCache, setComputedCache] = useState<{
     [scopeId: string]: ComputedVariables
@@ -63,12 +63,12 @@ export function useLazyComputedVariables(questionnaire: Block[], responses: Resp
           sections: [],
           computedVariables: block.computedVariables
         }
-        computedVars = evaluateComputedVariables(mockPage, responses, existingComputedVars)
+        computedVars = evaluateComputedVariables(mockPage, variables, existingComputedVars)
       }
     } else {
       const page = scope as Page
       if (page.computedVariables.length > 0) {
-        computedVars = evaluateComputedVariables(page, responses, existingComputedVars)
+        computedVars = evaluateComputedVariables(page, variables, existingComputedVars)
       }
     }
     
@@ -79,7 +79,7 @@ export function useLazyComputedVariables(questionnaire: Block[], responses: Resp
     }))
     
     return computedVars
-  }, [computedCache, getScopeId, responses])
+  }, [computedCache, getScopeId, variables])
 
   /**
    * Get computed variables for a specific block (compute if not cached)
@@ -107,7 +107,7 @@ export function useLazyComputedVariables(questionnaire: Block[], responses: Resp
   }, [computeForScope, getBlockComputedVariables, questionnaire])
 
   /**
-   * Invalidate cache when responses change
+   * Invalidate cache when variables change
    */
   const invalidateCache = useCallback(() => {
     setComputedCache({})

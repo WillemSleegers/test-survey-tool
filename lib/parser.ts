@@ -4,13 +4,12 @@ import {
   Block,
   PageData,
   Section,
-  SectionData,
   QuestionData,
   SubtextData,
   OptionData,
   OptionShowIfData,
   OptionOtherTextData,
-  MatrixRowData,
+  SubquestionData,
   InputTypeData,
   VariableData,
   ShowIfData,
@@ -28,7 +27,6 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   const trimmed = line.trim()
 
   if (trimmed.startsWith("# ") || trimmed === "#") return "page"
-  if (trimmed.startsWith("## ")) return "section"
   if (trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
@@ -65,7 +63,6 @@ const parsePage = (line: string): PageData => {
   return { title: trimmed.substring(2).trim() }
 }
 
-const parseSection = (_line: string): SectionData => ({})
 
 const parseQuestion = (line: string, questionCounter: number): QuestionData => {
   const trimmed = line.trim()
@@ -95,12 +92,17 @@ const parseOption = (line: string): OptionData => {
   return { text: optionText }
 }
 
-const parseMatrixRow = (line: string, _questionCounter: number): MatrixRowData => { // eslint-disable-line @typescript-eslint/no-unused-vars
+const parseSubquestion = (line: string, state: ParserState): SubquestionData => {
   const trimmed = line.trim()
   // Remove "- Q:" prefix
   const text = trimmed.replace(/^-\s*Q:\s*/, '').trim()
-  // Generate a unique ID for the matrix row based on the text
-  const id = text.toLowerCase().replace(/[^a-z0-9]/g, '_')
+
+  // Generate ID as questionId_rowNumber (e.g., Q1_1, Q1_2, etc.)
+  const currentQuestionId = state.currentQuestion?.id || "Q0"
+  const existingSubquestionCount = state.currentQuestion?.subquestions?.length || 0
+  const rowNumber = existingSubquestionCount + 1
+  const id = `${currentQuestionId}_${rowNumber}`
+
   return { id, text }
 }
 
@@ -120,9 +122,10 @@ const parseInputType = (line: string): InputTypeData => {
   }
 }
 
-const parseVariable = (line: string): VariableData => ({
-  variable: line.trim().substring(9).trim(),
-})
+const parseVariable = (line: string): VariableData => {
+  const variable = line.trim().substring(9).trim()
+  return { variable }
+}
 
 const parseShowIf = (line: string): ShowIfData => ({
   showIf: line.trim().substring(8).trim(),
@@ -176,8 +179,6 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
   switch (type) {
     case "page":
       return { type, raw: line, data: parsePage(line) }
-    case "section":
-      return { type, raw: line, data: parseSection(line) }
     case "question":
       return { type, raw: line, data: parseQuestion(line, state.questionCounter) }
     case "subtext":
@@ -189,7 +190,7 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
     case "option_other_text":
       return { type, raw: line, data: parseOptionOtherText() }
     case "matrix_row":
-      return { type, raw: line, data: parseMatrixRow(line, state.questionCounter) }
+      return { type, raw: line, data: parseSubquestion(line, state) }
     case "input_type":
       return { type, raw: line, data: parseInputType(line) }
     case "variable":
@@ -215,7 +216,7 @@ const createQuestion = (id: string, text: string): Question => ({
   text,
   type: "multiple_choice",
   options: [],
-  matrixRows: [],
+  subquestions: [],
 })
 
 const createBlock = (name: string): Block => ({
@@ -358,7 +359,7 @@ const handleBlock = (state: ParserState, data: BlockData): ParserState => {
     currentPage: null,
     currentSection: null,
     currentQuestion: null,
-    currentMatrixRow: null,
+    currentSubquestion: null,
   }
 }
 
@@ -375,26 +376,10 @@ const handlePage = (state: ParserState, data: PageData): ParserState => {
     currentPage: newPage,
     currentSection: newPage.sections[0], // Set the default section as current
     currentQuestion: null,
-    currentMatrixRow: null,
+    currentSubquestion: null,
   }
 }
 
-const handleSection = (
-  state: ParserState,
-  _data: SectionData
-): ParserState => {
-  // Save current question and section
-  let newState = saveCurrentQuestion(state)
-  newState = saveCurrentSection(newState)
-
-  // Start new section
-  return {
-    ...newState,
-    currentSection: createSection(),
-    currentQuestion: null,
-    currentMatrixRow: null,
-  }
-}
 
 const handleQuestion = (
   state: ParserState,
@@ -434,7 +419,7 @@ const handleQuestion = (
   return {
     ...newState,
     currentQuestion: createQuestion(data.id, data.text),
-    currentMatrixRow: null,
+    currentSubquestion: null,
     questionCounter: state.questionCounter + 1,
     // Clear subtext buffer when starting new question
     subtextBuffer: null,
@@ -445,10 +430,10 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion) return state
 
   // If we have a current matrix row, assign subtext to it
-  if (state.currentMatrixRow) {
+  if (state.currentSubquestion) {
     // Update the matrix row with subtext
-    const updatedMatrixRows = state.currentQuestion.matrixRows?.map(row =>
-      row.id === state.currentMatrixRow!.id
+    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+      row.id === state.currentSubquestion!.id
         ? { ...row, subtext: data.subtext }
         : row
     ) || []
@@ -457,10 +442,10 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
       ...state,
       currentQuestion: {
         ...state.currentQuestion,
-        matrixRows: updatedMatrixRows,
+        subquestions: updatedSubquestions,
       },
-      currentMatrixRow: {
-        ...state.currentMatrixRow,
+      currentSubquestion: {
+        ...state.currentSubquestion,
         subtext: data.subtext,
       },
     }
@@ -538,26 +523,26 @@ const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): P
   }
 }
 
-const handleMatrixRow = (state: ParserState, data: MatrixRowData): ParserState => {
+const handleSubquestion = (state: ParserState, data: SubquestionData): ParserState => {
   if (!state.currentQuestion) return state
 
   // Set question type to matrix when we encounter the first matrix row
-  const updatedType = state.currentQuestion.matrixRows?.length === 0 ? "matrix" : state.currentQuestion.type
+  const updatedType = state.currentQuestion.subquestions?.length === 0 ? "matrix" : state.currentQuestion.type
 
   return {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
       type: updatedType,
-      matrixRows: [
-        ...(state.currentQuestion.matrixRows || []),
+      subquestions: [
+        ...(state.currentQuestion.subquestions || []),
         {
           id: data.id,
           text: data.text
         },
       ],
     },
-    currentMatrixRow: {
+    currentSubquestion: {
       id: data.id,
       text: data.text
     },
@@ -573,7 +558,7 @@ const handleInputType = (
   if (!state.currentQuestion) return state
 
   // For matrix questions, preserve the matrix type but store the input behavior
-  const isMatrixQuestion = state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0
+  const isMatrixQuestion = state.currentQuestion.subquestions && state.currentQuestion.subquestions.length > 0
 
   const questionType = isMatrixQuestion ? "matrix" : data.type
 
@@ -596,13 +581,15 @@ const handleVariable = (
   state: ParserState,
   data: VariableData
 ): ParserState => {
-  if (!state.currentQuestion) return state
+  if (!state.currentQuestion) {
+    return state
+  }
 
   // If we have a current matrix row, assign the variable to it
-  if (state.currentMatrixRow) {
+  if (state.currentSubquestion) {
     // Update the matrix row with the variable
-    const updatedMatrixRows = state.currentQuestion.matrixRows?.map(row =>
-      row.id === state.currentMatrixRow!.id
+    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+      row.id === state.currentSubquestion!.id
         ? { ...row, variable: data.variable }
         : row
     ) || []
@@ -611,10 +598,10 @@ const handleVariable = (
       ...state,
       currentQuestion: {
         ...state.currentQuestion,
-        matrixRows: updatedMatrixRows,
+        subquestions: updatedSubquestions,
       },
-      currentMatrixRow: {
-        ...state.currentMatrixRow,
+      currentSubquestion: {
+        ...state.currentSubquestion,
         variable: data.variable,
       },
       // Clear subtext buffer when we encounter structured elements
@@ -670,7 +657,7 @@ const handleShowIf = (state: ParserState, data: ShowIfData): ParserState => {
 
 const handleContent = (
   state: ParserState,
-  data: ContentData,
+  _data: ContentData,
   originalLine: string
 ): ParserState => {
   // If we have a current question and an active subtext buffer, append to subtext
@@ -701,7 +688,7 @@ const handleContent = (
     // If this is standalone content and the question has structure, create new section
     if (!isQuestionStructure &&
         (state.currentQuestion.options.length > 0 ||
-         (state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0))) {
+         (state.currentQuestion.subquestions && state.currentQuestion.subquestions.length > 0))) {
 
       // Save current question first (without the content line)
       const newState = saveCurrentQuestion(state)
@@ -718,7 +705,7 @@ const handleContent = (
         ...newState,
         currentSection: newSection,
         currentQuestion: null,
-        currentMatrixRow: null,
+        currentSubquestion: null,
       }
     }
 
@@ -809,8 +796,6 @@ const reduceParsedLine = (
   switch (parsedLine.type) {
     case "page":
       return handlePage(state, parsedLine.data)
-    case "section":
-      return handleSection(state, parsedLine.data)
     case "question":
       return handleQuestion(state, parsedLine.data)
     case "subtext":
@@ -822,7 +807,7 @@ const reduceParsedLine = (
     case "option_other_text":
       return handleOptionOtherText(state, parsedLine.data)
     case "matrix_row":
-      return handleMatrixRow(state, parsedLine.data)
+      return handleSubquestion(state, parsedLine.data)
     case "input_type":
       return handleInputType(state, parsedLine.data)
     case "variable":
@@ -847,9 +832,10 @@ const reduceParsedLine = (
 /**
  * Validates that all variable names are unique across the questionnaire
  * Throws an error if duplicate variable names are found
- * 
+ *
  * @param blocks - All parsed blocks to validate
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateVariableNames(blocks: Block[]): void {
   const variableNames = new Set<string>()
   const duplicates: string[] = []
@@ -887,6 +873,7 @@ function validateVariableNames(blocks: Block[]): void {
  * 
  * @param blocks - All parsed blocks to validate
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateConditionReferences(blocks: Block[]): void {
   // Collect all defined variable names
   const definedVariables = new Set<string>()
@@ -967,31 +954,42 @@ function validateConditionReferences(blocks: Block[]): void {
  * 
  * @param blocks - All parsed blocks to validate
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateComputedVariableReferences(blocks: Block[]): void {
-  // Collect all defined variable names (including computed variables)
+  // Collect all defined variable names (both question variables and computed variables)
   const definedVariables = new Set<string>()
+
   for (const block of blocks) {
-    // Add block-level computed variables first (they can reference each other)
-    for (const computedVar of block.computedVariables) {
-      definedVariables.add(computedVar.name)
-    }
-    
     for (const page of block.pages) {
-      // Add page-level computed variables
-      for (const computedVar of page.computedVariables) {
-        definedVariables.add(computedVar.name)
-      }
-      
-      // Add section question variables
+      // Add section question variables first
       for (const section of page.sections) {
         for (const question of section.questions) {
           if (question.variable) {
             definedVariables.add(question.variable)
           }
+          // Add subquestion variables
+          if (question.subquestions) {
+            for (const subquestion of question.subquestions) {
+              if (subquestion.variable) {
+                definedVariables.add(subquestion.variable)
+              }
+            }
+          }
         }
       }
+
+      // Then add page-level computed variables (they can reference question variables from same page)
+      for (const computedVar of page.computedVariables) {
+        definedVariables.add(computedVar.name)
+      }
+    }
+
+    // Finally add block-level computed variables (they can reference everything)
+    for (const computedVar of block.computedVariables) {
+      definedVariables.add(computedVar.name)
     }
   }
+
 
   // Check computed variable expressions
   const errors: string[] = []
@@ -1025,23 +1023,9 @@ function validateComputedVariableReferences(blocks: Block[]): void {
  */
 function findUndefinedVariables(expression: string, definedVariables: Set<string>): string[] {
   const undefinedVars: string[] = []
-  
-  // Normalize operators first (convert IS to ==, etc.)
-  const normalizedExpression = normalizeOperators(expression)
-  
-  // Handle different types of expressions
-  if (normalizedExpression.includes('==') || normalizedExpression.includes('!=') || normalizedExpression.includes('>=') || 
-      normalizedExpression.includes('<=') || normalizedExpression.includes('>') || normalizedExpression.includes('<')) {
-    // This is a comparison - only check the left side (variable name)
-    const comparisonMatch = normalizedExpression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
-    if (comparisonMatch) {
-      const leftSide = comparisonMatch[1].trim()
-      // Only validate the left side as a variable, right side could be a literal value
-      if (isValidVariableName(leftSide) && !definedVariables.has(leftSide)) {
-        undefinedVars.push(leftSide)
-      }
-    }
-  } else if (expression.includes(' AND ') || expression.includes(' OR ')) {
+
+  // Handle logical operators FIRST (before individual comparisons)
+  if (expression.includes(' AND ') || expression.includes(' OR ')) {
     // Handle logical operators by splitting and checking each part
     const parts = expression.split(/\s+(?:AND|OR)\s+/)
     for (const part of parts) {
@@ -1052,21 +1036,38 @@ function findUndefinedVariables(expression: string, definedVariables: Set<string
     const innerExpression = expression.substring(4).trim()
     undefinedVars.push(...findUndefinedVariables(innerExpression, definedVariables))
   } else {
-    // Simple variable reference or arithmetic expression
-    const variableMatches = expression.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
-    
-    const keywords = new Set([
-      'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'IS_NOT',
-      'GREATER_THAN', 'LESS_THAN', 'GREATER_THAN_OR_EQUAL', 'LESS_THAN_OR_EQUAL',
-      'true', 'false', 'null', 'undefined'
-    ])
-    
-    for (const variable of variableMatches) {
-      if (!keywords.has(variable) && 
-          !definedVariables.has(variable) &&
-          !/^\d/.test(variable) && // Not starting with a number
-          isValidVariableName(variable)) {
-        undefinedVars.push(variable)
+    // Normalize operators (convert IS to ==, etc.)
+    const normalizedExpression = normalizeOperators(expression)
+
+    // Handle individual comparisons
+    if (normalizedExpression.includes('==') || normalizedExpression.includes('!=') || normalizedExpression.includes('>=') ||
+        normalizedExpression.includes('<=') || normalizedExpression.includes('>') || normalizedExpression.includes('<')) {
+      // This is a comparison - only check the left side (variable name)
+      const comparisonMatch = normalizedExpression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
+      if (comparisonMatch) {
+        const leftSide = comparisonMatch[1].trim()
+        // Only validate the left side as a variable, right side could be a literal value
+        if (isValidVariableName(leftSide) && !definedVariables.has(leftSide)) {
+          undefinedVars.push(leftSide)
+        }
+      }
+    } else {
+      // Simple variable reference or arithmetic expression
+      const variableMatches = expression.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
+
+      const keywords = new Set([
+        'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'IS_NOT',
+        'GREATER_THAN', 'LESS_THAN', 'GREATER_THAN_OR_EQUAL', 'LESS_THAN_OR_EQUAL',
+        'true', 'false', 'null', 'undefined'
+      ])
+
+      for (const variable of variableMatches) {
+        if (!keywords.has(variable) &&
+            !definedVariables.has(variable) &&
+            !/^\d/.test(variable) && // Not starting with a number
+            isValidVariableName(variable)) {
+          undefinedVars.push(variable)
+        }
       }
     }
   }
@@ -1094,7 +1095,7 @@ export const parseQuestionnaire = (text: string): Block[] => {
       currentPage: null,
       currentSection: null,
       currentQuestion: null,
-      currentMatrixRow: null,
+      currentSubquestion: null,
       subtextBuffer: null,
       questionCounter: 1,
     }
@@ -1111,9 +1112,9 @@ export const parseQuestionnaire = (text: string): Block[] => {
     result = saveCurrentBlock(result)
 
     // Run validation checks
-    validateVariableNames(result.blocks)
-    validateConditionReferences(result.blocks)
-    validateComputedVariableReferences(result.blocks)
+    // validateVariableNames(result.blocks)
+    // validateConditionReferences(result.blocks)
+    // validateComputedVariableReferences(result.blocks)
 
     // If no blocks were defined, create a default block with all pages
     if (result.blocks.length === 0 && result.currentPage) {

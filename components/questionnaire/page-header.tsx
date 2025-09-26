@@ -1,13 +1,13 @@
 import React from "react"
 import Markdown from "react-markdown"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Page, Responses, ComputedVariables } from "@/lib/types"
+import { Page, Variables, ComputedVariables } from "@/lib/types"
 
 interface PageHeaderProps {
   /** The page to render header for */
   page: Page
-  /** User responses for placeholder replacement */
-  responses: Responses
+  /** User variables for placeholder replacement */
+  variables: Variables
   /** Computed variables from the current page */
   computedVariables?: ComputedVariables
 }
@@ -22,11 +22,11 @@ interface PageHeaderProps {
  * - Handles empty/whitespace-only content gracefully
  * 
  * @example
- * <PageHeader page={currentPage} responses={responses} />
+ * <PageHeader page={currentPage} variables={variables} />
  */
-export function PageHeader({ page, responses, computedVariables }: PageHeaderProps) {
+export function PageHeader({ page, variables, computedVariables }: PageHeaderProps) {
   const processedTitle = page.title.trim()
-    ? replacePlaceholders(page.title, responses, computedVariables).trim()
+    ? replacePlaceholders(page.title, variables, computedVariables).trim()
     : ''
 
   // Don't render anything if title is empty

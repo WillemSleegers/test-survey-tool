@@ -1,4 +1,4 @@
-import { Responses, ComputedVariables } from "@/lib/types"
+import { Variables, ComputedVariables } from "@/lib/types"
 import { 
   parseCondition, 
   isSimpleBooleanTest, 
@@ -38,19 +38,19 @@ import { convertValueToNumber } from "./value-converter"
  * - Computed variables: References to computed variables defined in sections
  * 
  * @param condition - The condition string to evaluate
- * @param responses - Object containing all user responses
+ * @param variables - Object containing all user variables
  * @param computedVariables - Optional computed variables from current section
  * @returns True if condition is met, false otherwise
  * 
  * @example
- * evaluateCondition("age >= 18", responses) // Check if age is 18 or more
- * evaluateCondition("experience IS Advanced", responses) // Check exact match
- * evaluateCondition("age >= 18 AND experience", responses) // Multiple conditions
- * evaluateCondition("has_crime", responses, computedVars) // Use computed variable
+ * evaluateCondition("age >= 18", variables) // Check if age is 18 or more
+ * evaluateCondition("experience IS Advanced", variables) // Check exact match
+ * evaluateCondition("age >= 18 AND experience", variables) // Multiple conditions
+ * evaluateCondition("has_crime", variables, computedVars) // Use computed variable
  */
 export function evaluateCondition(
   condition: string, 
-  responses: Responses, 
+  variables: Variables, 
   computedVariables?: ComputedVariables
 ): boolean {
   // Empty condition always passes
@@ -58,27 +58,27 @@ export function evaluateCondition(
 
 
   try {
-    // Create extended responses that includes computed variables
-    const extendedResponses = createExtendedResponses(responses, computedVariables)
+    // Create extended variables that includes computed variables
+    const extendedResponses = createExtendedResponses(variables, computedVariables)
 
     // Handle NOT operator
     if (hasNotOperator(condition)) {
       return evaluateNotCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, responses, computedVariables)
+        evaluateCondition(cond, variables, computedVariables)
       )
     }
 
     // Handle OR conditions  
     if (hasOrOperator(condition)) {
       return evaluateOrCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, responses, computedVariables)
+        evaluateCondition(cond, variables, computedVariables)
       )
     }
 
     // Handle AND conditions
     if (hasAndOperator(condition)) {
       return evaluateAndCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, responses, computedVariables)
+        evaluateCondition(cond, variables, computedVariables)
       )
     }
 
@@ -117,28 +117,24 @@ export function evaluateCondition(
 }
 
 /**
- * Creates an extended responses object that includes computed variables as pseudo-responses
+ * Creates an extended variables object that includes computed variables
  * This allows computed variables to be referenced in conditions just like regular variables
  */
 function createExtendedResponses(
-  responses: Responses,
+  variables: Variables,
   computedVariables?: ComputedVariables
-): Responses {
+): Variables {
   if (!computedVariables) {
-    return responses
+    return variables
   }
-  
-  const extended = { ...responses }
-  
-  // Add computed variables as pseudo-responses
+
+  const extended = { ...variables }
+
+  // Add computed variables directly
   Object.entries(computedVariables).forEach(([name, value]) => {
-    const pseudoQuestionId = `__computed_${name}`
-    extended[pseudoQuestionId] = {
-      value: value,
-      variable: name
-    }
+    extended[name] = value
   })
-  
+
   return extended
 }
 
@@ -149,27 +145,27 @@ function evaluateArithmeticComparison(
   leftSide: string,
   operator: string, 
   rightSide: string,
-  responses: Responses
+  variables: Variables
 ): boolean {
   // Handle left side - could be arithmetic expression or simple variable
   let leftValue: number
   if (isArithmeticExpression(leftSide)) {
-    leftValue = evaluateExpression(leftSide, responses)
+    leftValue = evaluateExpression(leftSide, variables)
   } else {
     // Simple variable name - get its numeric value using clean converter
-    const responseEntry = Object.values(responses).find(r => r.variable === leftSide.trim())
-    leftValue = convertValueToNumber(responseEntry?.value)
+    const variableName = leftSide.trim()
+    leftValue = convertValueToNumber(variables[variableName])
   }
   
   // Handle right side - could be arithmetic expression, variable name, or literal number
   let rightValue: number
   if (isArithmeticExpression(rightSide)) {
-    rightValue = evaluateExpression(rightSide, responses)
+    rightValue = evaluateExpression(rightSide, variables)
   } else {
     // Check if right side is a variable name
-    const responseEntry = Object.values(responses).find(r => r.variable === rightSide.trim())
-    if (responseEntry) {
-      rightValue = convertValueToNumber(responseEntry.value)
+    const variableName = rightSide.trim()
+    if (variables[variableName] !== undefined) {
+      rightValue = convertValueToNumber(variables[variableName])
     } else {
       rightValue = parseFloat(rightSide)
       if (isNaN(rightValue)) rightValue = 0
@@ -194,19 +190,19 @@ function evaluateVariableComparison(
   variable: string,
   operator: string,
   rawValue: string, 
-  responses: Responses
+  variables: Variables
 ): boolean {
-  // Find response by variable name
-  const responseEntry = Object.values(responses).find(r => r.variable === variable)
-  const responseValue: ResponseValue = responseEntry?.value
+  // Get variable value directly
+  const responseValue: ResponseValue = variables[variable]
   
   // Check if rawValue is actually another variable name
-  const rightVariableEntry = Object.values(responses).find(r => r.variable === rawValue.trim())
+  const rightVariableName = rawValue.trim()
+  const rightVariableValue = variables[rightVariableName]
   
-  if (rightVariableEntry) {
+  if (rightVariableValue !== undefined) {
     // Variable-to-variable comparison using clean converter utilities
     const leftNum = convertValueToNumber(responseValue)
-    const rightNum = convertValueToNumber(rightVariableEntry.value)
+    const rightNum = convertValueToNumber(rightVariableValue)
     
     
     // Perform numeric comparison
@@ -226,7 +222,7 @@ function evaluateVariableComparison(
   
   // Handle empty string checks (special case)
   if (value === "") {
-    return compareEmptyString(variable, responseValue, responses, operator as ComparisonOperator)
+    return compareEmptyString(variable, responseValue, variables, operator as ComparisonOperator)
   }
 
   // Determine if this should be numeric or string comparison

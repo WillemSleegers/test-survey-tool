@@ -1,4 +1,4 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 import { ComparisonOperator } from "./condition-parser"
 
 /**
@@ -123,17 +123,17 @@ export function compareNumericValue(
 export function compareEmptyString(
   variable: string,
   responseValue: ResponseValue,
-  responses: Responses,
+  variables: Variables,
   operator: ComparisonOperator
 ): boolean {
-  const responseEntry = Object.values(responses).find(r => r.variable === variable)
-  
-  if (responseEntry === undefined) {
-    // Question was never shown - return based on operator
-    return operator === "==" ? false : true
+  const variableValue = variables[variable]
+
+  if (variableValue === undefined) {
+    // Variable was never set - return based on operator
+    return operator === "==" ? true : false
   }
-  
-  // Question was shown but empty
-  const isEmpty = responseValue === "" || (Array.isArray(responseValue) && responseValue.length === 0)
+
+  // Variable exists but check if empty
+  const isEmpty = variableValue === "" || (Array.isArray(variableValue) && variableValue.length === 0)
   return operator === "==" ? isEmpty : !isEmpty
 }

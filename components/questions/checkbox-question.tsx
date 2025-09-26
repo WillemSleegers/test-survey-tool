@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
@@ -14,6 +14,8 @@ interface CheckboxQuestionProps {
   question: Question
   /** User responses */
   responses: Responses
+  /** User variables */
+  variables: Variables
   /** Callback when user toggles an option */
   onResponse: (questionId: string, value: string[]) => void
   /** Starting tab index for accessibility */
@@ -44,19 +46,20 @@ interface CheckboxQuestionProps {
  *   startTabIndex={5}
  * />
  */
-export function CheckboxQuestion({ 
-  question, 
-  responses, 
-  onResponse, 
+export function CheckboxQuestion({
+  question,
+  responses,
+  variables,
+  onResponse,
   startTabIndex,
   computedVariables
 }: CheckboxQuestionProps) {
   const { t } = useLanguage()
   
-  // Get current response values (should be string array)
-  const responseValue = responses[question.id]?.value
-  const rawCheckboxValues = useMemo(() => 
-    Array.isArray(responseValue) ? responseValue : [], 
+  // Get current response value (should be string array)
+  const responseValue = responses[question.id]
+  const rawCheckboxValues = useMemo(() =>
+    Array.isArray(responseValue) ? responseValue : [],
     [responseValue]
   )
   
@@ -111,7 +114,7 @@ export function CheckboxQuestion({
   // Filter options based on conditions
   const visibleOptions = question.options.filter(option => {
     if (!option.showIf) return true
-    return evaluateCondition(option.showIf, responses, computedVariables)
+    return evaluateCondition(option.showIf, variables, computedVariables)
   })
 
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
@@ -165,7 +168,7 @@ export function CheckboxQuestion({
   }
 
   return (
-    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
+    <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       <div className="space-y-3">
         {visibleOptions.map((option, optionIndex) => {
           // Calculate tab indices dynamically based on actual inputs
@@ -199,7 +202,7 @@ export function CheckboxQuestion({
                   className="cursor-pointer text-base font-normal"
                 >
                   <Markdown>
-                    {replacePlaceholders(option.label, responses, computedVariables)}
+                    {replacePlaceholders(option.label, variables, computedVariables)}
                   </Markdown>
                 </Label>
               </div>

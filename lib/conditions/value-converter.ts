@@ -1,4 +1,4 @@
-import { Responses } from "@/lib/types"
+import { Variables } from "@/lib/types"
 
 /**
  * Represents a response value that can be converted to numeric
@@ -59,26 +59,23 @@ export function convertValueToNumber(value: ResponseValue): number {
 }
 
 /**
- * Gets the numeric value for a variable from responses
- * 
+ * Gets the numeric value for a variable from the variables object
+ *
  * @param variableName - Name of the variable to look up
- * @param responses - Responses object containing all variable values
+ * @param variables - Variables object containing all variable values
  * @returns Numeric value for the variable, or 0 if not found
  */
-export function getVariableNumericValue(variableName: string, responses: Responses): number {
-  const responseEntry = Object.values(responses).find(r => r.variable === variableName)
-  return convertValueToNumber(responseEntry?.value)
+export function getVariableNumericValue(variableName: string, variables: Variables): number {
+  return convertValueToNumber(variables[variableName])
 }
 
 /**
- * Gets all variable names from the responses object
- * 
- * @param responses - Responses object
+ * Gets all variable names from the variables object
+ *
+ * @param variables - Variables object
  * @returns Array of variable names, sorted by length (longest first) to avoid partial matches
  */
-export function getKnownVariables(responses: Responses): string[] {
-  return Object.values(responses)
-    .map(r => r.variable)
-    .filter((variable): variable is string => Boolean(variable))
+export function getKnownVariables(variables: Variables): string[] {
+  return Object.keys(variables)
     .sort((a, b) => b.length - a.length)
 }

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Page, Question, Responses, VisiblePageContent, ComputedVariables } from "@/lib/types"
+import { Page, Question, Variables, VisiblePageContent, ComputedVariables } from "@/lib/types"
 
 /**
  * Hook for managing page visibility and content filtering
@@ -12,13 +12,13 @@ import { Page, Question, Responses, VisiblePageContent, ComputedVariables } from
  * - Section content filtering
  * 
  * @param questionnaire - All questionnaire pages
- * @param responses - Current user responses
+ * @param variables - Current user variables
  * @param blockComputedVariables - Computed variables from block level (optional)
  * @returns Visible pages and content getter function
  */
 export function useVisiblePages(
   questionnaire: Page[], 
-  responses: Responses, 
+  variables: Variables, 
   blockComputedVariables?: ComputedVariables,
   getPageComputedVars?: (page: Page) => ComputedVariables
 ) {
@@ -28,11 +28,11 @@ export function useVisiblePages(
       // Use lazy computed variables if provided, otherwise fall back to eager evaluation
       const pageComputedVars = getPageComputedVars ? 
         getPageComputedVars(page) : 
-        evaluateComputedVariables(page, responses, blockComputedVariables)
+        evaluateComputedVariables(page, variables, blockComputedVariables)
       
-      return evaluateCondition(page.showIf || "", responses, pageComputedVars)
+      return evaluateCondition(page.showIf || "", variables, pageComputedVars)
     })
-  }, [questionnaire, responses, blockComputedVariables, getPageComputedVars])
+  }, [questionnaire, variables, blockComputedVariables, getPageComputedVars])
 
   // Get visible content for a page
   const getVisiblePageContent = useCallback(
@@ -40,7 +40,7 @@ export function useVisiblePages(
       // Use lazy computed variables if provided, otherwise fall back to eager evaluation
       const pageComputedVars = getPageComputedVars ? 
         getPageComputedVars(page) : 
-        evaluateComputedVariables(page, responses, blockComputedVariables)
+        evaluateComputedVariables(page, variables, blockComputedVariables)
       
       // No main page questions since everything is in sections now
       const mainQuestions: Question[] = []
@@ -49,7 +49,7 @@ export function useVisiblePages(
       const visibleSections = page.sections.map((section) => ({
         content: section.content,
         questions: section.questions.filter((question) =>
-          evaluateCondition(question.showIf || "", responses, pageComputedVars)
+          evaluateCondition(question.showIf || "", variables, pageComputedVars)
         ),
       }))
 
@@ -58,7 +58,7 @@ export function useVisiblePages(
         sections: visibleSections,
       }
     },
-    [responses, blockComputedVariables, getPageComputedVars]
+    [variables, blockComputedVariables, getPageComputedVars]
   )
 
   return {

@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
@@ -12,8 +12,10 @@ interface MatrixQuestionProps {
   question: Question
   /** User responses */
   responses: Responses
+  /** User variables */
+  variables: Variables
   /** Callback when user selects an option */
-  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -45,78 +47,61 @@ interface MatrixQuestionProps {
 export function MatrixQuestion({
   question,
   responses,
+  variables,
   onResponse,
   startTabIndex: _startTabIndex, // eslint-disable-line @typescript-eslint/no-unused-vars
   computedVariables
 }: MatrixQuestionProps) {
-  if (!question.matrixRows || question.matrixRows.length === 0) {
+
+  if (!question.subquestions || question.subquestions.length === 0) {
     return null
   }
 
   // Filter options based on conditions
   const visibleOptions = question.options.filter(option => {
     if (!option.showIf) return true
-    return evaluateCondition(option.showIf, responses, computedVariables)
+    return evaluateCondition(option.showIf, variables, computedVariables)
   })
 
   // Determine if this matrix should use checkboxes or radio buttons
   const isCheckboxMatrix = question.inputType === "checkbox"
 
   // Handle option selection for a matrix row
-  const handleRowResponse = (rowId: string, value: string) => {
-    // Always store in the main matrix response format, regardless of whether rows have variables
-    const currentResponse = responses[question.id]?.value
-    const existingResponses = (typeof currentResponse === "object" && currentResponse !== null && !Array.isArray(currentResponse))
-      ? currentResponse as Record<string, string | string[]>
-      : {}
-
+  const handleRowResponse = (subquestionId: string, value: string) => {
+    // Always save response for this subquestion
     if (isCheckboxMatrix) {
       // For checkboxes, handle multiple selections
-      const currentValues = Array.isArray(existingResponses[rowId])
-        ? existingResponses[rowId] as string[]
-        : typeof existingResponses[rowId] === "string"
-          ? [existingResponses[rowId] as string]
+      const currentValues = Array.isArray(responses[subquestionId])
+        ? responses[subquestionId] as string[]
+        : typeof responses[subquestionId] === "string"
+          ? [responses[subquestionId] as string]
           : []
 
       const newValues = currentValues.includes(value)
         ? currentValues.filter(v => v !== value)  // Remove if already selected
         : [...currentValues, value]               // Add if not selected
 
-      if (newValues.length > 0) {
-        existingResponses[rowId] = newValues
-      } else {
-        delete existingResponses[rowId]
-      }
+      onResponse(subquestionId, newValues)
     } else {
       // For radio buttons, single selection
-      existingResponses[rowId] = value
+      onResponse(subquestionId, value)
     }
-
-    onResponse(question.id, existingResponses)
   }
 
-  // Get current response for a matrix row from the object format
-  const getRowResponse = (rowId: string): string | string[] => {
-    // Always get from the main matrix response format
-    const responseValue = responses[question.id]?.value
+  // Get current response value for a matrix subquestion
+  const getRowResponse = (subquestionId: string): string | string[] => {
+    const responseValue = responses[subquestionId]
 
-    if (typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue)) {
-      const matrixResponses = responseValue as Record<string, string | string[]>
-      const rowValue = matrixResponses[rowId]
-
-      if (isCheckboxMatrix) {
-        return Array.isArray(rowValue) ? rowValue : rowValue ? [rowValue] : []
-      } else {
-        return Array.isArray(rowValue) ? rowValue[0] || "" : rowValue || ""
-      }
+    if (isCheckboxMatrix) {
+      return Array.isArray(responseValue) ? responseValue : responseValue ? [String(responseValue)] : []
+    } else {
+      return Array.isArray(responseValue) ? String(responseValue[0] || "") : String(responseValue || "")
     }
-
-    return isCheckboxMatrix ? [] : ""
   }
 
-  // Check if a specific option is selected for a matrix row
-  const isOptionSelected = (rowId: string, optionValue: string): boolean => {
-    const currentResponse = getRowResponse(rowId)
+  // Check if a specific option is selected for a matrix subquestion
+  const isOptionSelected = (subquestionId: string, optionValue: string): boolean => {
+    const currentResponse = getRowResponse(subquestionId)
 
     if (isCheckboxMatrix) {
       return Array.isArray(currentResponse) && currentResponse.includes(optionValue)
@@ -127,7 +112,7 @@ export function MatrixQuestion({
 
 
   return (
-    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
+    <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -135,27 +120,27 @@ export function MatrixQuestion({
               <TableHead className="text-left font-medium"></TableHead>
               {visibleOptions.map(option => (
                 <TableHead key={option.value} className="text-center font-medium min-w-[80px]">
-                  {replacePlaceholders(option.label, responses, computedVariables)}
+                  {replacePlaceholders(option.label, variables, computedVariables)}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {question.matrixRows.map((row) => {
-              const currentRowResponse = getRowResponse(row.id)
+            {question.subquestions.map((subquestion) => {
+              const currentRowResponse = getRowResponse(subquestion.id)
               const currentValue = !isCheckboxMatrix && typeof currentRowResponse === "string"
                 ? currentRowResponse
                 : ""
 
               return (
-                <TableRow key={row.id}>
+                <TableRow key={subquestion.id}>
                   <TableCell className="align-top">
                     <Label className="text-base font-normal">
-                      {replacePlaceholders(row.text, responses, computedVariables)}
+                      {replacePlaceholders(subquestion.text, variables, computedVariables)}
                     </Label>
-                    {row.subtext && (
+                    {subquestion.subtext && (
                       <div className="text-sm text-muted-foreground mt-1">
-                        {replacePlaceholders(row.subtext, responses, computedVariables)}
+                        {replacePlaceholders(subquestion.subtext, variables, computedVariables)}
                       </div>
                     )}
                   </TableCell>
@@ -165,15 +150,15 @@ export function MatrixQuestion({
                       <TableCell key={option.value} className="text-center align-top">
                         <div className="flex justify-center">
                           <Checkbox
-                            id={`${question.id}-${row.id}-${optionIndex}`}
-                            checked={isOptionSelected(row.id, option.value)}
-                            onCheckedChange={() => handleRowResponse(row.id, option.value)}
+                            id={`${question.id}-${subquestion.id}-${optionIndex}`}
+                            checked={isOptionSelected(subquestion.id, option.value)}
+                            onCheckedChange={() => handleRowResponse(subquestion.id, option.value)}
                           />
                           <Label
-                            htmlFor={`${question.id}-${row.id}-${optionIndex}`}
+                            htmlFor={`${question.id}-${subquestion.id}-${optionIndex}`}
                             className="sr-only"
                           >
-                            {row.text}: {option.label}
+                            {subquestion.text}: {option.label}
                           </Label>
                         </div>
                       </TableCell>
@@ -186,10 +171,10 @@ export function MatrixQuestion({
                           <label className="cursor-pointer">
                             <input
                               type="radio"
-                              name={`${question.id}_${row.id}`}
+                              name={`${question.id}_${subquestion.id}`}
                               value={option.value}
                               checked={currentValue === option.value}
-                              onChange={(e) => handleRowResponse(row.id, e.target.value)}
+                              onChange={(e) => handleRowResponse(subquestion.id, e.target.value)}
                               className="peer sr-only"
                             />
                             <div className="border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 peer-aria-invalid:ring-destructive/20 dark:peer-aria-invalid:ring-destructive/40 peer-aria-invalid:border-destructive dark:bg-input/30 aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none peer-focus-visible:ring-[3px] peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center">
@@ -198,7 +183,7 @@ export function MatrixQuestion({
                               )}
                             </div>
                             <span className="sr-only">
-                              {row.text}: {option.label}
+                              {subquestion.text}: {option.label}
                             </span>
                           </label>
                         </div>

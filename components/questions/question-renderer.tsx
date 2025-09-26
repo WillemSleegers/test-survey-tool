@@ -1,5 +1,5 @@
 import React from "react"
-import { Question, Responses, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { RadioQuestion } from "./radio-question"
 import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
@@ -11,8 +11,10 @@ interface QuestionRendererProps {
   question: Question
   /** All user responses */
   responses: Responses
+  /** All user variables */
+  variables: Variables
   /** Callback when user provides a response */
-  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -44,6 +46,7 @@ interface QuestionRendererProps {
 export function QuestionRenderer({
   question,
   responses,
+  variables,
   onResponse,
   startTabIndex,
   computedVariables,
@@ -54,6 +57,7 @@ export function QuestionRenderer({
         <RadioQuestion
           question={question}
           responses={responses}
+          variables={variables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -65,6 +69,7 @@ export function QuestionRenderer({
         <CheckboxQuestion
           question={question}
           responses={responses}
+          variables={variables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -77,6 +82,7 @@ export function QuestionRenderer({
         <TextQuestion
           question={question}
           responses={responses}
+          variables={variables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -88,6 +94,7 @@ export function QuestionRenderer({
         <NumberQuestion
           question={question}
           responses={responses}
+          variables={variables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -99,6 +106,7 @@ export function QuestionRenderer({
         <MatrixQuestion
           question={question}
           responses={responses}
+          variables={variables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}

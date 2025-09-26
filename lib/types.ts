@@ -25,13 +25,13 @@ export type Question = {
   subtext?: string
   type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix"
   options: Option[]
-  matrixRows?: MatrixRow[]
+  subquestions?: Subquestion[]
   inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   variable?: string
   showIf?: string
 }
 
-export type MatrixRow = {
+export type Subquestion = {
   id: string
   text: string
   subtext?: string
@@ -46,13 +46,13 @@ export type Option = {
   allowsOtherText?: boolean
 }
 
-export type Response = {
-  value: string | string[] | boolean | number | Record<string, string | string[]>
-  variable?: string
+
+export type Variables = {
+  [variableName: string]: string | string[] | number | boolean
 }
 
 export type Responses = {
-  [questionId: string]: Response
+  [questionId: string]: string | string[] | number | boolean
 }
 
 export type ComputedVariable = {
@@ -83,7 +83,6 @@ export type VisiblePageContent = {
 
 // Parser-specific types with proper discriminated unions
 export type PageData = { title: string }
-export type SectionData = Record<string, never>
 export type QuestionData = { id: string; text: string }
 export type SubtextData = { subtext: string }
 export type OptionData = { text: string; showIf?: string }
@@ -96,17 +95,16 @@ export type ContentData = { content: string }
 export type ComputeData = { name: string; expression: string }
 export type BlockData = { name: string }
 
-export type MatrixRowData = { id: string; text: string }
+export type SubquestionData = { id: string; text: string }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
-  | { type: "section"; raw: string; data: SectionData }
   | { type: "question"; raw: string; data: QuestionData }
   | { type: "subtext"; raw: string; data: SubtextData }
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
   | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
-  | { type: "matrix_row"; raw: string; data: MatrixRowData }
+  | { type: "matrix_row"; raw: string; data: SubquestionData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
@@ -120,7 +118,7 @@ export type ParserState = {
   currentPage: Page | null
   currentSection: Section | null
   currentQuestion: Question | null
-  currentMatrixRow: MatrixRow | null
+  currentSubquestion: Subquestion | null
   subtextBuffer: string[] | null
   questionCounter: number
 }
