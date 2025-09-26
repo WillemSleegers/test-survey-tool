@@ -1,4 +1,5 @@
 import React from "react"
+import Markdown from "react-markdown"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -117,10 +118,12 @@ export function MatrixQuestion({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-left font-medium"></TableHead>
+              <TableHead className="text-left font-medium w-1/2 max-w-xs"></TableHead>
               {visibleOptions.map(option => (
-                <TableHead key={option.value} className="text-center font-medium min-w-[80px]">
-                  {replacePlaceholders(option.label, variables, computedVariables)}
+                <TableHead key={option.value} className="text-center text-base font-normal min-w-[80px] max-w-[120px] whitespace-normal align-bottom px-3 py-2">
+                  <Markdown>
+                    {replacePlaceholders(option.label, variables, computedVariables)}
+                  </Markdown>
                 </TableHead>
               ))}
             </TableRow>
@@ -134,20 +137,20 @@ export function MatrixQuestion({
 
               return (
                 <TableRow key={subquestion.id}>
-                  <TableCell className="align-top">
-                    <Label className="text-base font-normal">
-                      {replacePlaceholders(subquestion.text, variables, computedVariables)}
-                    </Label>
+                  <TableCell className="align-top w-1/2 max-w-xs whitespace-normal">
+                    <div className="text-base font-normal">
+                      <Markdown>{replacePlaceholders(subquestion.text, variables, computedVariables)}</Markdown>
+                    </div>
                     {subquestion.subtext && (
                       <div className="text-sm text-muted-foreground mt-1">
-                        {replacePlaceholders(subquestion.subtext, variables, computedVariables)}
+                        <Markdown>{replacePlaceholders(subquestion.subtext, variables, computedVariables)}</Markdown>
                       </div>
                     )}
                   </TableCell>
                   {isCheckboxMatrix ? (
                     // For checkboxes, render each option independently
                     visibleOptions.map((option, optionIndex) => (
-                      <TableCell key={option.value} className="text-center align-top">
+                      <TableCell key={option.value} className="text-center align-middle">
                         <div className="flex justify-center">
                           <Checkbox
                             id={`${question.id}-${subquestion.id}-${optionIndex}`}
@@ -166,7 +169,7 @@ export function MatrixQuestion({
                   ) : (
                     // For radio buttons, render each option with native radio styling but shadcn appearance
                     visibleOptions.map((option, _optionIndex) => ( // eslint-disable-line @typescript-eslint/no-unused-vars
-                      <TableCell key={option.value} className="text-center align-top">
+                      <TableCell key={option.value} className="text-center align-middle">
                         <div className="flex justify-center">
                           <label className="cursor-pointer">
                             <input
