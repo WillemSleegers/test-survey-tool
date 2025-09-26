@@ -58,7 +58,7 @@ export function PageContent({
       })}
 
       {/* Render sections */}
-      {content.sections.map((section) => {
+      {content.sections.map((section, index) => {
         const sectionStartTabIndex = currentTabIndex
         
         // Update currentTabIndex for this section's questions
@@ -80,7 +80,7 @@ export function PageContent({
         
         return (
           <SectionRenderer
-            key={section.title}
+            key={`section-${index}`}
             section={section}
             responses={responses}
             onResponse={onResponse}

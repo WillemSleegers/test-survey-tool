@@ -78,8 +78,6 @@ export function PageNavigator({
     // Create a mock page with block's computed variables to evaluate block visibility
     const mockPage: Page = {
       title: "",
-      content: "",
-      questions: [],
       sections: [],
       computedVariables: block.computedVariables
     }

@@ -1,14 +1,22 @@
-export type Option = {
-  value: string
-  label: string
+
+
+export type Block = {
+  name: string
   showIf?: string
-  allowsOtherText?: boolean
+  pages: Page[]
+  computedVariables: ComputedVariable[]
 }
 
-export type MatrixRow = {
-  id: string
-  text: string
-  variable?: string
+export type Page = {
+  title: string
+  sections: Section[]
+  showIf?: string
+  computedVariables: ComputedVariable[]
+}
+
+export type Section = {
+  content: string
+  questions: Question[]
 }
 
 export type Question = {
@@ -21,36 +29,21 @@ export type Question = {
   inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   variable?: string
   showIf?: string
-  sectionTitle?: string
-  sectionContent?: string
 }
 
-export type Section = {
-  title: string
-  content: string
-  questions: Question[]
+export type MatrixRow = {
+  id: string
+  text: string
+  subtext?: string
+  variable?: string
 }
 
-export type ComputedVariable = {
-  name: string
-  expression: string
-  value?: boolean | string | number
-}
 
-export type Block = {
-  name: string
+export type Option = {
+  value: string
+  label: string
   showIf?: string
-  pages: Page[]
-  computedVariables: ComputedVariable[]
-}
-
-export type Page = {
-  title: string
-  content: string
-  questions: Question[]
-  sections: Section[]
-  showIf?: string
-  computedVariables: ComputedVariable[]
+  allowsOtherText?: boolean
 }
 
 export type Response = {
@@ -60,6 +53,12 @@ export type Response = {
 
 export type Responses = {
   [questionId: string]: Response
+}
+
+export type ComputedVariable = {
+  name: string
+  expression: string
+  value?: boolean | string | number
 }
 
 export type ComputedVariables = {
@@ -73,7 +72,6 @@ export type ConditionalPlaceholder = {
 }
 
 export type VisibleSection = {
-  title: string
   content: string
   questions: Question[]
 }
@@ -85,7 +83,7 @@ export type VisiblePageContent = {
 
 // Parser-specific types with proper discriminated unions
 export type PageData = { title: string }
-export type SectionData = { title: string }
+export type SectionData = Record<string, never>
 export type QuestionData = { id: string; text: string }
 export type SubtextData = { subtext: string }
 export type OptionData = { text: string; showIf?: string }
@@ -122,6 +120,7 @@ export type ParserState = {
   currentPage: Page | null
   currentSection: Section | null
   currentQuestion: Question | null
+  currentMatrixRow: MatrixRow | null
   subtextBuffer: string[] | null
   questionCounter: number
 }

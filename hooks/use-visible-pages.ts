@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Page, Responses, VisiblePageContent, ComputedVariables } from "@/lib/types"
+import { Page, Question, Responses, VisiblePageContent, ComputedVariables } from "@/lib/types"
 
 /**
  * Hook for managing page visibility and content filtering
@@ -42,14 +42,11 @@ export function useVisiblePages(
         getPageComputedVars(page) : 
         evaluateComputedVariables(page, responses, blockComputedVariables)
       
-      // Filter main page questions based on their individual SHOW_IF conditions
-      const mainQuestions = page.questions.filter((question) =>
-        evaluateCondition(question.showIf || "", responses, pageComputedVars)
-      )
+      // No main page questions since everything is in sections now
+      const mainQuestions: Question[] = []
 
       // Filter sections and their questions based on individual SHOW_IF conditions
       const visibleSections = page.sections.map((section) => ({
-        title: section.title,
         content: section.content,
         questions: section.questions.filter((question) =>
           evaluateCondition(question.showIf || "", responses, pageComputedVars)

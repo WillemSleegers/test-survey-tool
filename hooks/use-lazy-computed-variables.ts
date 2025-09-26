@@ -60,8 +60,6 @@ export function useLazyComputedVariables(questionnaire: Block[], responses: Resp
         // Create a mock page to evaluate block-level computed variables
         const mockPage: Page = {
           title: "",
-          content: "",
-          questions: [],
           sections: [],
           computedVariables: block.computedVariables
         }

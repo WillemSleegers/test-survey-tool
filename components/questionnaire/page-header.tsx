@@ -25,26 +25,18 @@ interface PageHeaderProps {
  * <PageHeader page={currentPage} responses={responses} />
  */
 export function PageHeader({ page, responses, computedVariables }: PageHeaderProps) {
-  const processedTitle = page.title.trim() 
-    ? replacePlaceholders(page.title, responses, computedVariables).trim() 
+  const processedTitle = page.title.trim()
+    ? replacePlaceholders(page.title, responses, computedVariables).trim()
     : ''
-  const processedContent = page.content.trim() 
-    ? replacePlaceholders(page.content, responses, computedVariables).trim() 
-    : ''
-  
-  // Don't render anything if both title and content are empty
-  if (!processedTitle && !processedContent) return null
-  
+
+  // Don't render anything if title is empty
+  if (!processedTitle) return null
+
   return (
     <div className="whitespace-pre-wrap">
-      {processedTitle && (
-        <div className="mb-6">
-          <Markdown>{processedTitle}</Markdown>
-        </div>
-      )}
-      {processedContent && (
-        <Markdown>{processedContent}</Markdown>
-      )}
+      <div className="mb-6">
+        <Markdown>{processedTitle}</Markdown>
+      </div>
     </div>
   )
 }

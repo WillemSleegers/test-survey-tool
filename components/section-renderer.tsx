@@ -26,15 +26,13 @@ export function SectionRenderer({
     <div className="space-y-6">
       {/* Section Header */}
       {(() => {
-        const processedTitle = replacePlaceholders(section.title, responses, computedVariables).trim()
         const processedContent = section.content ? replacePlaceholders(section.content, responses, computedVariables).trim() : ''
-        
-        if (!processedTitle && !processedContent) return null
-        
+
+        if (!processedContent) return null
+
         return (
           <div className="whitespace-pre-wrap">
-            {processedTitle && <Markdown>{processedTitle}</Markdown>}
-            {processedContent && <Markdown>{processedContent}</Markdown>}
+            <Markdown>{processedContent}</Markdown>
           </div>
         )
       })()}

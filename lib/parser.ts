@@ -65,9 +65,7 @@ const parsePage = (line: string): PageData => {
   return { title: trimmed.substring(2).trim() }
 }
 
-const parseSection = (line: string): SectionData => ({
-  title: line.trim().substring(3).trim(),
-})
+const parseSection = (_line: string): SectionData => ({})
 
 const parseQuestion = (line: string, questionCounter: number): QuestionData => {
   const trimmed = line.trim()
@@ -227,16 +225,19 @@ const createBlock = (name: string): Block => ({
   computedVariables: [],
 })
 
-const createPage = (title: string): Page => ({
-  title,
-  content: "",
-  questions: [],
-  sections: [],
-  computedVariables: [],
-})
+const createPage = (title: string): Page => {
+  const page: Page = {
+    title,
+    sections: [],
+    computedVariables: [],
+  }
+  // Start with a default section for questions
+  const defaultSection = createSection()
+  page.sections.push(defaultSection)
+  return page
+}
 
-const createSection = (title: string): Section => ({
-  title,
+const createSection = (): Section => ({
   content: "",
   questions: [],
 })
@@ -245,26 +246,27 @@ const createSection = (title: string): Section => ({
 const saveCurrentQuestion = (state: ParserState): ParserState => {
   if (!state.currentQuestion) return state
 
-  if (state.currentSection) {
-    return {
-      ...state,
-      currentSection: {
-        ...state.currentSection,
-        questions: [
-          ...state.currentSection.questions,
-          state.currentQuestion,
-        ],
-      },
-    }
-  }
+  if (state.currentSection && state.currentQuestion && state.currentPage) {
+    // Find the section in the page and update it
+    const sectionIndex = state.currentPage.sections.findIndex(s => s === state.currentSection)
+    if (sectionIndex !== -1) {
+      const updatedSections = [...state.currentPage.sections]
+      const section = state.currentSection as Section
+      const question = state.currentQuestion as Question
 
-  if (state.currentPage) {
-    return {
-      ...state,
-      currentPage: {
-        ...state.currentPage,
-        questions: [...state.currentPage.questions, state.currentQuestion],
-      },
+      updatedSections[sectionIndex] = {
+        content: section.content,
+        questions: [...section.questions, question],
+      }
+
+      return {
+        ...state,
+        currentPage: {
+          ...state.currentPage,
+          sections: updatedSections,
+        },
+        currentSection: updatedSections[sectionIndex],
+      }
     }
   }
 
@@ -275,11 +277,17 @@ const saveCurrentQuestion = (state: ParserState): ParserState => {
 const saveCurrentSection = (state: ParserState): ParserState => {
   if (!state.currentSection || !state.currentPage) return state
 
+  // Check if the section is already in the page (by reference)
+  const sectionAlreadyExists = state.currentPage.sections.includes(state.currentSection)
+  if (sectionAlreadyExists) {
+    return state // Section is already saved, nothing to do
+  }
+
   // Normalize whitespace-only content to empty string
   const normalizedSection = {
     ...state.currentSection,
-    content: state.currentSection.content.trim() === "" 
-      ? "" 
+    content: state.currentSection.content.trim() === ""
+      ? ""
       : state.currentSection.content
   }
 
@@ -299,13 +307,8 @@ const saveCurrentSection = (state: ParserState): ParserState => {
 const saveCurrentPage = (state: ParserState): ParserState => {
   if (!state.currentPage) return state
 
-  // Normalize whitespace-only content to empty string
-  const normalizedPage = {
-    ...state.currentPage,
-    content: state.currentPage.content.trim() === "" 
-      ? "" 
-      : state.currentPage.content
-  }
+  // Pages no longer have content, so just use the current page as is
+  const normalizedPage = state.currentPage
 
   // If no current block, create a default one
   if (!state.currentBlock) {
@@ -355,6 +358,7 @@ const handleBlock = (state: ParserState, data: BlockData): ParserState => {
     currentPage: null,
     currentSection: null,
     currentQuestion: null,
+    currentMatrixRow: null,
   }
 }
 
@@ -365,17 +369,19 @@ const handlePage = (state: ParserState, data: PageData): ParserState => {
   newState = saveCurrentPage(newState)
 
   // Start new page
+  const newPage = createPage(data.title)
   return {
     ...newState,
-    currentPage: createPage(data.title),
-    currentSection: null,
+    currentPage: newPage,
+    currentSection: newPage.sections[0], // Set the default section as current
     currentQuestion: null,
+    currentMatrixRow: null,
   }
 }
 
 const handleSection = (
   state: ParserState,
-  data: SectionData
+  _data: SectionData
 ): ParserState => {
   // Save current question and section
   let newState = saveCurrentQuestion(state)
@@ -384,8 +390,9 @@ const handleSection = (
   // Start new section
   return {
     ...newState,
-    currentSection: createSection(data.title),
+    currentSection: createSection(),
     currentQuestion: null,
+    currentMatrixRow: null,
   }
 }
 
@@ -398,9 +405,28 @@ const handleQuestion = (
 
   // If no page exists, create a default one
   if (!newState.currentPage) {
+    const defaultPage = createPage("")
     newState = {
       ...newState,
-      currentPage: createPage(""),
+      currentPage: defaultPage,
+      currentSection: defaultPage.sections[0], // Set the default section as current
+    }
+  }
+
+  // If no current section, ensure we have one
+  if (!newState.currentSection && newState.currentPage) {
+    if (newState.currentPage.sections.length === 0) {
+      const defaultSection = createSection()
+      newState.currentPage.sections.push(defaultSection)
+      newState = {
+        ...newState,
+        currentSection: defaultSection,
+      }
+    } else {
+      newState = {
+        ...newState,
+        currentSection: newState.currentPage.sections[0],
+      }
     }
   }
 
@@ -408,6 +434,7 @@ const handleQuestion = (
   return {
     ...newState,
     currentQuestion: createQuestion(data.id, data.text),
+    currentMatrixRow: null,
     questionCounter: state.questionCounter + 1,
     // Clear subtext buffer when starting new question
     subtextBuffer: null,
@@ -417,6 +444,29 @@ const handleQuestion = (
 const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion) return state
 
+  // If we have a current matrix row, assign subtext to it
+  if (state.currentMatrixRow) {
+    // Update the matrix row with subtext
+    const updatedMatrixRows = state.currentQuestion.matrixRows?.map(row =>
+      row.id === state.currentMatrixRow!.id
+        ? { ...row, subtext: data.subtext }
+        : row
+    ) || []
+
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        matrixRows: updatedMatrixRows,
+      },
+      currentMatrixRow: {
+        ...state.currentMatrixRow,
+        subtext: data.subtext,
+      },
+    }
+  }
+
+  // Otherwise assign to the question itself (original behavior)
   return {
     ...state,
     currentQuestion: {
@@ -507,6 +557,10 @@ const handleMatrixRow = (state: ParserState, data: MatrixRowData): ParserState =
         },
       ],
     },
+    currentMatrixRow: {
+      id: data.id,
+      text: data.text
+    },
     // Clear subtext buffer when we encounter structured elements
     subtextBuffer: null,
   }
@@ -544,6 +598,31 @@ const handleVariable = (
 ): ParserState => {
   if (!state.currentQuestion) return state
 
+  // If we have a current matrix row, assign the variable to it
+  if (state.currentMatrixRow) {
+    // Update the matrix row with the variable
+    const updatedMatrixRows = state.currentQuestion.matrixRows?.map(row =>
+      row.id === state.currentMatrixRow!.id
+        ? { ...row, variable: data.variable }
+        : row
+    ) || []
+
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        matrixRows: updatedMatrixRows,
+      },
+      currentMatrixRow: {
+        ...state.currentMatrixRow,
+        variable: data.variable,
+      },
+      // Clear subtext buffer when we encounter structured elements
+      subtextBuffer: null,
+    }
+  }
+
+  // Otherwise, assign to the question itself
   return {
     ...state,
     currentQuestion: {
@@ -607,8 +686,43 @@ const handleContent = (
     }
   }
   
-  // If we have a current question but no subtext buffer, append to question text
+  // If we have a current question but no subtext buffer, decide what to do with the content
   if (state.currentQuestion) {
+    // Check if this looks like standalone content (not question structure)
+    const trimmed = originalLine.trim()
+    const isQuestionStructure =
+      trimmed.startsWith('-') ||
+      trimmed.startsWith('HINT:') ||
+      trimmed.startsWith('VARIABLE:') ||
+      trimmed.startsWith('SHOW_IF:') ||
+      trimmed.match(/^(TEXT|ESSAY|NUMBER|CHECKBOX)$/) ||
+      trimmed === ''
+
+    // If this is standalone content and the question has structure, create new section
+    if (!isQuestionStructure &&
+        (state.currentQuestion.options.length > 0 ||
+         (state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0))) {
+
+      // Save current question first (without the content line)
+      const newState = saveCurrentQuestion(state)
+
+      // Create a new section with this content and no title
+      const newSection = createSection()
+      newSection.content = originalLine
+
+      if (newState.currentPage) {
+        newState.currentPage.sections.push(newSection)
+      }
+
+      return {
+        ...newState,
+        currentSection: newSection,
+        currentQuestion: null,
+        currentMatrixRow: null,
+      }
+    }
+
+    // Otherwise append to question text (for question structure or empty questions)
     return {
       ...state,
       currentQuestion: {
@@ -619,28 +733,37 @@ const handleContent = (
   }
 
   if (state.currentSection) {
+    // Update the current section's content
+    const updatedSection = {
+      ...state.currentSection,
+      content: state.currentSection.content
+        ? state.currentSection.content + "\n" + originalLine
+        : originalLine,
+    }
+
+    // Also update the section in the page's sections array
+    let updatedPage = state.currentPage
+    if (state.currentPage) {
+      const sectionIndex = state.currentPage.sections.findIndex(s => s === state.currentSection)
+      if (sectionIndex !== -1) {
+        const updatedSections = [...state.currentPage.sections]
+        updatedSections[sectionIndex] = updatedSection
+        updatedPage = {
+          ...state.currentPage,
+          sections: updatedSections
+        }
+      }
+    }
+
     return {
       ...state,
-      currentSection: {
-        ...state.currentSection,
-        content: state.currentSection.content
-          ? state.currentSection.content + "\n" + originalLine
-          : originalLine,
-      },
+      currentPage: updatedPage,
+      currentSection: updatedSection,
     }
   }
 
-  if (state.currentPage) {
-    return {
-      ...state,
-      currentPage: {
-        ...state.currentPage,
-        content: state.currentPage.content
-          ? state.currentPage.content + "\n" + originalLine
-          : originalLine,
-      },
-    }
-  }
+  // No fallback to page content since pages no longer have content
+  // All content should go to sections
 
   return state
 }
@@ -734,17 +857,6 @@ function validateVariableNames(blocks: Block[]): void {
   // Check all questions in all blocks/pages/sections
   for (const block of blocks) {
     for (const page of block.pages) {
-      // Check page-level questions
-      for (const question of page.questions) {
-        if (question.variable) {
-          if (variableNames.has(question.variable)) {
-            duplicates.push(question.variable)
-          } else {
-            variableNames.add(question.variable)
-          }
-        }
-      }
-      
       // Check section questions
       for (const section of page.sections) {
         for (const question of section.questions) {
@@ -785,13 +897,6 @@ function validateConditionReferences(blocks: Block[]): void {
         definedVariables.add(computedVar.name)
       }
       
-      // Add question variables
-      for (const question of page.questions) {
-        if (question.variable) {
-          definedVariables.add(question.variable)
-        }
-      }
-      
       // Add section question variables
       for (const section of page.sections) {
         for (const question of section.questions) {
@@ -826,26 +931,6 @@ function validateConditionReferences(blocks: Block[]): void {
         const missingVars = findUndefinedVariables(page.showIf, definedVariables)
         if (missingVars.length > 0) {
           errors.push(`Page "${page.title}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-        }
-      }
-      
-      // Check question SHOW_IF
-      for (const question of page.questions) {
-        if (question.showIf) {
-          const missingVars = findUndefinedVariables(question.showIf, definedVariables)
-          if (missingVars.length > 0) {
-            errors.push(`Question "${question.id}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-          }
-        }
-        
-        // Check option SHOW_IF
-        for (const option of question.options) {
-          if (option.showIf) {
-            const missingVars = findUndefinedVariables(option.showIf, definedVariables)
-            if (missingVars.length > 0) {
-              errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-            }
-          }
         }
       }
       
@@ -895,13 +980,6 @@ function validateComputedVariableReferences(blocks: Block[]): void {
       // Add page-level computed variables
       for (const computedVar of page.computedVariables) {
         definedVariables.add(computedVar.name)
-      }
-      
-      // Add question variables
-      for (const question of page.questions) {
-        if (question.variable) {
-          definedVariables.add(question.variable)
-        }
       }
       
       // Add section question variables
@@ -1016,6 +1094,7 @@ export const parseQuestionnaire = (text: string): Block[] => {
       currentPage: null,
       currentSection: null,
       currentQuestion: null,
+      currentMatrixRow: null,
       subtextBuffer: null,
       questionCounter: 1,
     }

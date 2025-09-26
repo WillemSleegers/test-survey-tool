@@ -64,6 +64,7 @@ export function MatrixQuestion({
 
   // Handle option selection for a matrix row
   const handleRowResponse = (rowId: string, value: string) => {
+    // Always store in the main matrix response format, regardless of whether rows have variables
     const currentResponse = responses[question.id]?.value
     const existingResponses = (typeof currentResponse === "object" && currentResponse !== null && !Array.isArray(currentResponse))
       ? currentResponse as Record<string, string | string[]>
@@ -96,6 +97,7 @@ export function MatrixQuestion({
 
   // Get current response for a matrix row from the object format
   const getRowResponse = (rowId: string): string | string[] => {
+    // Always get from the main matrix response format
     const responseValue = responses[question.id]?.value
 
     if (typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue)) {
@@ -151,6 +153,11 @@ export function MatrixQuestion({
                     <Label className="text-base font-normal">
                       {replacePlaceholders(row.text, responses, computedVariables)}
                     </Label>
+                    {row.subtext && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {replacePlaceholders(row.subtext, responses, computedVariables)}
+                      </div>
+                    )}
                   </TableCell>
                   {isCheckboxMatrix ? (
                     // For checkboxes, render each option independently
