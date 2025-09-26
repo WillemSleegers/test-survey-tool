@@ -50,10 +50,11 @@ export function MatrixQuestion({
   responses,
   variables,
   onResponse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  startTabIndex: _startTabIndex, // Currently unused - matrix questions use default tab behavior
+  startTabIndex,
   computedVariables
 }: MatrixQuestionProps) {
+  // startTabIndex is required by interface but currently unused - matrix questions use default tab behavior
+  void startTabIndex
 
   if (!question.subquestions || question.subquestions.length === 0) {
     return null
