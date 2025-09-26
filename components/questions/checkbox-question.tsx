@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -58,10 +58,7 @@ export function CheckboxQuestion({
   
   // Get current response value (should be string array)
   const responseValue = responses[question.id]
-  const rawCheckboxValues = useMemo(() =>
-    Array.isArray(responseValue) ? responseValue : [],
-    [responseValue]
-  )
+  const rawCheckboxValues = Array.isArray(responseValue) ? responseValue : []
   
   // Helper function to parse checkbox responses properly
   const parseCheckboxValue = (value: string) => {

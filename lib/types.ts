@@ -77,7 +77,6 @@ export type VisibleSection = {
 }
 
 export type VisiblePageContent = {
-  mainQuestions: Question[]
   sections: VisibleSection[]
 }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Variables, Responses, Page } from "@/lib/types"
 
 /**
@@ -16,44 +16,36 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
   const [responses, setResponses] = useState<Responses>({})
 
   // Create a lookup map for questions and subquestions with variables
-  const questionVariableMap = useMemo(() => {
-    const map = new Map<string, string>() // questionId -> variableName
+  const questionVariableMap = new Map<string, string>() // questionId -> variableName
 
-    questionnaire?.forEach(page => {
-      page.sections.forEach(section => {
-        section.questions.forEach(question => {
-          // Regular question variable
-          if (question.variable) {
-            map.set(question.id, question.variable)
+  questionnaire?.forEach(page => {
+    page.sections.forEach(section => {
+      section.questions.forEach(question => {
+        // Regular question variable
+        if (question.variable) {
+          questionVariableMap.set(question.id, question.variable)
+        }
+
+        // Subquestion variables
+        question.subquestions?.forEach(subquestion => {
+          if (subquestion.variable) {
+            questionVariableMap.set(subquestion.id, subquestion.variable)
           }
-
-          // Subquestion variables
-          question.subquestions?.forEach(subquestion => {
-            if (subquestion.variable) {
-              map.set(subquestion.id, subquestion.variable)
-            }
-          })
         })
       })
     })
-
-    return map
-  }, [questionnaire])
+  })
 
   // Derive variables from responses
-  const variables = useMemo<Variables>(() => {
-    const derivedVariables: Variables = {}
+  const variables: Variables = {}
 
-    // For each response, check if it should be mapped to a variable
-    Object.entries(responses).forEach(([questionId, responseValue]) => {
-      const variableName = questionVariableMap.get(questionId)
-      if (variableName) {
-        derivedVariables[variableName] = responseValue
-      }
-    })
-
-    return derivedVariables
-  }, [responses, questionVariableMap])
+  // For each response, check if it should be mapped to a variable
+  Object.entries(responses).forEach(([questionId, responseValue]) => {
+    const variableName = questionVariableMap.get(questionId)
+    if (variableName) {
+      variables[variableName] = responseValue
+    }
+  })
 
   /**
    * Handle response updates - stores by question ID and auto-derives variables

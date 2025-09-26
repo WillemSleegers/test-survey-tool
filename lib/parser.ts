@@ -82,12 +82,6 @@ const parseSubtext = (line: string): SubtextData => {
 
 const parseOption = (line: string): OptionData => {
   const trimmed = line.trim()
-  const oldFormatMatch = trimmed.match(/^-\s*[A-Z]\)\s*(.+)/)
-
-  if (oldFormatMatch) {
-    return { text: oldFormatMatch[1] }
-  }
-
   const optionText = trimmed.substring(1).trim()
   return { text: optionText }
 }
@@ -835,7 +829,6 @@ const reduceParsedLine = (
  *
  * @param blocks - All parsed blocks to validate
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateVariableNames(blocks: Block[]): void {
   const variableNames = new Set<string>()
   const duplicates: string[] = []
@@ -873,7 +866,6 @@ function validateVariableNames(blocks: Block[]): void {
  * 
  * @param blocks - All parsed blocks to validate
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateConditionReferences(blocks: Block[]): void {
   // Collect all defined variable names
   const definedVariables = new Set<string>()
@@ -954,7 +946,6 @@ function validateConditionReferences(blocks: Block[]): void {
  * 
  * @param blocks - All parsed blocks to validate
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateComputedVariableReferences(blocks: Block[]): void {
   // Collect all defined variable names (both question variables and computed variables)
   const definedVariables = new Set<string>()
@@ -1112,9 +1103,9 @@ export const parseQuestionnaire = (text: string): Block[] => {
     result = saveCurrentBlock(result)
 
     // Run validation checks
-    // validateVariableNames(result.blocks)
-    // validateConditionReferences(result.blocks)
-    // validateComputedVariableReferences(result.blocks)
+    validateVariableNames(result.blocks)
+    validateConditionReferences(result.blocks)
+    validateComputedVariableReferences(result.blocks)
 
     // If no blocks were defined, create a default block with all pages
     if (result.blocks.length === 0 && result.currentPage) {

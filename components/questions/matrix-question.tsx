@@ -50,7 +50,7 @@ export function MatrixQuestion({
   responses,
   variables,
   onResponse,
-  startTabIndex: _startTabIndex, // eslint-disable-line @typescript-eslint/no-unused-vars
+  startTabIndex: _startTabIndex, // Currently unused - matrix questions use default tab behavior
   computedVariables
 }: MatrixQuestionProps) {
 
@@ -168,7 +168,7 @@ export function MatrixQuestion({
                     ))
                   ) : (
                     // For radio buttons, render each option with native radio styling but shadcn appearance
-                    visibleOptions.map((option, _optionIndex) => ( // eslint-disable-line @typescript-eslint/no-unused-vars
+                    visibleOptions.map((option) => (
                       <TableCell key={option.value} className="text-center align-middle">
                         <div className="flex justify-center">
                           <label className="cursor-pointer">

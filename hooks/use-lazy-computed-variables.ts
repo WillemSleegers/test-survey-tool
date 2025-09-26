@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState } from "react"
 import { Block, Page, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
 
@@ -15,7 +15,7 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
   /**
    * Generate a unique scope identifier for a block or page
    */
-  const getScopeId = useCallback((scope: Block | Page, type: 'block' | 'page'): string => {
+  const getScopeId = (scope: Block | Page, type: 'block' | 'page'): string => {
     if (type === 'block') {
       const block = scope as Block
       return `block_${block.name || 'default'}`
@@ -24,7 +24,7 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
       // Find block index and page index for unique identification
       let blockIndex = -1
       let pageIndex = -1
-      
+
       questionnaire.forEach((block, bIndex) => {
         const pIndex = block.pages.indexOf(page)
         if (pIndex !== -1) {
@@ -32,28 +32,28 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
           pageIndex = pIndex
         }
       })
-      
+
       return `page_${blockIndex}_${pageIndex}`
     }
-  }, [questionnaire])
+  }
 
   /**
    * Compute variables for a specific scope (block or page)
    */
-  const computeForScope = useCallback((
-    scope: Block | Page, 
+  const computeForScope = (
+    scope: Block | Page,
     type: 'block' | 'page',
     existingComputedVars: ComputedVariables = {}
   ): ComputedVariables => {
     const scopeId = getScopeId(scope, type)
-    
+
     // Check if already computed
     if (computedCache[scopeId]) {
       return computedCache[scopeId]
     }
-    
+
     let computedVars: ComputedVariables = {}
-    
+
     if (type === 'block') {
       const block = scope as Block
       if (block.computedVariables.length > 0) {
@@ -71,66 +71,64 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
         computedVars = evaluateComputedVariables(page, variables, existingComputedVars)
       }
     }
-    
+
     // Cache the result
     setComputedCache(prev => ({
       ...prev,
       [scopeId]: computedVars
     }))
-    
+
     return computedVars
-  }, [computedCache, getScopeId, variables])
+  }
 
   /**
    * Get computed variables for a specific block (compute if not cached)
    */
-  const getBlockComputedVariables = useCallback((block: Block): ComputedVariables => {
+  const getBlockComputedVariables = (block: Block): ComputedVariables => {
     return computeForScope(block, 'block')
-  }, [computeForScope])
+  }
 
   /**
    * Get computed variables for a specific page (compute if not cached)
    * Includes block-level computed variables as dependencies
    */
-  const getPageComputedVariables = useCallback((page: Page): ComputedVariables => {
+  const getPageComputedVariables = (page: Page): ComputedVariables => {
     // Find the block containing this page
     const containingBlock = questionnaire.find(block => block.pages.includes(page))
-    
+
     // Get block-level computed variables first
     const blockComputedVars = containingBlock ? getBlockComputedVariables(containingBlock) : {}
-    
+
     // Then get page-level computed variables
     const pageComputedVars = computeForScope(page, 'page', blockComputedVars)
-    
+
     // Return combined variables (page-level takes precedence)
     return { ...blockComputedVars, ...pageComputedVars }
-  }, [computeForScope, getBlockComputedVariables, questionnaire])
+  }
 
   /**
    * Invalidate cache when variables change
    */
-  const invalidateCache = useCallback(() => {
+  const invalidateCache = () => {
     setComputedCache({})
-  }, [])
+  }
 
   /**
    * Invalidate cache for a specific scope (when user re-enters that scope)
    */
-  const invalidateScopeCache = useCallback((scope: Block | Page, type: 'block' | 'page') => {
+  const invalidateScopeCache = (scope: Block | Page, type: 'block' | 'page') => {
     const scopeId = getScopeId(scope, type)
     setComputedCache(prev => {
       const newCache = { ...prev }
       delete newCache[scopeId]
       return newCache
     })
-  }, [getScopeId])
+  }
 
   return {
     getBlockComputedVariables,
     getPageComputedVariables,
     invalidateCache,
-    invalidateScopeCache,
-    // For debugging: expose current cache state
-    computedCache
+    invalidateScopeCache
   }
 }

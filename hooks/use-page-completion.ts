@@ -19,10 +19,7 @@ export function usePageCompletion(
 ): boolean {
   if (!pageContent) return false
 
-  const allQuestions = [
-    ...pageContent.mainQuestions,
-    ...pageContent.sections.flatMap(sub => sub.questions)
-  ]
+  const allQuestions = pageContent.sections.flatMap(sub => sub.questions)
 
   return allQuestions.every(question => {
     if (!question.variable) return true // Skip questions without variables

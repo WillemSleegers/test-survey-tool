@@ -10,13 +10,15 @@ export const nl = {
     otherText: "Voer je antwoord in...",
   },
   completion: {
-    title: "Vragenlijst voltooid!",
+    title: "Enquête voltooid!",
     description:
-      "Bedankt voor het invullen van de vragenlijst.",
+      "Bedankt voor het invullen van de enquête.",
     close: "Sluiten",
   },
   errors: {
     noSections:
       "Er zijn momenteel geen secties zichtbaar op basis van uw antwoorden.",
+    noPages:
+      "Er zijn momenteel geen pagina's zichtbaar op basis van uw antwoorden.",
   },
 } as const

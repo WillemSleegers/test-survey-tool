@@ -20,17 +20,13 @@ export function calculateTotalTabInputs(
   pageContent: VisiblePageContent,
   variables: Variables
 ): number {
-  const mainInputs = pageContent.mainQuestions.reduce((sum, question) => {
-    return sum + calculateQuestionInputCount(question, variables)
-  }, 0)
-
   const sectionInputs = pageContent.sections.reduce((sum, sub) => {
     return sum + sub.questions.reduce((subSum, question) => {
       return subSum + calculateQuestionInputCount(question, variables)
     }, 0)
   }, 0)
 
-  return mainInputs + sectionInputs
+  return sectionInputs
 }
 
 /**
