@@ -144,6 +144,13 @@ Strong TypeScript usage throughout:
 - Remove unused code rather than commenting it out
 - Refactor directly rather than adding workarounds
 
+### Linting and Code Quality:
+- **Never use ESLint disable comments** (`// eslint-disable`, `/* eslint-disable */`)
+- **Never use TypeScript suppressions** (`@ts-ignore`, `@ts-expect-error`)
+- Fix underlying issues instead of suppressing warnings
+- For intentionally unused parameters, use `void parameterName` or proper underscore naming
+- Maintain zero build warnings without rule suppressions
+
 ### Documentation and Examples:
 - Keep survey examples realistic and purposeful - avoid forced feature demonstrations
 - Use progressive examples that build naturally (Basic → Intermediate → Advanced)
