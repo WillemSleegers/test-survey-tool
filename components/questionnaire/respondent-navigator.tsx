@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ChevronRight } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent } from "@/components/ui/card"
 import { NavItem, Page } from "@/lib/types"
 import { useLanguage } from "@/contexts/language-context"
 
