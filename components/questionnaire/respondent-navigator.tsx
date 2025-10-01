@@ -175,10 +175,10 @@ export function RespondentNavigator({
                 firstChild && isNavItemCurrent(firstChild)
 
               return (
-                <div key={index} className="space-y-1">
+                <div key={index} className="space-y-0.5">
                   {/* Level 1 item */}
                   <div
-                    className={`flex items-center gap-2 p-2 rounded-lg text-sm transition-all cursor-pointer hover:bg-muted ${
+                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-all cursor-pointer hover:bg-muted ${
                       isCurrent || firstChildCurrent
                         ? "font-bold"
                         : isVisited || anyChildVisited
@@ -224,7 +224,7 @@ export function RespondentNavigator({
                         return (
                           <div
                             key={`${index}-${childIdx}`}
-                            className={`flex items-center gap-2 p-1.5 rounded text-sm transition-all cursor-pointer hover:bg-muted ${
+                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm transition-all cursor-pointer hover:bg-muted ${
                               isChildCurrent
                                 ? "font-bold"
                                 : isChildVisited
