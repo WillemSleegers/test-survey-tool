@@ -3,32 +3,37 @@
 import { useState, useMemo, useEffect } from "react"
 import { PageContent } from "@/components/page-content"
 import { useLanguage } from "@/contexts/language-context"
+import { useNavigation } from "@/contexts/navigation-context"
 
 import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation"
 import { useVisiblePages } from "@/hooks/use-visible-pages"
 import { useLazyComputedVariables } from "@/hooks/use-lazy-computed-variables"
-import { evaluateCondition } from "@/lib/conditions/condition-evaluator" 
+import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
 import { usePageCompletion } from "@/hooks/use-page-completion"
 import { PageHeader } from "@/components/questionnaire/page-header"
 import { NavigationButtons } from "@/components/questionnaire/navigation-buttons"
 import { CompletionDialog } from "@/components/questionnaire/completion-dialog"
 import { PageNavigator } from "@/components/questionnaire/page-navigator"
+import { RespondentNavigator } from "@/components/questionnaire/respondent-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
-import { Block, Page, ComputedVariables } from "@/lib/types"
+import { Block, Page, NavItem, ComputedVariables } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Block[]
+  navItems: NavItem[]
   onResetToUpload: () => void
 }
 
 export function QuestionnaireViewer({
   questionnaire,
+  navItems,
   onResetToUpload,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
+  const { isVisible: isNavVisible, position: navPosition } = useNavigation()
 
   // Response management - get all pages first for response tracking
   const allPages = questionnaire.flatMap(block => block.pages)
@@ -84,6 +89,18 @@ export function QuestionnaireViewer({
     prevPage,
     jumpToPage,
   } = useQuestionnaireNavigation(visiblePages.length)
+
+  // Navigation: jump to first visible page of a nav item
+  const handleJumpToNavItem = (navItem: NavItem): void => {
+    // Find the first page from this nav item that is visible
+    for (const page of navItem.pages) {
+      const pageIndex = visiblePages.findIndex(p => p === page)
+      if (pageIndex !== -1) {
+        jumpToPage(pageIndex)
+        return
+      }
+    }
+  }
 
   // Get current page and its content
   const currentPage = visiblePages[currentVisiblePageIndex]
@@ -147,32 +164,58 @@ export function QuestionnaireViewer({
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
-        <PageHeader 
-          page={currentPage} 
-          variables={variables} 
-          computedVariables={currentPageComputedVars}
-        />
-        
-        <PageContent
-          content={pageContent}
-          responses={responses}
-          variables={variables}
-          onResponse={handleResponse}
-          computedVariables={{ ...currentBlockComputedVars, ...currentPageComputedVars }}
-        />
+      <div className="flex justify-center px-6 py-6">
+        <div className="flex gap-16 items-start w-full justify-center">
+          {/* Respondent Navigator - NAV-based navigation for survey takers */}
+          {isNavVisible && navPosition === 'left' && (
+            <RespondentNavigator
+              navItems={navItems}
+              visiblePages={visiblePages}
+              currentVisiblePageIndex={currentVisiblePageIndex}
+              onJumpToNavItem={handleJumpToNavItem}
+            />
+          )}
 
-        <NavigationButtons
-          currentPageIndex={currentVisiblePageIndex}
-          totalPages={visiblePages.length}
-          allQuestionsAnswered={allQuestionsAnswered}
-          totalInputs={totalInputs}
-          onPrevious={prevPage}
-          onNext={nextPage}
-          onComplete={handleComplete}
-        />
+          {/* Main content */}
+          <div className="w-full max-w-4xl space-y-6">
+            <PageHeader
+              page={currentPage}
+              variables={variables}
+              computedVariables={currentPageComputedVars}
+            />
+
+            <PageContent
+              content={pageContent}
+              responses={responses}
+              variables={variables}
+              onResponse={handleResponse}
+              computedVariables={{ ...currentBlockComputedVars, ...currentPageComputedVars }}
+            />
+
+            <NavigationButtons
+              currentPageIndex={currentVisiblePageIndex}
+              totalPages={visiblePages.length}
+              allQuestionsAnswered={allQuestionsAnswered}
+              totalInputs={totalInputs}
+              onPrevious={prevPage}
+              onNext={nextPage}
+              onComplete={handleComplete}
+            />
+          </div>
+
+          {/* Right side navigator */}
+          {isNavVisible && navPosition === 'right' && (
+            <RespondentNavigator
+              navItems={navItems}
+              visiblePages={visiblePages}
+              currentVisiblePageIndex={currentVisiblePageIndex}
+              onJumpToNavItem={handleJumpToNavItem}
+            />
+          )}
+        </div>
       </div>
 
+      {/* Page Navigator - Developer/researcher tool with page-level detail */}
       <PageNavigator
         questionnaire={questionnaire}
         allPages={allPages}

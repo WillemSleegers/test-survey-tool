@@ -3,6 +3,7 @@ export const en = {
     previous: "Previous",
     next: "Next",
     complete: "Complete Survey",
+    contents: "Contents",
   },
   placeholders: {
     textInput: "Enter your response...",

@@ -207,15 +207,43 @@ export function TextFormatGuide() {
             <li>
               <code>BLOCK: name</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Groups pages together</li>
+                <li>Groups pages together for conditional logic</li>
                 <li>All pages until the next BLOCK belong to this block</li>
                 <li>
                   Can be used in combination with SHOW_IF to hide multiple pages
                   at once
                 </li>
                 <li>
-                  Can also be used to more easily navigate between sections of
-                  the survey
+                  Note: BLOCKs are for logic only - use NAV for respondent navigation
+                </li>
+              </ul>
+            </li>
+            <li>
+              <code>NAV: name</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Creates a navigation item in the survey sidebar</li>
+                <li>All pages until the next NAV belong to this item</li>
+                <li>Defaults to level 1 (top-level) navigation</li>
+                <li>
+                  Appears as clickable item in navigation for respondents to jump to sections
+                </li>
+                <li>
+                  Shows completion status (visited/current/upcoming) automatically
+                </li>
+              </ul>
+            </li>
+            <li>
+              <code>LEVEL: 1</code> or <code>LEVEL: 2</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Must come immediately after NAV declaration</li>
+                <li>Sets the hierarchy level of the navigation item</li>
+                <li>Level 1 = top-level navigation (default, can be omitted)</li>
+                <li>Level 2 = nested under the previous level 1 item</li>
+                <li>
+                  Useful for organizing long surveys with hierarchical structure
+                </li>
+                <li>
+                  Level 1 items with level 2 children become collapsible sections
                 </li>
               </ul>
             </li>

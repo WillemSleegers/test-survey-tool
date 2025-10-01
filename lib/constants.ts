@@ -91,6 +91,8 @@ Q: Overall, how would you rate the learning curve?
 - Very difficult`
 
 export const ADVANCED_SAMPLE_TEXT = `BLOCK: User Background
+NAV: Background & Experience
+LEVEL: 1
 
 # **Survey Tool Evaluation**
 
@@ -128,6 +130,9 @@ HINT: Select all that apply
 CHECKBOX
 VARIABLE: features_tried
 
+NAV: Getting Started
+LEVEL: 2
+
 Q: How would you rate each aspect of the survey tool?
 - Q: Ease of use
 - Q: Documentation quality
@@ -141,6 +146,8 @@ COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_crea
 
 BLOCK: Feature Feedback
 SHOW_IF: features_tried
+NAV: Detailed Feedback
+LEVEL: 1
 
 #
 
@@ -154,6 +161,8 @@ Q: {{IF experienced_user THEN As an experienced user ELSE As someone still learn
 
 BLOCK: Overall Assessment
 SHOW_IF: experienced_user
+NAV: Advanced Users
+LEVEL: 2
 
 # **Advanced User Feedback**
 
@@ -166,6 +175,8 @@ Q: You've created {surveys_created} surveys so far. {{IF recommend IS Yes THEN T
 ESSAY
 
 BLOCK: Final Page
+NAV: Completion
+LEVEL: 1
 
 # **Thank You**
 

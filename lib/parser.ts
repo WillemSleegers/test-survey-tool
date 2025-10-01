@@ -2,6 +2,7 @@ import {
   Question,
   Page,
   Block,
+  NavItem,
   PageData,
   Section,
   QuestionData,
@@ -16,6 +17,8 @@ import {
   ContentData,
   ComputeData,
   BlockData,
+  NavItemData,
+  NavLevelData,
   ParsedLine,
   ParserState,
 } from "@/lib/types"
@@ -48,6 +51,8 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
+  if (trimmed.startsWith("NAV:")) return "nav_item"
+  if (trimmed.startsWith("LEVEL:")) return "nav_level"
   if (trimmed.startsWith("BLOCK:")) return "block"
 
   return "content"
@@ -146,6 +151,24 @@ const parseBlock = (line: string): BlockData => {
   return { name }
 }
 
+const parseNavItem = (line: string): NavItemData => {
+  const trimmed = line.trim()
+  const name = trimmed.substring(4).trim() // Remove "NAV:" prefix
+  return { name }
+}
+
+const parseNavLevel = (line: string): NavLevelData => {
+  const trimmed = line.trim()
+  const levelStr = trimmed.substring(6).trim() // Remove "LEVEL:" prefix
+  const level = parseInt(levelStr, 10)
+
+  if (isNaN(level) || level < 1) {
+    throw new Error(`Invalid LEVEL syntax: ${line}. Expected a positive number (1, 2, etc.)`)
+  }
+
+  return { level }
+}
+
 const parseCompute = (line: string): ComputeData => {
   const trimmed = line.trim()
   const content = trimmed.substring(8).trim() // Remove "COMPUTE:" prefix
@@ -197,6 +220,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseCompute(line) }
     case "block":
       return { type, raw: line, data: parseBlock(line) }
+    case "nav_item":
+      return { type, raw: line, data: parseNavItem(line) }
+    case "nav_level":
+      return { type, raw: line, data: parseNavLevel(line) }
     default:
       const _exhaustive: never = type
       throw new Error(`Unknown line type: ${_exhaustive}`)
@@ -218,6 +245,12 @@ const createBlock = (name: string): Block => ({
   showIf: undefined,
   pages: [],
   computedVariables: [],
+})
+
+const createNavItem = (name: string, level: number): NavItem => ({
+  name,
+  level,
+  pages: [],
 })
 
 const createPage = (title: string): Page => {
@@ -298,32 +331,45 @@ const saveCurrentSection = (state: ParserState): ParserState => {
   }
 }
 
-// Save current page to current block
+// Save current page to current block AND current nav item
 const saveCurrentPage = (state: ParserState): ParserState => {
   if (!state.currentPage) return state
 
-  // Pages no longer have content, so just use the current page as is
   const normalizedPage = state.currentPage
+  let newState = { ...state }
 
-  // If no current block, create a default one
-  if (!state.currentBlock) {
-    return {
-      ...state,
+  // Add page to current block if it exists
+  if (state.currentBlock) {
+    newState = {
+      ...newState,
       currentBlock: {
-        name: "",
-        showIf: undefined,
-        pages: [normalizedPage],
-        computedVariables: []
+        ...state.currentBlock,
+        pages: [...state.currentBlock.pages, normalizedPage],
       }
     }
   }
 
+  // Add page to current nav item if it exists
+  if (state.currentNavItem) {
+    newState = {
+      ...newState,
+      currentNavItem: {
+        ...state.currentNavItem,
+        pages: [...state.currentNavItem.pages, normalizedPage],
+      }
+    }
+  }
+
+  return newState
+}
+
+// Save current nav item to nav items array
+const saveCurrentNavItem = (state: ParserState): ParserState => {
+  if (!state.currentNavItem) return state
+
   return {
     ...state,
-    currentBlock: {
-      ...state.currentBlock,
-      pages: [...state.currentBlock.pages, normalizedPage],
-    }
+    navItems: [...state.navItems, state.currentNavItem],
   }
 }
 
@@ -354,6 +400,42 @@ const handleBlock = (state: ParserState, data: BlockData): ParserState => {
     currentSection: null,
     currentQuestion: null,
     currentSubquestion: null,
+  }
+}
+
+const handleNavItem = (state: ParserState, data: NavItemData): ParserState => {
+  // Save current nav item (and page/section/question)
+  let newState = saveCurrentQuestion(state)
+  newState = saveCurrentSection(newState)
+  newState = saveCurrentPage(newState)
+  newState = saveCurrentNavItem(newState)
+
+  // Start new nav item with default level 1
+  return {
+    ...newState,
+    currentNavItem: createNavItem(data.name, 1),
+    currentNavLevel: 1,
+    currentPage: null,
+    currentSection: null,
+    currentQuestion: null,
+    currentSubquestion: null,
+  }
+}
+
+const handleNavLevel = (state: ParserState, data: NavLevelData): ParserState => {
+  // LEVEL must follow a NAV item
+  if (!state.currentNavItem) {
+    throw new Error('LEVEL must come immediately after a NAV declaration')
+  }
+
+  // Update the current nav item's level
+  return {
+    ...state,
+    currentNavItem: {
+      ...state.currentNavItem,
+      level: data.level,
+    },
+    currentNavLevel: data.level,
   }
 }
 
@@ -814,6 +896,10 @@ const reduceParsedLine = (
       return handleCompute(state, parsedLine.data)
     case "block":
       return handleBlock(state, parsedLine.data)
+    case "nav_item":
+      return handleNavItem(state, parsedLine.data)
+    case "nav_level":
+      return handleNavLevel(state, parsedLine.data)
     default:
       // Exhaustiveness check - TypeScript will error if we miss a case
       const _exhaustive: never = parsedLine
@@ -822,6 +908,13 @@ const reduceParsedLine = (
 }
 
 // Validation functions
+
+/**
+ * Collects all pages from blocks (no subblocks anymore)
+ */
+function getAllPages(blocks: Block[]): Page[] {
+  return blocks.flatMap(block => block.pages)
+}
 
 /**
  * Validates that all variable names are unique across the questionnaire
@@ -833,18 +926,17 @@ function validateVariableNames(blocks: Block[]): void {
   const variableNames = new Set<string>()
   const duplicates: string[] = []
 
-  // Check all questions in all blocks/pages/sections
-  for (const block of blocks) {
-    for (const page of block.pages) {
-      // Check section questions
-      for (const section of page.sections) {
-        for (const question of section.questions) {
-          if (question.variable) {
-            if (variableNames.has(question.variable)) {
-              duplicates.push(question.variable)
-            } else {
-              variableNames.add(question.variable)
-            }
+  // Get all pages from all blocks (including subblocks)
+  const allPages = getAllPages(blocks)
+
+  for (const page of allPages) {
+    for (const section of page.sections) {
+      for (const question of section.questions) {
+        if (question.variable) {
+          if (variableNames.has(question.variable)) {
+            duplicates.push(question.variable)
+          } else {
+            variableNames.add(question.variable)
           }
         }
       }
@@ -869,32 +961,35 @@ function validateVariableNames(blocks: Block[]): void {
 function validateConditionReferences(blocks: Block[]): void {
   // Collect all defined variable names
   const definedVariables = new Set<string>()
-  for (const block of blocks) {
-    for (const page of block.pages) {
-      // Add page-level computed variables
-      for (const computedVar of page.computedVariables) {
-        definedVariables.add(computedVar.name)
-      }
-      
-      // Add section question variables
-      for (const section of page.sections) {
-        for (const question of section.questions) {
-          if (question.variable) {
-            definedVariables.add(question.variable)
-          }
-          // Add subquestion variables
-          if (question.subquestions) {
-            for (const subquestion of question.subquestions) {
-              if (subquestion.variable) {
-                definedVariables.add(subquestion.variable)
-              }
+  const allPages = getAllPages(blocks)
+
+  // Collect variables from all pages
+  for (const page of allPages) {
+    // Add page-level computed variables
+    for (const computedVar of page.computedVariables) {
+      definedVariables.add(computedVar.name)
+    }
+
+    // Add section question variables
+    for (const section of page.sections) {
+      for (const question of section.questions) {
+        if (question.variable) {
+          definedVariables.add(question.variable)
+        }
+        // Add subquestion variables
+        if (question.subquestions) {
+          for (const subquestion of question.subquestions) {
+            if (subquestion.variable) {
+              definedVariables.add(subquestion.variable)
             }
           }
         }
       }
     }
-    
-    // Add block-level computed variables
+  }
+
+  // Add block-level computed variables
+  for (const block of blocks) {
     for (const computedVar of block.computedVariables) {
       definedVariables.add(computedVar.name)
     }
@@ -902,41 +997,41 @@ function validateConditionReferences(blocks: Block[]): void {
 
   // Check all condition references
   const errors: string[] = []
-  
+
+  // Check block SHOW_IF conditions
   for (const block of blocks) {
-    // Check block SHOW_IF
     if (block.showIf) {
       const missingVars = findUndefinedVariables(block.showIf, definedVariables)
       if (missingVars.length > 0) {
         errors.push(`Block "${block.name}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
       }
     }
-    
-    for (const page of block.pages) {
-      // Check page SHOW_IF
-      if (page.showIf) {
-        const missingVars = findUndefinedVariables(page.showIf, definedVariables)
-        if (missingVars.length > 0) {
-          errors.push(`Page "${page.title}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-        }
+  }
+
+  // Check page and question SHOW_IF conditions
+  for (const page of allPages) {
+    if (page.showIf) {
+      const missingVars = findUndefinedVariables(page.showIf, definedVariables)
+      if (missingVars.length > 0) {
+        errors.push(`Page "${page.title}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
       }
-      
-      // Check section questions
-      for (const section of page.sections) {
-        for (const question of section.questions) {
-          if (question.showIf) {
-            const missingVars = findUndefinedVariables(question.showIf, definedVariables)
-            if (missingVars.length > 0) {
-              errors.push(`Question "${question.id}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-            }
+    }
+
+    // Check section questions
+    for (const section of page.sections) {
+      for (const question of section.questions) {
+        if (question.showIf) {
+          const missingVars = findUndefinedVariables(question.showIf, definedVariables)
+          if (missingVars.length > 0) {
+            errors.push(`Question "${question.id}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
           }
-          
-          for (const option of question.options) {
-            if (option.showIf) {
-              const missingVars = findUndefinedVariables(option.showIf, definedVariables)
-              if (missingVars.length > 0) {
-                errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
-              }
+        }
+
+        for (const option of question.options) {
+          if (option.showIf) {
+            const missingVars = findUndefinedVariables(option.showIf, definedVariables)
+            if (missingVars.length > 0) {
+              errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
             }
           }
         }
@@ -957,42 +1052,42 @@ function validateConditionReferences(blocks: Block[]): void {
 function validateComputedVariableReferences(blocks: Block[]): void {
   // Collect all defined variable names (both question variables and computed variables)
   const definedVariables = new Set<string>()
+  const allPages = getAllPages(blocks)
 
-  for (const block of blocks) {
-    for (const page of block.pages) {
-      // Add section question variables first
-      for (const section of page.sections) {
-        for (const question of section.questions) {
-          if (question.variable) {
-            definedVariables.add(question.variable)
-          }
-          // Add subquestion variables
-          if (question.subquestions) {
-            for (const subquestion of question.subquestions) {
-              if (subquestion.variable) {
-                definedVariables.add(subquestion.variable)
-              }
+  // Add section question variables first
+  for (const page of allPages) {
+    for (const section of page.sections) {
+      for (const question of section.questions) {
+        if (question.variable) {
+          definedVariables.add(question.variable)
+        }
+        // Add subquestion variables
+        if (question.subquestions) {
+          for (const subquestion of question.subquestions) {
+            if (subquestion.variable) {
+              definedVariables.add(subquestion.variable)
             }
           }
         }
       }
-
-      // Then add page-level computed variables (they can reference question variables from same page)
-      for (const computedVar of page.computedVariables) {
-        definedVariables.add(computedVar.name)
-      }
     }
 
-    // Finally add block-level computed variables (they can reference everything)
+    // Then add page-level computed variables
+    for (const computedVar of page.computedVariables) {
+      definedVariables.add(computedVar.name)
+    }
+  }
+
+  // Finally add block-level computed variables
+  for (const block of blocks) {
     for (const computedVar of block.computedVariables) {
       definedVariables.add(computedVar.name)
     }
   }
 
-
   // Check computed variable expressions
   const errors: string[] = []
-  
+
   for (const block of blocks) {
     for (const computedVar of block.computedVariables) {
       const missingVars = findUndefinedVariables(computedVar.expression, definedVariables)
@@ -1000,13 +1095,13 @@ function validateComputedVariableReferences(blocks: Block[]): void {
         errors.push(`Computed variable "${computedVar.name}" references undefined variables: ${missingVars.join(', ')}`)
       }
     }
-    
-    for (const page of block.pages) {
-      for (const computedVar of page.computedVariables) {
-        const missingVars = findUndefinedVariables(computedVar.expression, definedVariables)
-        if (missingVars.length > 0) {
-          errors.push(`Computed variable "${computedVar.name}" references undefined variables: ${missingVars.join(', ')}`)
-        }
+  }
+
+  for (const page of allPages) {
+    for (const computedVar of page.computedVariables) {
+      const missingVars = findUndefinedVariables(computedVar.expression, definedVariables)
+      if (missingVars.length > 0) {
+        errors.push(`Computed variable "${computedVar.name}" references undefined variables: ${missingVars.join(', ')}`)
       }
     }
   }
@@ -1084,13 +1179,16 @@ function isValidVariableName(str: string): boolean {
 
 // Main function
 
-export const parseQuestionnaire = (text: string): Block[] => {
+export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: NavItem[] } => {
   try {
     const lines = text.split("\n")
 
     const initialState: ParserState = {
       blocks: [],
+      navItems: [],
       currentBlock: null,
+      currentNavItem: null,
+      currentNavLevel: 1,
       currentPage: null,
       currentSection: null,
       currentQuestion: null,
@@ -1108,6 +1206,7 @@ export const parseQuestionnaire = (text: string): Block[] => {
     let result = saveCurrentQuestion(finalState)
     result = saveCurrentSection(result)
     result = saveCurrentPage(result)
+    result = saveCurrentNavItem(result)
     result = saveCurrentBlock(result)
 
     // Run validation checks
@@ -1124,7 +1223,7 @@ export const parseQuestionnaire = (text: string): Block[] => {
           name: "",
           showIf: undefined,
           pages: result.currentPage ? [result.currentPage] : [],
-          computedVariables: []
+          computedVariables: [],
         }]
       }
     } else if (result.blocks.length === 0) {
@@ -1134,12 +1233,15 @@ export const parseQuestionnaire = (text: string): Block[] => {
           name: "",
           showIf: undefined,
           pages: [],
-          computedVariables: []
+          computedVariables: [],
         }]
       }
     }
 
-    return result.blocks
+    return {
+      blocks: result.blocks,
+      navItems: result.navItems,
+    }
   } catch (err) {
     throw new Error(
       "Failed to parse questionnaire format: " + (err as Error).message

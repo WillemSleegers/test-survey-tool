@@ -11,12 +11,17 @@ import { Settings } from "@/components/settings"
 
 import { parseQuestionnaire } from "@/lib/parser"
 
-import { Block } from "@/lib/types"
+import { Block, NavItem } from "@/lib/types"
 
 import { ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
 
+type ParsedQuestionnaire = {
+  blocks: Block[]
+  navItems: NavItem[]
+}
+
 const QuestionnaireApp = () => {
-  const [questionnaire, setQuestionnaire] = useState<Block[] | null>(null)
+  const [questionnaire, setQuestionnaire] = useState<ParsedQuestionnaire | null>(null)
   const [error, setError] = useState<string>("")
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
 
@@ -51,7 +56,13 @@ const QuestionnaireApp = () => {
   }
 
   if (isPreviewMode && questionnaire) {
-    return <QuestionnaireViewer questionnaire={questionnaire} onResetToUpload={handleResetToUpload} />
+    return (
+      <QuestionnaireViewer
+        questionnaire={questionnaire.blocks}
+        navItems={questionnaire.navItems}
+        onResetToUpload={handleResetToUpload}
+      />
+    )
   }
 
   return (

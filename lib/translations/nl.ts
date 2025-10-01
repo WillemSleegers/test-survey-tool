@@ -3,6 +3,7 @@ export const nl = {
     previous: "Vorige",
     next: "Volgende",
     complete: "Enquête Voltooien",
+    contents: "Inhoud",
   },
   placeholders: {
     textInput: "Voer je antwoord in...",

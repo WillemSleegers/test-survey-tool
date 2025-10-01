@@ -7,6 +7,12 @@ export type Block = {
   computedVariables: ComputedVariable[]
 }
 
+export type NavItem = {
+  name: string
+  level: number
+  pages: Page[]
+}
+
 export type Page = {
   title: string
   sections: Section[]
@@ -93,6 +99,8 @@ export type ShowIfData = { showIf: string }
 export type ContentData = { content: string }
 export type ComputeData = { name: string; expression: string }
 export type BlockData = { name: string }
+export type NavItemData = { name: string }
+export type NavLevelData = { level: number }
 
 export type SubquestionData = { id: string; text: string }
 
@@ -110,10 +118,15 @@ export type ParsedLine =
   | { type: "content"; raw: string; data: ContentData }
   | { type: "compute"; raw: string; data: ComputeData }
   | { type: "block"; raw: string; data: BlockData }
+  | { type: "nav_item"; raw: string; data: NavItemData }
+  | { type: "nav_level"; raw: string; data: NavLevelData }
 
 export type ParserState = {
   blocks: Block[]
+  navItems: NavItem[]
   currentBlock: Block | null
+  currentNavItem: NavItem | null
+  currentNavLevel: number
   currentPage: Page | null
   currentSection: Section | null
   currentQuestion: Question | null
