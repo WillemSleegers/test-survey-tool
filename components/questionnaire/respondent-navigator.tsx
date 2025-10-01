@@ -5,7 +5,6 @@ import { ChevronRight } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { NavItem, Page } from "@/lib/types"
-import { useNavigation } from "@/contexts/navigation-context"
 import { useLanguage } from "@/contexts/language-context"
 
 interface RespondentNavigatorProps {
@@ -35,7 +34,6 @@ export function RespondentNavigator({
   currentVisiblePageIndex,
   onJumpToNavItem,
 }: RespondentNavigatorProps) {
-  const { position } = useNavigation()
   const { t } = useLanguage()
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
   const [visitedNavItems, setVisitedNavItems] = useState<Set<NavItem>>(
@@ -100,12 +98,6 @@ export function RespondentNavigator({
     }
     setExpandedItems(newExpanded)
   }
-
-  // Calculate total progress
-  const totalItems = navItems.length
-  const completedItems = visitedNavItems.size
-  const progressPercent =
-    totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
 
   // Helper to check if a nav item is current
   const isNavItemCurrent = (navItem: NavItem): boolean => {
