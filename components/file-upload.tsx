@@ -40,6 +40,8 @@ export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
     const file = event.target.files?.[0]
     if (file) {
       processFile(file)
+      // Reset the input value so the same file can be uploaded again
+      event.target.value = ""
     }
   }
 
