@@ -105,6 +105,11 @@ export function RespondentNavigator({
     return navItem.pages.some((page) => page === currentPage)
   }
 
+  // Helper to check if a nav item can be clicked (visited or current)
+  const isNavItemClickable = (navItem: NavItem): boolean => {
+    return visitedNavItems.has(navItem) || isNavItemCurrent(navItem)
+  }
+
   // Helper to check if a level 1 item has level 2 children
   const hasChildren = (itemIndex: number): boolean => {
     const item = navItems[itemIndex]
@@ -168,11 +173,18 @@ export function RespondentNavigator({
               const firstChildCurrent =
                 firstChild && isNavItemCurrent(firstChild)
 
+              // Check if item is clickable
+              const isClickable = isNavItemClickable(item)
+
               return (
                 <div key={index} className="space-y-0.5">
                   {/* Level 1 item */}
                   <div
-                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-all cursor-pointer hover:bg-muted ${
+                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-all ${
+                      isClickable
+                        ? "cursor-pointer hover:bg-muted"
+                        : "cursor-not-allowed opacity-50"
+                    } ${
                       isCurrent || firstChildCurrent
                         ? "font-bold"
                         : isVisited || anyChildVisited
@@ -180,6 +192,8 @@ export function RespondentNavigator({
                         : "text-muted-foreground"
                     }`}
                     onClick={() => {
+                      if (!isClickable) return // Prevent navigation to unvisited items
+
                       if (itemHasChildren) {
                         // If has children, only toggle expansion
                         toggleItemExpansion(index)
@@ -214,18 +228,26 @@ export function RespondentNavigator({
                       {children.map((child, childIdx) => {
                         const isChildCurrent = isNavItemCurrent(child)
                         const isChildVisited = visitedNavItems.has(child)
+                        const isChildClickable = isNavItemClickable(child)
 
                         return (
                           <div
                             key={`${index}-${childIdx}`}
-                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm transition-all cursor-pointer hover:bg-muted ${
+                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm transition-all ${
+                              isChildClickable
+                                ? "cursor-pointer hover:bg-muted"
+                                : "cursor-not-allowed opacity-50"
+                            } ${
                               isChildCurrent
                                 ? "font-bold"
                                 : isChildVisited
                                 ? ""
                                 : "text-muted-foreground"
                             }`}
-                            onClick={() => onJumpToNavItem(child)}
+                            onClick={() => {
+                              if (!isChildClickable) return // Prevent navigation to unvisited items
+                              onJumpToNavItem(child)
+                            }}
                           >
                             {/* Child title */}
                             <div className="flex-1 min-w-0 truncate">
