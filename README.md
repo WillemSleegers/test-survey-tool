@@ -15,8 +15,8 @@ A Next.js application that converts structured text files into interactive surve
 
 ## Technology Stack
 
-- **Next.js 15** with App Router
-- **React 19** with experimental React Compiler
+- **Next.js 16** with App Router and Turbopack
+- **React 19** with React Compiler
 - **TypeScript** with strict configuration
 - **Tailwind CSS** with Radix UI components
 - **shadcn/ui** component library

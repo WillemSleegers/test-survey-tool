@@ -19,9 +19,9 @@ Test Survey Tool (TST) is a Next.js React application that converts structured t
 
 ### Core Structure
 
-- **Next.js 15** with App Router (`app/` directory)
+- **Next.js 16** with App Router (`app/` directory) and Turbopack
 - **TypeScript** with strict configuration
-- **React 19** with experimental React Compiler
+- **React 19** with React Compiler
 - **Tailwind CSS** for styling with Radix UI components
 - **shadcn/ui** component library
 
@@ -106,7 +106,7 @@ Strong TypeScript usage throughout:
 
 ## React Compiler Guidelines
 
-**IMPORTANT**: This project uses React 19 with experimental React Compiler. Follow these guidelines:
+**IMPORTANT**: This project uses React 19 with React Compiler. Follow these guidelines:
 
 ### ❌ DO NOT USE:
 
