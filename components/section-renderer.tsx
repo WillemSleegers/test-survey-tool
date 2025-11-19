@@ -34,7 +34,39 @@ export function SectionRenderer({
 
         return (
           <div className="whitespace-pre-wrap">
-            <Markdown>{processedContent}</Markdown>
+            <Markdown
+              components={{
+                code: (props) => {
+                  const { children, className, ...rest } = props as {
+                    className?: string
+                    children?: React.ReactNode
+                  }
+
+                  // Inline code (no className)
+                  if (!className) {
+                    return (
+                      <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...rest}>
+                        {children}
+                      </code>
+                    )
+                  }
+
+                  // Block code (wrapped in pre, will be styled by pre component)
+                  return (
+                    <code className="font-mono text-sm" {...rest}>
+                      {children}
+                    </code>
+                  )
+                },
+                pre: ({ children }) => (
+                  <div className="my-4 bg-muted p-4 rounded-lg overflow-x-auto">
+                    {children}
+                  </div>
+                ),
+              }}
+            >
+              {processedContent}
+            </Markdown>
           </div>
         )
       })()}

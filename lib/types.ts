@@ -35,6 +35,7 @@ export type Question = {
   inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   variable?: string
   showIf?: string
+  totalLabel?: string
 }
 
 export type Subquestion = {
@@ -103,6 +104,7 @@ export type NavItemData = { name: string }
 export type NavLevelData = { level: number }
 
 export type SubquestionData = { id: string; text: string }
+export type TotalLabelData = { totalLabel: string }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
@@ -115,6 +117,7 @@ export type ParsedLine =
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
+  | { type: "total_label"; raw: string; data: TotalLabelData }
   | { type: "content"; raw: string; data: ContentData }
   | { type: "compute"; raw: string; data: ComputeData }
   | { type: "block"; raw: string; data: BlockData }

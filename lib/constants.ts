@@ -70,6 +70,15 @@ Q: How would you rate each aspect of the survey tool?
 - Fair
 - Poor
 
+Q: How many hours per month do you spend using different features?
+HINT: Enter estimated hours for each feature
+- Q: Creating surveys
+- Q: Testing surveys
+- Q: Analyzing results
+- Hours
+NUMBER
+TOTAL_LABEL: Total Hours
+
 #
 SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
 

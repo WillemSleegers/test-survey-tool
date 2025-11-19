@@ -14,6 +14,7 @@ import {
   InputTypeData,
   VariableData,
   ShowIfData,
+  TotalLabelData,
   ContentData,
   ComputeData,
   BlockData,
@@ -54,6 +55,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
+  if (trimmed.startsWith("TOTAL_LABEL:")) return "total_label"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
   if (trimmed.startsWith("NAV:")) return "nav_item"
   if (trimmed.startsWith("LEVEL:")) return "nav_level"
@@ -133,6 +135,12 @@ const parseVariable = (line: string): VariableData => {
 const parseShowIf = (line: string): ShowIfData => ({
   showIf: line.trim().substring(8).trim(),
 })
+
+const parseTotalLabel = (line: string): TotalLabelData => {
+  const trimmed = line.trim()
+  const totalLabel = trimmed.substring(12).trim() // Remove "TOTAL_LABEL:" prefix
+  return { totalLabel }
+}
 
 const parseOptionShowIf = (line: string): OptionShowIfData => {
   const trimmed = line.trim()
@@ -218,6 +226,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseVariable(line) }
     case "show_if":
       return { type, raw: line, data: parseShowIf(line) }
+    case "total_label":
+      return { type, raw: line, data: parseTotalLabel(line) }
     case "content":
       return { type, raw: line, data: parseContent(line) }
     case "compute":
@@ -735,6 +745,18 @@ const handleShowIf = (state: ParserState, data: ShowIfData): ParserState => {
   return state
 }
 
+const handleTotalLabel = (state: ParserState, data: TotalLabelData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      totalLabel: data.totalLabel,
+    },
+  }
+}
+
 const handleContent = (
   state: ParserState,
   _data: ContentData,
@@ -894,6 +916,8 @@ const reduceParsedLine = (
       return handleVariable(state, parsedLine.data)
     case "show_if":
       return handleShowIf(state, parsedLine.data)
+    case "total_label":
+      return handleTotalLabel(state, parsedLine.data)
     case "content":
       return handleContent(state, parsedLine.data, parsedLine.raw)
     case "compute":
@@ -917,6 +941,25 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
   try {
     const lines = text.split("\n")
 
+    // Track code fence state to avoid parsing content inside fences
+    let insideCodeFence = false
+    const processedLines: Array<{ line: string; shouldParse: boolean }> = []
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      // Check if this line is a code fence delimiter
+      if (trimmed.startsWith("```")) {
+        insideCodeFence = !insideCodeFence
+        // Keep fence lines but don't parse them
+        processedLines.push({ line, shouldParse: false })
+        continue
+      }
+
+      // Keep all lines, but mark whether they should be parsed
+      processedLines.push({ line, shouldParse: !insideCodeFence })
+    }
+
     // Create a default block to hold all pages when BLOCK: is not explicitly declared
     const defaultBlock = createBlock("")
 
@@ -934,7 +977,12 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
       questionCounter: 1,
     }
 
-    const finalState = lines.reduce((state, line) => {
+    const finalState = processedLines.reduce((state, { line, shouldParse }) => {
+      if (!shouldParse) {
+        // Lines inside code fences are treated as content
+        const contentLine: ParsedLine = { type: "content", raw: line, data: { content: line } }
+        return reduceParsedLine(state, contentLine)
+      }
       const parsedLine = parseLine(line, state)
       return reduceParsedLine(state, parsedLine)
     }, initialState)

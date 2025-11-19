@@ -5,6 +5,7 @@ import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
 import { NumberQuestion } from "./number-question"
 import { MatrixQuestion } from "./matrix-question"
+import { NumericMatrixQuestion } from "./numeric-matrix-question"
 
 interface QuestionRendererProps {
   /** The question to render */
@@ -102,6 +103,20 @@ export function QuestionRenderer({
       )
 
     case "matrix":
+      // Check if this is a numeric matrix
+      if (question.inputType === "number") {
+        return (
+          <NumericMatrixQuestion
+            question={question}
+            responses={responses}
+            variables={variables}
+            onResponse={(questionId, value) => onResponse(questionId, value)}
+            startTabIndex={startTabIndex}
+            computedVariables={computedVariables}
+          />
+        )
+      }
+
       return (
         <MatrixQuestion
           question={question}
