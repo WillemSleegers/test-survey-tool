@@ -169,6 +169,18 @@ export function TextFormatGuide() {
                 <li>Creates a table layout where each row is a separate question</li>
               </ul>
             </li>
+            <li>
+              <code>NUMBER with options + TOTAL_LABEL</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>Creates a number list question with multiple number inputs</li>
+                <li>Add options using <code>- Option text</code> for each row</li>
+                <li>Use <code>NUMBER</code> after the options to specify number inputs</li>
+                <li>Add <code>TOTAL_LABEL: Label text</code> to show an automatic sum at the bottom</li>
+                <li>Optional: <code>PREFIX: €</code> adds text before each input (e.g., currency symbols)</li>
+                <li>Optional: <code>SUFFIX: .000,-</code> adds text after each input (e.g., units, thousands indicator)</li>
+                <li>Perfect for collecting breakdowns where you need a total (e.g., employee counts, budget items)</li>
+              </ul>
+            </li>
           </ul>
         </div>
 

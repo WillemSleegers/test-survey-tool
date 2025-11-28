@@ -5,6 +5,7 @@ import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
 import { NumberQuestion } from "./number-question"
 import { MatrixQuestion } from "./matrix-question"
+import { NumberListQuestion } from "./number-list-question"
 
 interface QuestionRendererProps {
   /** The question to render */
@@ -29,6 +30,7 @@ interface QuestionRendererProps {
  * - "essay": Multi-line textarea for longer text responses
  * - "number": Number input for numeric values
  * - "matrix": Matrix/table format with multiple sub-questions sharing options
+ * - "number_list": Multiple number inputs with automatic sum total
  * 
  * This component acts as a dispatcher, routing each question to its specialized
  * component while maintaining a consistent interface for parent components.
@@ -97,6 +99,17 @@ export function QuestionRenderer({
     case "matrix":
       return (
         <MatrixQuestion
+          question={question}
+          responses={responses}
+          onResponse={(questionId, value) => onResponse(questionId, value)}
+          startTabIndex={startTabIndex}
+          computedVariables={computedVariables}
+        />
+      )
+
+    case "number_list":
+      return (
+        <NumberListQuestion
           question={question}
           responses={responses}
           onResponse={(questionId, value) => onResponse(questionId, value)}

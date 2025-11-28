@@ -1,8 +1,15 @@
 export type Option = {
   value: string
   label: string
+  hint?: string
   showIf?: string
   allowsOtherText?: boolean
+}
+
+export type OptionGroup = {
+  label?: string
+  options: Option[]
+  subtotalLabel?: string
 }
 
 export type MatrixRow = {
@@ -15,10 +22,15 @@ export type Question = {
   id: string
   text: string
   subtext?: string
-  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix"
+  tooltip?: string
+  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "number_list"
   options: Option[]
+  optionGroups?: OptionGroup[]
   matrixRows?: MatrixRow[]
   inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
+  totalLabel?: string
+  prefix?: string
+  suffix?: string
   variable?: string
   showIf?: string
   sectionTitle?: string
@@ -91,12 +103,19 @@ export type SubtextData = { subtext: string }
 export type OptionData = { text: string; showIf?: string }
 export type OptionShowIfData = { showIf: string }
 export type OptionOtherTextData = { allowsOtherText: true }
+export type OptionHintData = { hint: string }
 export type InputTypeData = { type: Question["type"] }
 export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }
 export type ContentData = { content: string }
 export type ComputeData = { name: string; expression: string }
 export type BlockData = { name: string }
+export type TotalLabelData = { totalLabel: string }
+export type SubtotalLabelData = { subtotalLabel: string }
+export type PrefixData = { prefix: string }
+export type SuffixData = { suffix: string }
+export type TooltipData = { tooltip: string }
+export type MatrixRowVariableData = { variable: string }
 
 export type MatrixRowData = { id: string; text: string }
 
@@ -105,16 +124,23 @@ export type ParsedLine =
   | { type: "section"; raw: string; data: SectionData }
   | { type: "question"; raw: string; data: QuestionData }
   | { type: "subtext"; raw: string; data: SubtextData }
+  | { type: "tooltip"; raw: string; data: TooltipData }
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
   | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
+  | { type: "option_hint"; raw: string; data: OptionHintData }
   | { type: "matrix_row"; raw: string; data: MatrixRowData }
+  | { type: "matrix_row_variable"; raw: string; data: MatrixRowVariableData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
   | { type: "content"; raw: string; data: ContentData }
   | { type: "compute"; raw: string; data: ComputeData }
   | { type: "block"; raw: string; data: BlockData }
+  | { type: "total_label"; raw: string; data: TotalLabelData }
+  | { type: "subtotal_label"; raw: string; data: SubtotalLabelData }
+  | { type: "prefix"; raw: string; data: PrefixData }
+  | { type: "suffix"; raw: string; data: SuffixData }
 
 export type ParserState = {
   blocks: Block[]

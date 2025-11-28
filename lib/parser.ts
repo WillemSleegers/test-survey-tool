@@ -7,16 +7,23 @@ import {
   SectionData,
   QuestionData,
   SubtextData,
+  TooltipData,
   OptionData,
   OptionShowIfData,
   OptionOtherTextData,
+  OptionHintData,
   MatrixRowData,
+  MatrixRowVariableData,
   InputTypeData,
   VariableData,
   ShowIfData,
   ContentData,
   ComputeData,
   BlockData,
+  TotalLabelData,
+  SubtotalLabelData,
+  PrefixData,
+  SuffixData,
   ParsedLine,
   ParserState,
 } from "@/lib/types"
@@ -26,11 +33,27 @@ import { normalizeOperators } from "@/lib/conditions/condition-parser"
 
 const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   const trimmed = line.trim()
+  const original = line
 
   if (trimmed.startsWith("# ") || trimmed === "#") return "page"
   if (trimmed.startsWith("## ")) return "section"
   if (trimmed.match(/^Q\d+:/) || trimmed.match(/^Q:/)) return "question"
-  if (trimmed.startsWith("HINT:")) return "subtext"
+
+  // HINT can be for questions (no indent) or options (indented)
+  if (trimmed.startsWith("HINT:")) {
+    // Check if this is indented (option hint) or not (question hint)
+    const hasIndent = original !== trimmed && original.startsWith(" ")
+    if (hasIndent && state.currentQuestion && state.currentQuestion.options.length > 0) {
+      return "option_hint"
+    }
+    return "subtext"
+  }
+
+  // TOOLTIP is always for questions
+  if (trimmed.startsWith("TOOLTIP:")) {
+    return "tooltip"
+  }
+
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a matrix row (- Q: ...)
     if (trimmed.match(/^-\s*Q:/)) {
@@ -47,10 +70,23 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     return state.currentQuestion ? "option" : "content"
   }
   if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
-  if (trimmed.startsWith("VARIABLE:")) return "variable"
+
+  // VARIABLE can be for questions (no indent) or matrix rows (indented)
+  if (trimmed.startsWith("VARIABLE:")) {
+    const hasIndent = original !== trimmed && original.startsWith(" ")
+    if (hasIndent && state.currentQuestion && state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0) {
+      return "matrix_row_variable"
+    }
+    return "variable"
+  }
+
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
   if (trimmed.startsWith("BLOCK:")) return "block"
+  if (trimmed.startsWith("TOTAL_LABEL:")) return "total_label"
+  if (trimmed.startsWith("SUBTOTAL_LABEL:")) return "subtotal_label"
+  if (trimmed.startsWith("PREFIX:")) return "prefix"
+  if (trimmed.startsWith("SUFFIX:")) return "suffix"
 
   return "content"
 }
@@ -100,6 +136,13 @@ const parseSubtext = (line: string): SubtextData => {
   }
 }
 
+const parseTooltip = (line: string): TooltipData => {
+  const trimmed = line.trim()
+  return {
+    tooltip: trimmed.substring(8).trim(), // Remove "TOOLTIP:" prefix
+  }
+}
+
 const parseOption = (line: string): OptionData => {
   const trimmed = line.trim()
   const oldFormatMatch = trimmed.match(/^-\s*[A-Z]\)\s*(.+)/)
@@ -112,6 +155,13 @@ const parseOption = (line: string): OptionData => {
   return { text: optionText }
 }
 
+const parseOptionHint = (line: string): OptionHintData => {
+  const trimmed = line.trim()
+  return {
+    hint: trimmed.substring(5).trim(), // Remove "HINT:" prefix
+  }
+}
+
 const parseMatrixRow = (line: string, _questionCounter: number): MatrixRowData => { // eslint-disable-line @typescript-eslint/no-unused-vars
   const trimmed = line.trim()
   // Remove "- Q:" prefix
@@ -119,6 +169,13 @@ const parseMatrixRow = (line: string, _questionCounter: number): MatrixRowData =
   // Generate a unique ID for the matrix row based on the text
   const id = text.toLowerCase().replace(/[^a-z0-9]/g, '_')
   return { id, text }
+}
+
+const parseMatrixRowVariable = (line: string): MatrixRowVariableData => {
+  const trimmed = line.trim()
+  return {
+    variable: trimmed.substring(9).trim(), // Remove "VARIABLE:" prefix
+  }
 }
 
 const parseInputType = (line: string): InputTypeData => {
@@ -166,6 +223,30 @@ const parseBlock = (line: string): BlockData => {
   return { name }
 }
 
+const parseTotalLabel = (line: string): TotalLabelData => {
+  const trimmed = line.trim()
+  const totalLabel = trimmed.substring(12).trim() // Remove "TOTAL_LABEL:" prefix
+  return { totalLabel }
+}
+
+const parseSubtotalLabel = (line: string): SubtotalLabelData => {
+  const trimmed = line.trim()
+  const subtotalLabel = trimmed.substring(15).trim() // Remove "SUBTOTAL_LABEL:" prefix
+  return { subtotalLabel }
+}
+
+const parsePrefix = (line: string): PrefixData => {
+  const trimmed = line.trim()
+  const prefix = trimmed.substring(7).trim() // Remove "PREFIX:" prefix
+  return { prefix }
+}
+
+const parseSuffix = (line: string): SuffixData => {
+  const trimmed = line.trim()
+  const suffix = trimmed.substring(7).trim() // Remove "SUFFIX:" prefix
+  return { suffix }
+}
+
 const parseCompute = (line: string): ComputeData => {
   const trimmed = line.trim()
   const content = trimmed.substring(8).trim() // Remove "COMPUTE:" prefix
@@ -199,14 +280,20 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseQuestion(line, state.questionCounter) }
     case "subtext":
       return { type, raw: line, data: parseSubtext(line) }
+    case "tooltip":
+      return { type, raw: line, data: parseTooltip(line) }
     case "option":
       return { type, raw: line, data: parseOption(line) }
     case "option_show_if":
       return { type, raw: line, data: parseOptionShowIf(line) }
     case "option_other_text":
       return { type, raw: line, data: parseOptionOtherText() }
+    case "option_hint":
+      return { type, raw: line, data: parseOptionHint(line) }
     case "matrix_row":
       return { type, raw: line, data: parseMatrixRow(line, state.questionCounter) }
+    case "matrix_row_variable":
+      return { type, raw: line, data: parseMatrixRowVariable(line) }
     case "input_type":
       return { type, raw: line, data: parseInputType(line) }
     case "variable":
@@ -219,6 +306,14 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseCompute(line) }
     case "block":
       return { type, raw: line, data: parseBlock(line) }
+    case "total_label":
+      return { type, raw: line, data: parseTotalLabel(line) }
+    case "subtotal_label":
+      return { type, raw: line, data: parseSubtotalLabel(line) }
+    case "prefix":
+      return { type, raw: line, data: parsePrefix(line) }
+    case "suffix":
+      return { type, raw: line, data: parseSuffix(line) }
     default:
       const _exhaustive: never = type
       throw new Error(`Unknown line type: ${_exhaustive}`)
@@ -443,6 +538,18 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
   }
 }
 
+const handleTooltip = (state: ParserState, data: TooltipData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      tooltip: data.tooltip,
+    },
+  }
+}
+
 const handleOption = (state: ParserState, data: OptionData): ParserState => {
   if (!state.currentQuestion) return state
 
@@ -472,6 +579,26 @@ const handleOptionShowIf = (state: ParserState, data: OptionShowIfData): ParserS
   updatedOptions[lastOptionIndex] = {
     ...updatedOptions[lastOptionIndex],
     showIf: data.showIf
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionHint = (state: ParserState, data: OptionHintData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the hint to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    hint: data.hint
   }
 
   return {
@@ -527,6 +654,26 @@ const handleMatrixRow = (state: ParserState, data: MatrixRowData): ParserState =
   }
 }
 
+const handleMatrixRowVariable = (state: ParserState, data: MatrixRowVariableData): ParserState => {
+  if (!state.currentQuestion || !state.currentQuestion.matrixRows || state.currentQuestion.matrixRows.length === 0) return state
+
+  // Apply the variable to the last matrix row
+  const lastRowIndex = state.currentQuestion.matrixRows.length - 1
+  const updatedRows = [...state.currentQuestion.matrixRows]
+  updatedRows[lastRowIndex] = {
+    ...updatedRows[lastRowIndex],
+    variable: data.variable
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      matrixRows: updatedRows,
+    },
+  }
+}
+
 const handleInputType = (
   state: ParserState,
   data: InputTypeData
@@ -536,18 +683,31 @@ const handleInputType = (
   // For matrix questions, preserve the matrix type but store the input behavior
   const isMatrixQuestion = state.currentQuestion.matrixRows && state.currentQuestion.matrixRows.length > 0
 
-  const questionType = isMatrixQuestion ? "matrix" : data.type
+  // Check if this is a number_list question (has options/rows and NUMBER input type)
+  const isNumberListQuestion = data.type === "number" && state.currentQuestion.options.length > 0
+
+  const questionType = isMatrixQuestion ? "matrix" : isNumberListQuestion ? "number_list" : data.type
+
+  // Build updated question with proper typing
+  const updatedQuestion: Question = {
+    ...state.currentQuestion,
+    type: questionType,
+    // For matrix questions, number_list, and checkbox questions, preserve options
+    options: (data.type === "checkbox" || isMatrixQuestion || isNumberListQuestion) ? state.currentQuestion.options : [],
+  }
+
+  // Only set inputType for matrix questions (not number_list)
+  if (isMatrixQuestion && data.type !== "matrix" && !isNumberListQuestion) {
+    // inputType is only for matrix questions and excludes "number_list"
+    const validInputTypes: Array<"multiple_choice" | "checkbox" | "text" | "essay" | "number"> = ["multiple_choice", "checkbox", "text", "essay", "number"]
+    if (validInputTypes.includes(data.type as any)) {
+      updatedQuestion.inputType = data.type as "multiple_choice" | "checkbox" | "text" | "essay" | "number"
+    }
+  }
 
   return {
     ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      type: questionType,
-      // Store the actual input type for matrix questions to know if it should be radio or checkbox
-      ...(isMatrixQuestion && data.type !== "matrix" && { inputType: data.type }),
-      // For matrix questions, always preserve options. For regular checkbox questions, preserve options too.
-      options: (data.type === "checkbox" || isMatrixQuestion) ? state.currentQuestion.options : [],
-    },
+    currentQuestion: updatedQuestion,
     // Clear subtext buffer when we encounter structured elements
     subtextBuffer: null,
   }
@@ -660,6 +820,65 @@ const handleContent = (
   return state
 }
 
+const handleTotalLabel = (state: ParserState, data: TotalLabelData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      totalLabel: data.totalLabel,
+    },
+  }
+}
+
+const handleSubtotalLabel = (state: ParserState, data: SubtotalLabelData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Get current ungrouped options (those in the options array but not in any group yet)
+  const existingGroups = state.currentQuestion.optionGroups || []
+  const groupedOptionsCount = existingGroups.reduce((sum, group) => sum + group.options.length, 0)
+  const ungroupedOptions = state.currentQuestion.options.slice(groupedOptionsCount)
+
+  // Create a new group with the ungrouped options
+  const newGroup = {
+    options: ungroupedOptions,
+    subtotalLabel: data.subtotalLabel,
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      optionGroups: [...existingGroups, newGroup],
+    },
+  }
+}
+
+const handlePrefix = (state: ParserState, data: PrefixData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      prefix: data.prefix,
+    },
+  }
+}
+
+const handleSuffix = (state: ParserState, data: SuffixData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      suffix: data.suffix,
+    },
+  }
+}
+
 const handleCompute = (state: ParserState, data: ComputeData): ParserState => {
   // If we have a current page, add to page-level COMPUTE
   if (state.currentPage) {
@@ -674,7 +893,7 @@ const handleCompute = (state: ParserState, data: ComputeData): ParserState => {
       },
     }
   }
-  
+
   // If we have a current block but no current page, add to block-level COMPUTE
   if (state.currentBlock) {
     return {
@@ -688,7 +907,7 @@ const handleCompute = (state: ParserState, data: ComputeData): ParserState => {
       },
     }
   }
-  
+
   return state
 }
 
@@ -707,14 +926,20 @@ const reduceParsedLine = (
       return handleQuestion(state, parsedLine.data)
     case "subtext":
       return handleSubtext(state, parsedLine.data)
+    case "tooltip":
+      return handleTooltip(state, parsedLine.data)
     case "option":
       return handleOption(state, parsedLine.data)
     case "option_show_if":
       return handleOptionShowIf(state, parsedLine.data)
     case "option_other_text":
       return handleOptionOtherText(state, parsedLine.data)
+    case "option_hint":
+      return handleOptionHint(state, parsedLine.data)
     case "matrix_row":
       return handleMatrixRow(state, parsedLine.data)
+    case "matrix_row_variable":
+      return handleMatrixRowVariable(state, parsedLine.data)
     case "input_type":
       return handleInputType(state, parsedLine.data)
     case "variable":
@@ -727,6 +952,14 @@ const reduceParsedLine = (
       return handleCompute(state, parsedLine.data)
     case "block":
       return handleBlock(state, parsedLine.data)
+    case "total_label":
+      return handleTotalLabel(state, parsedLine.data)
+    case "subtotal_label":
+      return handleSubtotalLabel(state, parsedLine.data)
+    case "prefix":
+      return handlePrefix(state, parsedLine.data)
+    case "suffix":
+      return handleSuffix(state, parsedLine.data)
     default:
       // Exhaustiveness check - TypeScript will error if we miss a case
       const _exhaustive: never = parsedLine
@@ -805,13 +1038,29 @@ function validateConditionReferences(blocks: Block[]): void {
         if (question.variable) {
           definedVariables.add(question.variable)
         }
+        // Add matrix row variables
+        if (question.matrixRows) {
+          for (const row of question.matrixRows) {
+            if (row.variable) {
+              definedVariables.add(row.variable)
+            }
+          }
+        }
       }
-      
+
       // Add section question variables
       for (const section of page.sections) {
         for (const question of section.questions) {
           if (question.variable) {
             definedVariables.add(question.variable)
+          }
+          // Add matrix row variables
+          if (question.matrixRows) {
+            for (const row of question.matrixRows) {
+              if (row.variable) {
+                definedVariables.add(row.variable)
+              }
+            }
           }
         }
       }
@@ -917,13 +1166,29 @@ function validateComputedVariableReferences(blocks: Block[]): void {
         if (question.variable) {
           definedVariables.add(question.variable)
         }
+        // Add matrix row variables
+        if (question.matrixRows) {
+          for (const row of question.matrixRows) {
+            if (row.variable) {
+              definedVariables.add(row.variable)
+            }
+          }
+        }
       }
-      
+
       // Add section question variables
       for (const section of page.sections) {
         for (const question of section.questions) {
           if (question.variable) {
             definedVariables.add(question.variable)
+          }
+          // Add matrix row variables
+          if (question.matrixRows) {
+            for (const row of question.matrixRows) {
+              if (row.variable) {
+                definedVariables.add(row.variable)
+              }
+            }
           }
         }
       }

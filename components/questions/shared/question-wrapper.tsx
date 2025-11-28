@@ -29,9 +29,10 @@ interface QuestionWrapperProps {
 export function QuestionWrapper({ question, responses, children, computedVariables }: QuestionWrapperProps) {
   return (
     <div className="space-y-3">
-      <QuestionHeader 
+      <QuestionHeader
         text={question.text}
         subtext={question.subtext}
+        tooltip={question.tooltip}
         responses={responses}
         computedVariables={computedVariables}
       />

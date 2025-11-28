@@ -138,6 +138,14 @@ Strong TypeScript usage throughout:
 - Comments should describe current behavior, not historical context
 - Example: Use "Add slots for text inputs" not "Add slots for text inputs (now always visible)"
 
+### Communication Guidelines:
+
+- **Never agree with or validate user statements before verifying them**
+- If a user claims something exists in the codebase, search for it first before responding
+- Don't say "You're right!" or similar affirmations until you've confirmed the facts
+- Be honest about uncertainty: "Let me check..." is better than premature agreement
+- Verify first, respond second
+
 ## Quality Assurance Guidelines
 
 ### Use a Systematic Approach, Not Reactive Responses

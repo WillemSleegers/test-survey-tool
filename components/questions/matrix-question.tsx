@@ -1,7 +1,14 @@
 import React from "react"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { Question, Responses, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
@@ -13,7 +20,10 @@ interface MatrixQuestionProps {
   /** User responses */
   responses: Responses
   /** Callback when user selects an option */
-  onResponse: (questionId: string, value: string | string[] | Record<string, string | string[]>) => void
+  onResponse: (
+    questionId: string,
+    value: string | string[] | Record<string, string | string[]>
+  ) => void
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -47,14 +57,14 @@ export function MatrixQuestion({
   responses,
   onResponse,
   startTabIndex: _startTabIndex, // eslint-disable-line @typescript-eslint/no-unused-vars
-  computedVariables
+  computedVariables,
 }: MatrixQuestionProps) {
   if (!question.matrixRows || question.matrixRows.length === 0) {
     return null
   }
 
   // Filter options based on conditions
-  const visibleOptions = question.options.filter(option => {
+  const visibleOptions = question.options.filter((option) => {
     if (!option.showIf) return true
     return evaluateCondition(option.showIf, responses, computedVariables)
   })
@@ -65,21 +75,24 @@ export function MatrixQuestion({
   // Handle option selection for a matrix row
   const handleRowResponse = (rowId: string, value: string) => {
     const currentResponse = responses[question.id]?.value
-    const existingResponses = (typeof currentResponse === "object" && currentResponse !== null && !Array.isArray(currentResponse))
-      ? currentResponse as Record<string, string | string[]>
-      : {}
+    const existingResponses =
+      typeof currentResponse === "object" &&
+      currentResponse !== null &&
+      !Array.isArray(currentResponse)
+        ? (currentResponse as Record<string, string | string[]>)
+        : {}
 
     if (isCheckboxMatrix) {
       // For checkboxes, handle multiple selections
       const currentValues = Array.isArray(existingResponses[rowId])
-        ? existingResponses[rowId] as string[]
+        ? (existingResponses[rowId] as string[])
         : typeof existingResponses[rowId] === "string"
-          ? [existingResponses[rowId] as string]
-          : []
+        ? [existingResponses[rowId] as string]
+        : []
 
       const newValues = currentValues.includes(value)
-        ? currentValues.filter(v => v !== value)  // Remove if already selected
-        : [...currentValues, value]               // Add if not selected
+        ? currentValues.filter((v) => v !== value) // Remove if already selected
+        : [...currentValues, value] // Add if not selected
 
       if (newValues.length > 0) {
         existingResponses[rowId] = newValues
@@ -98,7 +111,11 @@ export function MatrixQuestion({
   const getRowResponse = (rowId: string): string | string[] => {
     const responseValue = responses[question.id]?.value
 
-    if (typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue)) {
+    if (
+      typeof responseValue === "object" &&
+      responseValue !== null &&
+      !Array.isArray(responseValue)
+    ) {
       const matrixResponses = responseValue as Record<string, string | string[]>
       const rowValue = matrixResponses[rowId]
 
@@ -117,23 +134,35 @@ export function MatrixQuestion({
     const currentResponse = getRowResponse(rowId)
 
     if (isCheckboxMatrix) {
-      return Array.isArray(currentResponse) && currentResponse.includes(optionValue)
+      return (
+        Array.isArray(currentResponse) && currentResponse.includes(optionValue)
+      )
     } else {
       return currentResponse === optionValue
     }
   }
 
-
   return (
-    <QuestionWrapper question={question} responses={responses} computedVariables={computedVariables}>
+    <QuestionWrapper
+      question={question}
+      responses={responses}
+      computedVariables={computedVariables}
+    >
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="text-left font-medium"></TableHead>
-              {visibleOptions.map(option => (
-                <TableHead key={option.value} className="text-center font-medium min-w-[80px]">
-                  {replacePlaceholders(option.label, responses, computedVariables)}
+              {visibleOptions.map((option) => (
+                <TableHead
+                  key={option.value}
+                  className="text-center font-medium min-w-20"
+                >
+                  {replacePlaceholders(
+                    option.label,
+                    responses,
+                    computedVariables
+                  )}
                 </TableHead>
               ))}
             </TableRow>
@@ -141,63 +170,81 @@ export function MatrixQuestion({
           <TableBody>
             {question.matrixRows.map((row) => {
               const currentRowResponse = getRowResponse(row.id)
-              const currentValue = !isCheckboxMatrix && typeof currentRowResponse === "string"
-                ? currentRowResponse
-                : ""
+              const currentValue =
+                !isCheckboxMatrix && typeof currentRowResponse === "string"
+                  ? currentRowResponse
+                  : ""
 
               return (
                 <TableRow key={row.id}>
                   <TableCell className="align-top">
                     <Label className="text-base font-normal">
-                      {replacePlaceholders(row.text, responses, computedVariables)}
+                      {replacePlaceholders(
+                        row.text,
+                        responses,
+                        computedVariables
+                      )}
                     </Label>
                   </TableCell>
-                  {isCheckboxMatrix ? (
-                    // For checkboxes, render each option independently
-                    visibleOptions.map((option, optionIndex) => (
-                      <TableCell key={option.value} className="text-center align-top">
-                        <div className="flex justify-center">
-                          <Checkbox
-                            id={`${question.id}-${row.id}-${optionIndex}`}
-                            checked={isOptionSelected(row.id, option.value)}
-                            onCheckedChange={() => handleRowResponse(row.id, option.value)}
-                          />
-                          <Label
-                            htmlFor={`${question.id}-${row.id}-${optionIndex}`}
-                            className="sr-only"
-                          >
-                            {row.text}: {option.label}
-                          </Label>
-                        </div>
-                      </TableCell>
-                    ))
-                  ) : (
-                    // For radio buttons, render each option with native radio styling but shadcn appearance
-                    visibleOptions.map((option, _optionIndex) => ( // eslint-disable-line @typescript-eslint/no-unused-vars
-                      <TableCell key={option.value} className="text-center align-top">
-                        <div className="flex justify-center">
-                          <label className="cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`${question.id}_${row.id}`}
-                              value={option.value}
-                              checked={currentValue === option.value}
-                              onChange={(e) => handleRowResponse(row.id, e.target.value)}
-                              className="peer sr-only"
+                  {isCheckboxMatrix
+                    ? // For checkboxes, render each option independently
+                      visibleOptions.map((option, optionIndex) => (
+                        <TableCell
+                          key={option.value}
+                          className="text-center align-top"
+                        >
+                          <div className="flex justify-center">
+                            <Checkbox
+                              id={`${question.id}-${row.id}-${optionIndex}`}
+                              checked={isOptionSelected(row.id, option.value)}
+                              onCheckedChange={() =>
+                                handleRowResponse(row.id, option.value)
+                              }
                             />
-                            <div className="border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 peer-aria-invalid:ring-destructive/20 dark:peer-aria-invalid:ring-destructive/40 peer-aria-invalid:border-destructive dark:bg-input/30 aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none peer-focus-visible:ring-[3px] peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center">
-                              {currentValue === option.value && (
-                                <div className="size-2 bg-primary-foreground rounded-full" />
-                              )}
-                            </div>
-                            <span className="sr-only">
+                            <Label
+                              htmlFor={`${question.id}-${row.id}-${optionIndex}`}
+                              className="sr-only"
+                            >
                               {row.text}: {option.label}
-                            </span>
-                          </label>
-                        </div>
-                      </TableCell>
-                    ))
-                  )}
+                            </Label>
+                          </div>
+                        </TableCell>
+                      ))
+                    : // For radio buttons, render each option with native radio styling but shadcn appearance
+                      visibleOptions.map(
+                        (
+                          option,
+                          _optionIndex // eslint-disable-line @typescript-eslint/no-unused-vars
+                        ) => (
+                          <TableCell
+                            key={option.value}
+                            className="text-center align-top"
+                          >
+                            <div className="flex justify-center">
+                              <label className="cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`${question.id}_${row.id}`}
+                                  value={option.value}
+                                  checked={currentValue === option.value}
+                                  onChange={(e) =>
+                                    handleRowResponse(row.id, e.target.value)
+                                  }
+                                  className="peer sr-only"
+                                />
+                                <div className="border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 peer-aria-invalid:ring-destructive/20 dark:peer-aria-invalid:ring-destructive/40 peer-aria-invalid:border-destructive dark:bg-input/30 aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none peer-focus-visible:ring-[3px] peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center">
+                                  {currentValue === option.value && (
+                                    <div className="size-2 bg-primary-foreground rounded-full" />
+                                  )}
+                                </div>
+                                <span className="sr-only">
+                                  {row.text}: {option.label}
+                                </span>
+                              </label>
+                            </div>
+                          </TableCell>
+                        )
+                      )}
                 </TableRow>
               )
             })}
