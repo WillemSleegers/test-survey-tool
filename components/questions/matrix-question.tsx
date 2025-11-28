@@ -156,7 +156,7 @@ export function MatrixQuestion({
               {visibleOptions.map((option) => (
                 <TableHead
                   key={option.value}
-                  className="text-center font-medium min-w-20"
+                  className="text-center font-normal text-base min-w-20 whitespace-normal py-2"
                 >
                   {replacePlaceholders(
                     option.label,
@@ -177,8 +177,8 @@ export function MatrixQuestion({
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell className="align-top">
-                    <Label className="text-base font-normal">
+                  <TableCell className="align-top max-w-md">
+                    <Label className="text-base font-normal whitespace-normal">
                       {replacePlaceholders(
                         row.text,
                         responses,
