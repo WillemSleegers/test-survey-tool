@@ -38,6 +38,9 @@ function calculateQuestionInputCount(
 ): number {
   if (question.type === 'text' || question.type === 'number') {
     return 1
+  } else if (question.type === 'number_list') {
+    // Number list: one input per option
+    return question.options.length
   } else if (question.type === 'multiple_choice') {
     const variableValue = question.variable ? variables[question.variable] : undefined
     const responseString = typeof variableValue === 'string' ? variableValue : ''
