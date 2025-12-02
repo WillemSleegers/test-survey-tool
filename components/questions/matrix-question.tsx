@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import Markdown from "react-markdown"
+import { Info } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -56,6 +57,21 @@ export function MatrixQuestion({
   // startTabIndex is required by interface but currently unused - matrix questions use default tab behavior
   void startTabIndex
 
+  // Track which subquestion tooltips are visible
+  const [visibleTooltips, setVisibleTooltips] = useState<Set<string>>(new Set())
+
+  const toggleTooltip = (subquestionId: string) => {
+    setVisibleTooltips(prev => {
+      const next = new Set(prev)
+      if (next.has(subquestionId)) {
+        next.delete(subquestionId)
+      } else {
+        next.add(subquestionId)
+      }
+      return next
+    })
+  }
+
   if (!question.subquestions || question.subquestions.length === 0) {
     return null
   }
@@ -65,6 +81,10 @@ export function MatrixQuestion({
     if (!option.showIf) return true
     return evaluateCondition(option.showIf, variables, computedVariables)
   })
+
+  // If no options, create a single default option for the response column
+  const hasOptions = visibleOptions.length > 0
+  const responseOptions = hasOptions ? visibleOptions : [{ value: "response", label: "" }]
 
   // Determine if this matrix should use checkboxes or radio buttons
   const isCheckboxMatrix = question.inputType === "checkbox"
@@ -118,18 +138,20 @@ export function MatrixQuestion({
     <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-left font-medium w-1/2 max-w-xs"></TableHead>
-              {visibleOptions.map(option => (
-                <TableHead key={option.value} className="text-center text-base font-normal min-w-[80px] max-w-[120px] whitespace-normal align-bottom px-3 py-2">
-                  <Markdown>
-                    {replacePlaceholders(option.label, variables, computedVariables)}
-                  </Markdown>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
+          {hasOptions && (
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left font-medium"></TableHead>
+                {responseOptions.map(option => (
+                  <TableHead key={option.value} className="text-center text-base font-normal min-w-[80px] max-w-[120px] whitespace-normal align-bottom px-3 py-2">
+                    <Markdown>
+                      {replacePlaceholders(option.label, variables, computedVariables)}
+                    </Markdown>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+          )}
           <TableBody>
             {question.subquestions.map((subquestion) => {
               const currentRowResponse = getRowResponse(subquestion.id)
@@ -137,21 +159,43 @@ export function MatrixQuestion({
                 ? currentRowResponse
                 : ""
 
+              const hasAdditionalContent = !!subquestion.subtext || (!!subquestion.tooltip && visibleTooltips.has(subquestion.id))
+              const alignment = hasAdditionalContent ? "align-top" : "align-middle"
+
               return (
                 <TableRow key={subquestion.id}>
-                  <TableCell className="align-top w-1/2 max-w-xs whitespace-normal">
-                    <div className="text-base font-normal">
-                      <Markdown>{replacePlaceholders(subquestion.text, variables, computedVariables)}</Markdown>
-                    </div>
-                    {subquestion.subtext && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <Markdown>{replacePlaceholders(subquestion.subtext, variables, computedVariables)}</Markdown>
+                  <TableCell className={`${alignment} whitespace-normal`}>
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-1">
+                        {subquestion.tooltip && (
+                          <button
+                            type="button"
+                            onClick={() => toggleTooltip(subquestion.id)}
+                            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                            aria-label="Toggle additional information"
+                          >
+                            <Info className="w-5 h-5 text-muted-foreground" />
+                          </button>
+                        )}
+                        <div className="flex-1 text-base font-normal">
+                          <Markdown>{replacePlaceholders(subquestion.text, variables, computedVariables)}</Markdown>
+                        </div>
                       </div>
-                    )}
+                      {subquestion.subtext && (
+                        <div className="text-base text-muted-foreground">
+                          <Markdown>{replacePlaceholders(subquestion.subtext, variables, computedVariables)}</Markdown>
+                        </div>
+                      )}
+                      {subquestion.tooltip && visibleTooltips.has(subquestion.id) && (
+                        <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
+                          <Markdown>{replacePlaceholders(subquestion.tooltip, variables, computedVariables)}</Markdown>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   {isCheckboxMatrix ? (
                     // For checkboxes, render each option independently
-                    visibleOptions.map((option, optionIndex) => (
+                    responseOptions.map((option, optionIndex) => (
                       <TableCell key={option.value} className="text-center align-middle">
                         <div className="flex justify-center">
                           <Checkbox
@@ -163,14 +207,14 @@ export function MatrixQuestion({
                             htmlFor={`${question.id}-${subquestion.id}-${optionIndex}`}
                             className="sr-only"
                           >
-                            {subquestion.text}: {option.label}
+                            {subquestion.text}{option.label ? `: ${option.label}` : ""}
                           </Label>
                         </div>
                       </TableCell>
                     ))
                   ) : (
                     // For radio buttons, render each option with native radio styling but shadcn appearance
-                    visibleOptions.map((option) => (
+                    responseOptions.map((option) => (
                       <TableCell key={option.value} className="text-center align-middle">
                         <div className="flex justify-center">
                           <label className="cursor-pointer">
@@ -188,7 +232,7 @@ export function MatrixQuestion({
                               )}
                             </div>
                             <span className="sr-only">
-                              {subquestion.text}: {option.label}
+                              {subquestion.text}{option.label ? `: ${option.label}` : ""}
                             </span>
                           </label>
                         </div>
