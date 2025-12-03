@@ -2,6 +2,13 @@
 
 ## High Priority
 
+- [x] Implement delimiter-based multi-line parsing for tooltips/hints
+  - ✅ Added support for `---` delimiters to mark complex tooltip/hint content
+  - ✅ Delimiter must be on the same line as keyword (e.g., `TOOLTIP: ---`) to avoid lookahead issues
+  - ✅ Simple single-line tooltips work without delimiters
+  - ✅ Complex multi-line content with lists requires `---` opening and closing delimiters
+  - ✅ Works for all contexts: question-level, option-level, and subquestion-level tooltips/hints
+  - ✅ Backward compatible with single-line tooltips/hints
 - [ ] Fix forward slashes in question options causing variable comparison issues
   - Forward slashes in option text break conditional logic when comparing variables to option values
   - Need to investigate escaping or normalization in condition evaluation
@@ -16,6 +23,11 @@
 
 ## Medium Priority
 
+- [ ] Simplify BREAKDOWN syntax to remove `- Q:` prefix requirement
+  - Currently BREAKDOWN supports both `- Option` and `- Q: Option` syntax
+  - The `- Q:` syntax was added for compatibility but creates confusion
+  - Should standardize on simple `- Option` syntax for BREAKDOWN questions
+  - Update PS-industrie.md to use simpler syntax once decided
 - [x] Clean up legacy mainQuestions array
   - ✅ Removed always-empty `mainQuestions` array from `hooks/use-visible-pages.ts:46`
   - ✅ Updated `VisiblePageContent` type to remove mainQuestions

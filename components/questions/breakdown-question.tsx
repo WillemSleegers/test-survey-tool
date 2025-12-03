@@ -104,7 +104,12 @@ export function BreakdownQuestion({
       const key = optionToKey(option.value)
       const numValue = parseFloat(currentValues[key] || "")
       if (!isNaN(numValue)) {
-        total += numValue
+        // Subtract if the option has the subtract flag, otherwise add
+        if (option.subtract) {
+          total -= numValue
+        } else {
+          total += numValue
+        }
       }
     }
     return total
@@ -119,7 +124,12 @@ export function BreakdownQuestion({
       const key = optionToKey(option.value)
       const numValue = parseFloat(currentValues[key] || "")
       if (!isNaN(numValue)) {
-        total += numValue
+        // Subtract if the option has the subtract flag, otherwise add
+        if (option.subtract) {
+          total -= numValue
+        } else {
+          total += numValue
+        }
       }
     }
 

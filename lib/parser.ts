@@ -11,6 +11,7 @@ import {
   OptionData,
   OptionShowIfData,
   OptionOtherTextData,
+  OptionSubtractData,
   SubquestionData,
   SubquestionSubtractData,
   SubquestionValueData,
@@ -35,6 +36,24 @@ import {
   validateComputedVariableReferences,
 } from "@/lib/validation"
 
+// Helper function to remove leading indentation (2+ spaces or 1 tab)
+const removeIndentation = (line: string): string => {
+  if (line.startsWith('\t')) {
+    return line.substring(1)
+  }
+  // Match 2 or more leading spaces and remove them
+  const match = line.match(/^(\s{2,})/)
+  if (match) {
+    return line.substring(match[1].length)
+  }
+  return line
+}
+
+// Helper function to filter out delimiter markers and join buffer
+const joinBuffer = (buffer: string[]): string => {
+  return buffer.filter(line => line !== "---DELIMITER---").join('\n')
+}
+
 // Line classification functions
 
 const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
@@ -44,6 +63,50 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.match(/^Q:/)) return "question"
   if (trimmed.startsWith("HINT:")) return "subtext"
   if (trimmed.startsWith("TOOLTIP:")) return "tooltip"
+
+  // Check for delimiter (---) - if we have an active buffer, treat as content
+  // The delimiter both opens (after seeing TOOLTIP:/HINT:) and closes the buffer
+  const hasActiveBuffer = !!(
+    state.tooltipBuffer ||
+    state.subtextBuffer ||
+    state.subquestionTooltipBuffer ||
+    state.subquestionSubtextBuffer ||
+    state.optionTooltipBuffer ||
+    state.optionSubtextBuffer
+  )
+
+  // If buffer is active, check if we have real content to distinguish opening from closing delimiter
+  if (hasActiveBuffer) {
+    const hasRealContent = (buffer: string[] | null) => {
+      if (!buffer || buffer.length === 0) return false
+      return buffer.some(line => line.trim().length > 0)
+    }
+
+    const bufferHasContent =
+      hasRealContent(state.tooltipBuffer) ||
+      hasRealContent(state.subtextBuffer) ||
+      hasRealContent(state.subquestionTooltipBuffer) ||
+      hasRealContent(state.subquestionSubtextBuffer) ||
+      hasRealContent(state.optionTooltipBuffer) ||
+      hasRealContent(state.optionSubtextBuffer)
+
+    // If we see --- and buffer has content, this is the CLOSING delimiter
+    // Return "content" so handleContent can process it and close the buffer
+    if (trimmed === "---" && bufferHasContent) {
+      return "content"
+    }
+
+    // If buffer has content (we're between delimiters), treat everything as content
+    if (bufferHasContent) {
+      return "content"
+    }
+
+    // If --- with empty buffer, this is OPENING delimiter - also return "content"
+    if (trimmed === "---") {
+      return "content"
+    }
+  }
+
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a matrix row (- Q: ...)
     if (trimmed.match(/^-\s*Q:/)) {
@@ -61,9 +124,11 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_tooltip"
       return "content"
     }
-    // Check if this is a subquestion subtract flag (- SUBTRACT)
+    // Check if this is a subtract flag (- SUBTRACT)
     if (trimmed.match(/^-\s*SUBTRACT\s*$/)) {
-      return state.currentSubquestion ? "subquestion_subtract" : "content"
+      if (state.currentSubquestion) return "subquestion_subtract"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_subtract"
+      return "content"
     }
     // Check if this is a subquestion value (- VALUE: ...)
     if (trimmed.match(/^-\s*VALUE:/)) {
@@ -253,6 +318,10 @@ const parseOptionOtherText = (): OptionOtherTextData => ({
   allowsOtherText: true,
 })
 
+const parseOptionSubtract = (): OptionSubtractData => ({
+  subtract: true,
+})
+
 const parseOptionHint = (line: string): SubtextData => {
   const trimmed = line.trim()
   const match = trimmed.match(/^-\s*HINT:\s*(.*)/)
@@ -332,6 +401,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionShowIf(line) }
     case "option_other_text":
       return { type, raw: line, data: parseOptionOtherText() }
+    case "option_subtract":
+      return { type, raw: line, data: parseOptionSubtract() }
     case "option_hint":
       return { type, raw: line, data: parseOptionHint(line) }
     case "option_tooltip":
@@ -648,18 +719,23 @@ const handleQuestion = (
     tooltipBuffer: null,
     subquestionSubtextBuffer: null,
     subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
 const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion) return state
 
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.subtext === "---"
+
   // If we have a current matrix row, assign subtext to it
   if (state.currentSubquestion) {
     // Update the matrix row with subtext
     const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
       row.id === state.currentSubquestion!.id
-        ? { ...row, subtext: data.subtext }
+        ? { ...row, subtext: isDelimiterMode ? "" : data.subtext }
         : row
     ) || []
 
@@ -671,8 +747,10 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
       },
       currentSubquestion: {
         ...state.currentSubquestion,
-        subtext: data.subtext,
+        subtext: isDelimiterMode ? "" : data.subtext,
       },
+      // Start collecting with delimiter marker if in delimiter mode
+      subtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.subtext],
     }
   }
 
@@ -681,29 +759,35 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
-      subtext: data.subtext,
+      subtext: isDelimiterMode ? "" : data.subtext,
     },
-    // Start collecting multiline subtext
-    subtextBuffer: [data.subtext],
+    // Start collecting with delimiter marker if in delimiter mode
+    subtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.subtext],
   }
 }
 
 const handleTooltip = (state: ParserState, data: TooltipData): ParserState => {
   if (!state.currentQuestion) return state
 
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.tooltip === "---"
+
   return {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
-      tooltip: data.tooltip,
+      tooltip: isDelimiterMode ? "" : data.tooltip,
     },
-    // Start collecting multiline tooltip
-    tooltipBuffer: [data.tooltip],
+    // Start collecting with delimiter marker if in delimiter mode
+    tooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.tooltip],
   }
 }
 
 const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
+
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.subtext === "---"
 
   // Check if subquestion is attached to an option (breakdown) or question (matrix)
   const hasOptions = state.currentQuestion.options.length > 0
@@ -715,7 +799,7 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
       ...option,
       subquestions: option.subquestions?.map(sq =>
         sq.id === state.currentSubquestion!.id
-          ? { ...sq, subtext: data.subtext }
+          ? { ...sq, subtext: isDelimiterMode ? "" : data.subtext }
           : sq
       ),
     }))
@@ -728,9 +812,9 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
       },
       currentSubquestion: {
         ...state.currentSubquestion,
-        subtext: data.subtext,
+        subtext: isDelimiterMode ? "" : data.subtext,
       },
-      subquestionSubtextBuffer: [data.subtext],
+      subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
     }
   }
 
@@ -738,7 +822,7 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
     // Matrix: update subquestion at question level
     const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
       row.id === state.currentSubquestion!.id
-        ? { ...row, subtext: data.subtext }
+        ? { ...row, subtext: isDelimiterMode ? "" : data.subtext }
         : row
     ) || []
 
@@ -750,9 +834,9 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
       },
       currentSubquestion: {
         ...state.currentSubquestion,
-        subtext: data.subtext,
+        subtext: isDelimiterMode ? "" : data.subtext,
       },
-      subquestionSubtextBuffer: [data.subtext],
+      subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
     }
   }
 
@@ -762,6 +846,9 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
 const handleSubquestionTooltip = (state: ParserState, data: TooltipData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.tooltip === "---"
+
   const hasOptions = state.currentQuestion.options.length > 0
 
   if (hasOptions) {
@@ -769,7 +856,7 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
       ...option,
       subquestions: option.subquestions?.map(sq =>
         sq.id === state.currentSubquestion!.id
-          ? { ...sq, tooltip: data.tooltip }
+          ? { ...sq, tooltip: isDelimiterMode ? "" : data.tooltip }
           : sq
       ),
     }))
@@ -777,22 +864,22 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
     return {
       ...state,
       currentQuestion: { ...state.currentQuestion, options: updatedOptions },
-      currentSubquestion: { ...state.currentSubquestion, tooltip: data.tooltip },
-      subquestionTooltipBuffer: [data.tooltip],
+      currentSubquestion: { ...state.currentSubquestion, tooltip: isDelimiterMode ? "" : data.tooltip },
+      subquestionTooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
     }
   }
 
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
-      ? { ...row, tooltip: data.tooltip }
+      ? { ...row, tooltip: isDelimiterMode ? "" : data.tooltip }
       : row
   ) || []
 
   return {
     ...state,
     currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
-    currentSubquestion: { ...state.currentSubquestion, tooltip: data.tooltip },
-    subquestionTooltipBuffer: [data.tooltip],
+    currentSubquestion: { ...state.currentSubquestion, tooltip: isDelimiterMode ? "" : data.tooltip },
+    subquestionTooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
   }
 }
 
@@ -886,6 +973,8 @@ const handleOption = (state: ParserState, data: OptionData): ParserState => {
     tooltipBuffer: null,
     subquestionSubtextBuffer: null,
     subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
@@ -912,40 +1001,60 @@ const handleOptionShowIf = (state: ParserState, data: OptionShowIfData): ParserS
 const handleOptionHint = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
-  // Apply hint to the last option
-  const lastOptionIndex = state.currentQuestion.options.length - 1
-  const updatedOptions = [...state.currentQuestion.options]
-  updatedOptions[lastOptionIndex] = {
-    ...updatedOptions[lastOptionIndex],
-    hint: data.subtext
-  }
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.subtext === "---"
 
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      options: updatedOptions,
-    },
+  if (isDelimiterMode) {
+    // Delimiter mode: create buffer
+    return {
+      ...state,
+      optionSubtextBuffer: ["---DELIMITER---"],
+    }
+  } else {
+    // Single-line hint: apply immediately to last option
+    const lastOptionIndex = state.currentQuestion.options.length - 1
+    const updatedOptions = [...state.currentQuestion.options]
+    updatedOptions[lastOptionIndex] = {
+      ...updatedOptions[lastOptionIndex],
+      hint: data.subtext
+    }
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+    }
   }
 }
 
 const handleOptionTooltip = (state: ParserState, data: TooltipData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
-  // Apply tooltip to the last option
-  const lastOptionIndex = state.currentQuestion.options.length - 1
-  const updatedOptions = [...state.currentQuestion.options]
-  updatedOptions[lastOptionIndex] = {
-    ...updatedOptions[lastOptionIndex],
-    tooltip: data.tooltip
-  }
+  // Check if delimiter mode is being activated
+  const isDelimiterMode = data.tooltip === "---"
 
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      options: updatedOptions,
-    },
+  if (isDelimiterMode) {
+    // Delimiter mode: create buffer
+    return {
+      ...state,
+      optionTooltipBuffer: ["---DELIMITER---"],
+    }
+  } else {
+    // Single-line tooltip: apply immediately to last option
+    const lastOptionIndex = state.currentQuestion.options.length - 1
+    const updatedOptions = [...state.currentQuestion.options]
+    updatedOptions[lastOptionIndex] = {
+      ...updatedOptions[lastOptionIndex],
+      tooltip: data.tooltip
+    }
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+    }
   }
 }
 
@@ -958,6 +1067,26 @@ const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): P
   updatedOptions[lastOptionIndex] = {
     ...updatedOptions[lastOptionIndex],
     allowsOtherText: data.allowsOtherText
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionSubtract = (state: ParserState, data: OptionSubtractData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the subtract flag to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    subtract: data.subtract
   }
 
   return {
@@ -1007,6 +1136,8 @@ const handleSubquestion = (state: ParserState, data: SubquestionData): ParserSta
       tooltipBuffer: null,
       subquestionSubtextBuffer: null,
       subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
     }
   }
 
@@ -1036,6 +1167,8 @@ const handleSubquestion = (state: ParserState, data: SubquestionData): ParserSta
     tooltipBuffer: null,
     subquestionSubtextBuffer: null,
     subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
@@ -1091,6 +1224,8 @@ const handleInputType = (
     tooltipBuffer: null,
     subquestionSubtextBuffer: null,
     subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
@@ -1126,6 +1261,8 @@ const handleVariable = (
       tooltipBuffer: null,
       subquestionSubtextBuffer: null,
       subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
     }
   }
 
@@ -1141,6 +1278,8 @@ const handleVariable = (
     tooltipBuffer: null,
     subquestionSubtextBuffer: null,
     subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
@@ -1269,12 +1408,211 @@ const handleContent = (
   _data: ContentData,
   originalLine: string
 ): ParserState => {
+  const trimmed = originalLine.trim()
+
+  // Handle delimiter (---) logic
+  if (trimmed === "---") {
+    // Check if any buffer is active
+    const hasActiveBuffer = !!(
+      state.tooltipBuffer ||
+      state.subtextBuffer ||
+      state.subquestionTooltipBuffer ||
+      state.subquestionSubtextBuffer ||
+      state.optionTooltipBuffer ||
+      state.optionSubtextBuffer
+    )
+
+    if (hasActiveBuffer) {
+      // Check if buffer has actual content (not just empty strings)
+      // This distinguishes opening delimiter from closing delimiter
+      const hasRealContent = (buffer: string[] | null) => {
+        if (!buffer || buffer.length === 0) return false
+        // Check if any item in buffer is non-empty after trimming
+        return buffer.some(line => line.trim().length > 0)
+      }
+
+      const bufferHasContent =
+        hasRealContent(state.tooltipBuffer) ||
+        hasRealContent(state.subtextBuffer) ||
+        hasRealContent(state.subquestionTooltipBuffer) ||
+        hasRealContent(state.subquestionSubtextBuffer) ||
+        hasRealContent(state.optionTooltipBuffer) ||
+        hasRealContent(state.optionSubtextBuffer)
+
+      if (bufferHasContent) {
+        // This is a closing delimiter - apply buffer content and clear buffers
+        let newState = { ...state }
+
+        // Apply tooltip buffer to question
+        if (state.tooltipBuffer && newState.currentQuestion) {
+          newState.currentQuestion = {
+            ...newState.currentQuestion,
+            tooltip: joinBuffer(state.tooltipBuffer),
+          }
+        }
+
+        // Apply subtext buffer to question
+        if (state.subtextBuffer && newState.currentQuestion) {
+          newState.currentQuestion = {
+            ...newState.currentQuestion,
+            subtext: joinBuffer(state.subtextBuffer),
+          }
+        }
+
+        // Apply option tooltip buffer to last option
+        if (state.optionTooltipBuffer && newState.currentQuestion) {
+          const lastOptionIndex = newState.currentQuestion.options.length - 1
+          if (lastOptionIndex >= 0) {
+            const updatedOptions = [...newState.currentQuestion.options]
+            updatedOptions[lastOptionIndex] = {
+              ...updatedOptions[lastOptionIndex],
+              tooltip: joinBuffer(state.optionTooltipBuffer),
+            }
+            newState.currentQuestion = {
+              ...newState.currentQuestion,
+              options: updatedOptions,
+            }
+          }
+        }
+
+        // Apply option subtext buffer to last option
+        if (state.optionSubtextBuffer && newState.currentQuestion) {
+          const lastOptionIndex = newState.currentQuestion.options.length - 1
+          if (lastOptionIndex >= 0) {
+            const updatedOptions = [...newState.currentQuestion.options]
+            updatedOptions[lastOptionIndex] = {
+              ...updatedOptions[lastOptionIndex],
+              hint: joinBuffer(state.optionSubtextBuffer),
+            }
+            newState.currentQuestion = {
+              ...newState.currentQuestion,
+              options: updatedOptions,
+            }
+          }
+        }
+
+        // Apply subquestion tooltip buffer
+        if (state.subquestionTooltipBuffer && state.currentSubquestion && newState.currentQuestion) {
+          const hasOptions = newState.currentQuestion.options.length > 0
+          if (hasOptions) {
+            const updatedOptions = newState.currentQuestion.options.map(option => ({
+              ...option,
+              subquestions: option.subquestions?.map(sq =>
+                sq.id === state.currentSubquestion!.id
+                  ? { ...sq, tooltip: joinBuffer(state.subquestionTooltipBuffer!) }
+                  : sq
+              ),
+            }))
+            newState.currentQuestion = { ...newState.currentQuestion, options: updatedOptions }
+          } else {
+            const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
+              row.id === state.currentSubquestion!.id
+                ? { ...row, tooltip: joinBuffer(state.subquestionTooltipBuffer!) }
+                : row
+            ) || []
+            newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
+          }
+        }
+
+        // Apply subquestion subtext buffer
+        if (state.subquestionSubtextBuffer && state.currentSubquestion && newState.currentQuestion) {
+          const hasOptions = newState.currentQuestion.options.length > 0
+          if (hasOptions) {
+            const updatedOptions = newState.currentQuestion.options.map(option => ({
+              ...option,
+              subquestions: option.subquestions?.map(sq =>
+                sq.id === state.currentSubquestion!.id
+                  ? { ...sq, subtext: joinBuffer(state.subquestionSubtextBuffer!) }
+                  : sq
+              ),
+            }))
+            newState.currentQuestion = { ...newState.currentQuestion, options: updatedOptions }
+          } else {
+            const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
+              row.id === state.currentSubquestion!.id
+                ? { ...row, subtext: joinBuffer(state.subquestionSubtextBuffer!) }
+                : row
+            ) || []
+            newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
+          }
+        }
+
+        // Clear all buffers
+        return {
+          ...newState,
+          tooltipBuffer: null,
+          subtextBuffer: null,
+          subquestionTooltipBuffer: null,
+          subquestionSubtextBuffer: null,
+          optionTooltipBuffer: null,
+          optionSubtextBuffer: null,
+        }
+      } else {
+        // This is an opening delimiter - mark that we've seen it by incrementing buffer length
+        // Add a special delimiter marker so subsequent lines are captured as content
+        const delimiterMarker = "---DELIMITER---"
+        return {
+          ...state,
+          tooltipBuffer: state.tooltipBuffer ? [...state.tooltipBuffer, delimiterMarker] : state.tooltipBuffer,
+          subtextBuffer: state.subtextBuffer ? [...state.subtextBuffer, delimiterMarker] : state.subtextBuffer,
+          subquestionTooltipBuffer: state.subquestionTooltipBuffer ? [...state.subquestionTooltipBuffer, delimiterMarker] : state.subquestionTooltipBuffer,
+          subquestionSubtextBuffer: state.subquestionSubtextBuffer ? [...state.subquestionSubtextBuffer, delimiterMarker] : state.subquestionSubtextBuffer,
+          optionTooltipBuffer: state.optionTooltipBuffer ? [...state.optionTooltipBuffer, delimiterMarker] : state.optionTooltipBuffer,
+          optionSubtextBuffer: state.optionSubtextBuffer ? [...state.optionSubtextBuffer, delimiterMarker] : state.optionSubtextBuffer,
+        }
+      }
+    }
+  }
+
+  // Strip indentation from content lines when they're part of a buffer
+  const cleanedLine = removeIndentation(originalLine)
+
+  // If we have an option tooltip buffer, append to the last option's tooltip
+  if (state.currentQuestion && state.optionTooltipBuffer && state.currentQuestion.options.length > 0) {
+    const updatedBuffer = [...state.optionTooltipBuffer, cleanedLine]
+    const lastOptionIndex = state.currentQuestion.options.length - 1
+    const updatedOptions = [...state.currentQuestion.options]
+    updatedOptions[lastOptionIndex] = {
+      ...updatedOptions[lastOptionIndex],
+      tooltip: joinBuffer(updatedBuffer),
+    }
+
+    return {
+      ...state,
+      optionTooltipBuffer: updatedBuffer,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+    }
+  }
+
+  // If we have an option subtext buffer, append to the last option's hint
+  if (state.currentQuestion && state.optionSubtextBuffer && state.currentQuestion.options.length > 0) {
+    const updatedBuffer = [...state.optionSubtextBuffer, cleanedLine]
+    const lastOptionIndex = state.currentQuestion.options.length - 1
+    const updatedOptions = [...state.currentQuestion.options]
+    updatedOptions[lastOptionIndex] = {
+      ...updatedOptions[lastOptionIndex],
+      hint: joinBuffer(updatedBuffer),
+    }
+
+    return {
+      ...state,
+      optionSubtextBuffer: updatedBuffer,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+    }
+  }
+
   // If we have a subquestion tooltip buffer, append to subquestion tooltip
   if (state.currentQuestion && state.currentSubquestion && state.subquestionTooltipBuffer) {
-    const updatedBuffer = [...state.subquestionTooltipBuffer, originalLine]
+    const updatedBuffer = [...state.subquestionTooltipBuffer, cleanedLine]
     const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
       row.id === state.currentSubquestion!.id
-        ? { ...row, tooltip: updatedBuffer.join('\n') }
+        ? { ...row, tooltip: joinBuffer(updatedBuffer) }
         : row
     ) || []
 
@@ -1287,17 +1625,17 @@ const handleContent = (
       },
       currentSubquestion: {
         ...state.currentSubquestion,
-        tooltip: updatedBuffer.join('\n'),
+        tooltip: joinBuffer(updatedBuffer),
       },
     }
   }
 
   // If we have a subquestion subtext buffer, append to subquestion hint
   if (state.currentQuestion && state.currentSubquestion && state.subquestionSubtextBuffer) {
-    const updatedBuffer = [...state.subquestionSubtextBuffer, originalLine]
+    const updatedBuffer = [...state.subquestionSubtextBuffer, cleanedLine]
     const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
       row.id === state.currentSubquestion!.id
-        ? { ...row, subtext: updatedBuffer.join('\n') }
+        ? { ...row, subtext: joinBuffer(updatedBuffer) }
         : row
     ) || []
 
@@ -1310,33 +1648,33 @@ const handleContent = (
       },
       currentSubquestion: {
         ...state.currentSubquestion,
-        subtext: updatedBuffer.join('\n'),
+        subtext: joinBuffer(updatedBuffer),
       },
     }
   }
 
   // If we have a current question and an active tooltip buffer, append to tooltip
   if (state.currentQuestion && state.tooltipBuffer) {
-    const updatedBuffer = [...state.tooltipBuffer, originalLine]
+    const updatedBuffer = [...state.tooltipBuffer, cleanedLine]
     return {
       ...state,
       tooltipBuffer: updatedBuffer,
       currentQuestion: {
         ...state.currentQuestion,
-        tooltip: updatedBuffer.join('\n'),
+        tooltip: joinBuffer(updatedBuffer),
       },
     }
   }
 
   // If we have a current question and an active subtext buffer, append to subtext
   if (state.currentQuestion && state.subtextBuffer) {
-    const updatedBuffer = [...state.subtextBuffer, originalLine]
+    const updatedBuffer = [...state.subtextBuffer, cleanedLine]
     return {
       ...state,
       subtextBuffer: updatedBuffer,
       currentQuestion: {
         ...state.currentQuestion,
-        subtext: updatedBuffer.join('\n'),
+        subtext: joinBuffer(updatedBuffer),
       },
     }
   }
@@ -1476,6 +1814,8 @@ const reduceParsedLine = (
       return handleOptionShowIf(state, parsedLine.data)
     case "option_other_text":
       return handleOptionOtherText(state, parsedLine.data)
+    case "option_subtract":
+      return handleOptionSubtract(state, parsedLine.data)
     case "option_hint":
       return handleOptionHint(state, parsedLine.data)
     case "option_tooltip":
@@ -1563,6 +1903,8 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
       tooltipBuffer: null,
       subquestionSubtextBuffer: null,
       subquestionTooltipBuffer: null,
+      optionSubtextBuffer: null,
+      optionTooltipBuffer: null,
       questionCounter: 1,
     }
 

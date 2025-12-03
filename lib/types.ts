@@ -62,6 +62,7 @@ export type Option = {
   showIf?: string
   allowsOtherText?: boolean
   subquestions?: Subquestion[]
+  subtract?: boolean
 }
 
 export type OptionGroup = {
@@ -112,6 +113,7 @@ export type TooltipData = { tooltip: string }
 export type OptionData = { text: string; showIf?: string }
 export type OptionShowIfData = { showIf: string }
 export type OptionOtherTextData = { allowsOtherText: true }
+export type OptionSubtractData = { subtract: true }
 export type InputTypeData = { type: Question["type"] }
 export type VariableData = { variable: string }
 export type ShowIfData = { showIf: string }
@@ -137,6 +139,7 @@ export type ParsedLine =
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
   | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
+  | { type: "option_subtract"; raw: string; data: OptionSubtractData }
   | { type: "option_hint"; raw: string; data: SubtextData }
   | { type: "option_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
@@ -171,5 +174,7 @@ export type ParserState = {
   tooltipBuffer: string[] | null
   subquestionSubtextBuffer: string[] | null
   subquestionTooltipBuffer: string[] | null
+  optionSubtextBuffer: string[] | null
+  optionTooltipBuffer: string[] | null
   questionCounter: number
 }
