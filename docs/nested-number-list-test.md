@@ -1,16 +1,16 @@
-# Nested Number List Test
+# Breakdown Question Test
 
 Q: Budget breakdown
 
 - Salaries Department A
 - Equipment Department A
 - Travel Department A
-  SUBTOTAL_LABEL: Department A Total
+  SUBTOTAL: Department A Total
 - Salaries Department B
 - Equipment Department B
-  SUBTOTAL_LABEL: Department B Total
+  SUBTOTAL: Department B Total
 - Misc costs
-  NUMBER
-  TOTAL_LABEL: Overall Total
+  BREAKDOWN
+  TOTAL: Overall Total
   PREFIX: €
   SUFFIX: .000,-

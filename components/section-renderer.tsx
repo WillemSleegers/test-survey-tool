@@ -11,7 +11,7 @@ interface SectionRendererProps {
   section: VisibleSection
   responses: Responses
   variables: Variables
-  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
   startTabIndex: number
   computedVariables?: ComputedVariables
 }

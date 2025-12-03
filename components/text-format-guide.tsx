@@ -142,6 +142,30 @@ export function TextFormatGuide() {
               </ul>
             </li>
             <li>
+              <code>TOOLTIP: Additional context</code>
+              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                <li>
+                  Adds collapsible information icon next to question text
+                </li>
+                <li>
+                  Tooltip content is hidden by default and shown on click
+                </li>
+                <li>
+                  Place after HINT (if present); before question options
+                </li>
+                <li>
+                  Content on following lines gets appended to the tooltip text
+                </li>
+                <li>
+                  Supports Markdown formatting (bold, italic, links, etc.)
+                </li>
+                <li>
+                  <strong>Note:</strong> Use <code>*</code> or numbered lists for
+                  bullets, not <code>-</code> (which starts options)
+                </li>
+              </ul>
+            </li>
+            <li>
               <code>- TEXT</code>
               <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
                 <li>Adds text input to a question option</li>

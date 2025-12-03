@@ -51,11 +51,15 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
     // Check if this is a subquestion hint (- HINT: ...)
     if (trimmed.match(/^-\s*HINT:/)) {
-      return state.currentSubquestion ? "subquestion_hint" : "content"
+      if (state.currentSubquestion) return "subquestion_hint"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_hint"
+      return "content"
     }
     // Check if this is a subquestion tooltip (- TOOLTIP: ...)
     if (trimmed.match(/^-\s*TOOLTIP:/)) {
-      return state.currentSubquestion ? "subquestion_tooltip" : "content"
+      if (state.currentSubquestion) return "subquestion_tooltip"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_tooltip"
+      return "content"
     }
     // Check if this is a subquestion subtract flag (- SUBTRACT)
     if (trimmed.match(/^-\s*SUBTRACT\s*$/)) {
@@ -75,11 +79,11 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
     return state.currentQuestion ? "option" : "content"
   }
-  if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX"].includes(trimmed)) return "input_type"
+  if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX", "BREAKDOWN"].includes(trimmed)) return "input_type"
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
-  if (trimmed.startsWith("TOTAL_LABEL:")) return "total_label"
-  if (trimmed.startsWith("SUBTOTAL_LABEL:")) return "subtotal_label"
+  if (trimmed.startsWith("TOTAL:")) return "total_label"
+  if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
   if (trimmed.startsWith("PREFIX:")) return "prefix"
   if (trimmed.startsWith("SUFFIX:")) return "suffix"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
@@ -170,7 +174,17 @@ const parseSubquestion = (line: string, state: ParserState): SubquestionData => 
 
   // Generate ID as questionId_rowNumber (e.g., Q1_1, Q1_2, etc.)
   const currentQuestionId = state.currentQuestion?.id || "Q0"
-  const existingSubquestionCount = state.currentQuestion?.subquestions?.length || 0
+
+  // Count existing subquestions - check both question-level (matrix) and option-level (breakdown)
+  let existingSubquestionCount = state.currentQuestion?.subquestions?.length || 0
+
+  // For breakdown questions, also count subquestions in options
+  if (state.currentQuestion?.options) {
+    for (const option of state.currentQuestion.options) {
+      existingSubquestionCount += option.subquestions?.length || 0
+    }
+  }
+
   const rowNumber = existingSubquestionCount + 1
   const id = `${currentQuestionId}_${rowNumber}`
 
@@ -188,6 +202,8 @@ const parseInputType = (line: string): InputTypeData => {
       return { type: "number" }
     case "CHECKBOX":
       return { type: "checkbox" }
+    case "BREAKDOWN":
+      return { type: "breakdown" }
     default:
       return { type: "multiple_choice" }
   }
@@ -204,13 +220,13 @@ const parseShowIf = (line: string): ShowIfData => ({
 
 const parseTotalLabel = (line: string): TotalLabelData => {
   const trimmed = line.trim()
-  const totalLabel = trimmed.substring(12).trim() // Remove "TOTAL_LABEL:" prefix
+  const totalLabel = trimmed.substring(6).trim() // Remove "TOTAL:" prefix
   return { totalLabel }
 }
 
 const parseSubtotalLabel = (line: string): SubtotalLabelData => {
   const trimmed = line.trim()
-  const subtotalLabel = trimmed.substring(15).trim() // Remove "SUBTOTAL_LABEL:" prefix
+  const subtotalLabel = trimmed.substring(9).trim() // Remove "SUBTOTAL:" prefix
   return { subtotalLabel }
 }
 
@@ -236,6 +252,18 @@ const parseOptionShowIf = (line: string): OptionShowIfData => {
 const parseOptionOtherText = (): OptionOtherTextData => ({
   allowsOtherText: true,
 })
+
+const parseOptionHint = (line: string): SubtextData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*HINT:\s*(.*)/)
+  return { subtext: match ? match[1] : "" }
+}
+
+const parseOptionTooltip = (line: string): TooltipData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*TOOLTIP:\s*(.*)/)
+  return { tooltip: match ? match[1] : "" }
+}
 
 const parseContent = (line: string): ContentData => ({
   content: line,
@@ -304,6 +332,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionShowIf(line) }
     case "option_other_text":
       return { type, raw: line, data: parseOptionOtherText() }
+    case "option_hint":
+      return { type, raw: line, data: parseOptionHint(line) }
+    case "option_tooltip":
+      return { type, raw: line, data: parseOptionTooltip(line) }
     case "subquestion_hint":
       return { type, raw: line, data: parseSubquestionHint(line) }
     case "subquestion_tooltip":
@@ -673,32 +705,83 @@ const handleTooltip = (state: ParserState, data: TooltipData): ParserState => {
 const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
-  // Update the subquestion with hint text
-  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
-    row.id === state.currentSubquestion!.id
-      ? { ...row, subtext: data.subtext }
-      : row
-  ) || []
+  // Check if subquestion is attached to an option (breakdown) or question (matrix)
+  const hasOptions = state.currentQuestion.options.length > 0
+  const hasQuestionSubquestions = (state.currentQuestion.subquestions?.length || 0) > 0
 
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      subquestions: updatedSubquestions,
-    },
-    currentSubquestion: {
-      ...state.currentSubquestion,
-      subtext: data.subtext,
-    },
-    // Start collecting multiline subquestion hint
-    subquestionSubtextBuffer: [data.subtext],
+  if (hasOptions) {
+    // Number_list: update subquestion in option
+    const updatedOptions = state.currentQuestion.options.map(option => ({
+      ...option,
+      subquestions: option.subquestions?.map(sq =>
+        sq.id === state.currentSubquestion!.id
+          ? { ...sq, subtext: data.subtext }
+          : sq
+      ),
+    }))
+
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+      currentSubquestion: {
+        ...state.currentSubquestion,
+        subtext: data.subtext,
+      },
+      subquestionSubtextBuffer: [data.subtext],
+    }
   }
+
+  if (hasQuestionSubquestions) {
+    // Matrix: update subquestion at question level
+    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+      row.id === state.currentSubquestion!.id
+        ? { ...row, subtext: data.subtext }
+        : row
+    ) || []
+
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        subquestions: updatedSubquestions,
+      },
+      currentSubquestion: {
+        ...state.currentSubquestion,
+        subtext: data.subtext,
+      },
+      subquestionSubtextBuffer: [data.subtext],
+    }
+  }
+
+  return state
 }
 
 const handleSubquestionTooltip = (state: ParserState, data: TooltipData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
-  // Update the subquestion with tooltip text
+  const hasOptions = state.currentQuestion.options.length > 0
+
+  if (hasOptions) {
+    const updatedOptions = state.currentQuestion.options.map(option => ({
+      ...option,
+      subquestions: option.subquestions?.map(sq =>
+        sq.id === state.currentSubquestion!.id
+          ? { ...sq, tooltip: data.tooltip }
+          : sq
+      ),
+    }))
+
+    return {
+      ...state,
+      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
+      currentSubquestion: { ...state.currentSubquestion, tooltip: data.tooltip },
+      subquestionTooltipBuffer: [data.tooltip],
+    }
+  }
+
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
       ? { ...row, tooltip: data.tooltip }
@@ -707,15 +790,8 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
 
   return {
     ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      subquestions: updatedSubquestions,
-    },
-    currentSubquestion: {
-      ...state.currentSubquestion,
-      tooltip: data.tooltip,
-    },
-    // Start collecting multiline subquestion tooltip
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, tooltip: data.tooltip },
     subquestionTooltipBuffer: [data.tooltip],
   }
 }
@@ -723,7 +799,25 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
 const handleSubquestionSubtract = (state: ParserState, data: SubquestionSubtractData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
-  // Update the subquestion with subtract flag
+  const hasOptions = state.currentQuestion.options.length > 0
+
+  if (hasOptions) {
+    const updatedOptions = state.currentQuestion.options.map(option => ({
+      ...option,
+      subquestions: option.subquestions?.map(sq =>
+        sq.id === state.currentSubquestion!.id
+          ? { ...sq, subtract: data.subtract }
+          : sq
+      ),
+    }))
+
+    return {
+      ...state,
+      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
+      currentSubquestion: { ...state.currentSubquestion, subtract: data.subtract },
+    }
+  }
+
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
       ? { ...row, subtract: data.subtract }
@@ -732,21 +826,33 @@ const handleSubquestionSubtract = (state: ParserState, data: SubquestionSubtract
 
   return {
     ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      subquestions: updatedSubquestions,
-    },
-    currentSubquestion: {
-      ...state.currentSubquestion,
-      subtract: data.subtract,
-    },
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, subtract: data.subtract },
   }
 }
 
 const handleSubquestionValue = (state: ParserState, data: SubquestionValueData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
-  // Update the subquestion with value
+  const hasOptions = state.currentQuestion.options.length > 0
+
+  if (hasOptions) {
+    const updatedOptions = state.currentQuestion.options.map(option => ({
+      ...option,
+      subquestions: option.subquestions?.map(sq =>
+        sq.id === state.currentSubquestion!.id
+          ? { ...sq, value: data.value }
+          : sq
+      ),
+    }))
+
+    return {
+      ...state,
+      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
+      currentSubquestion: { ...state.currentSubquestion, value: data.value },
+    }
+  }
+
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
       ? { ...row, value: data.value }
@@ -755,14 +861,8 @@ const handleSubquestionValue = (state: ParserState, data: SubquestionValueData):
 
   return {
     ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      subquestions: updatedSubquestions,
-    },
-    currentSubquestion: {
-      ...state.currentSubquestion,
-      value: data.value,
-    },
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, value: data.value },
   }
 }
 
@@ -809,6 +909,46 @@ const handleOptionShowIf = (state: ParserState, data: OptionShowIfData): ParserS
   }
 }
 
+const handleOptionHint = (state: ParserState, data: SubtextData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply hint to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    hint: data.subtext
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionTooltip = (state: ParserState, data: TooltipData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply tooltip to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    tooltip: data.tooltip
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
 const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
@@ -832,6 +972,45 @@ const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): P
 const handleSubquestion = (state: ParserState, data: SubquestionData): ParserState => {
   if (!state.currentQuestion) return state
 
+  // Check if we have options (breakdown context) - attach subquestion to last option
+  const hasOptions = state.currentQuestion.options.length > 0
+
+  if (hasOptions) {
+    // Breakdown: attach subquestion to the last option
+    const lastOptionIndex = state.currentQuestion.options.length - 1
+    const updatedOptions = [...state.currentQuestion.options]
+    const lastOption = updatedOptions[lastOptionIndex]
+
+    updatedOptions[lastOptionIndex] = {
+      ...lastOption,
+      subquestions: [
+        ...(lastOption.subquestions || []),
+        {
+          id: data.id,
+          text: data.text
+        },
+      ],
+    }
+
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        options: updatedOptions,
+      },
+      currentSubquestion: {
+        id: data.id,
+        text: data.text
+      },
+      // Clear subtext and tooltip buffers when we encounter structured elements
+      subtextBuffer: null,
+      tooltipBuffer: null,
+      subquestionSubtextBuffer: null,
+      subquestionTooltipBuffer: null,
+    }
+  }
+
+  // Matrix: attach to question-level subquestions
   // Set question type to matrix when we encounter the first matrix row
   const updatedType = state.currentQuestion.subquestions?.length === 0 ? "matrix" : state.currentQuestion.type
 
@@ -869,23 +1048,19 @@ const handleInputType = (
   // For matrix questions, preserve the matrix type but store the input behavior
   const isMatrixQuestion = state.currentQuestion.subquestions && state.currentQuestion.subquestions.length > 0
 
-  // For NUMBER type with options, it's a number_list question
-  const hasOptions = state.currentQuestion.options.length > 0
-  const isNumberList = data.type === "number" && hasOptions && !isMatrixQuestion
+  const questionType = isMatrixQuestion ? "matrix" : data.type
 
-  const questionType = isMatrixQuestion ? "matrix" : (isNumberList ? "number_list" : data.type)
-
-  // Valid input types for matrix questions (excludes matrix and number_list)
+  // Valid input types for matrix questions (excludes matrix and breakdown)
   const validInputTypes: Question["inputType"][] = ["multiple_choice", "checkbox", "text", "essay", "number"]
   const isValidInputType = (type: Question["type"]): type is NonNullable<Question["inputType"]> => {
     return validInputTypes.includes(type as Question["inputType"])
   }
 
-  // For number_list questions, finalize any ungrouped options
+  // For breakdown questions, finalize any ungrouped options
   let finalOptions = state.currentQuestion.options
   let finalOptionGroups = state.currentQuestion.optionGroups
 
-  if (isNumberList) {
+  if (data.type === "breakdown") {
     // Finalize any ungrouped options
     if (finalOptionGroups && finalOptionGroups.length > 0) {
       // If we have ungrouped options and already have groups, add remaining options as a final group
@@ -907,8 +1082,8 @@ const handleInputType = (
       type: questionType,
       // Store the actual input type for matrix questions to know if it should be radio or checkbox
       ...(isMatrixQuestion && data.type !== "matrix" && isValidInputType(data.type) && { inputType: data.type }),
-      // For matrix questions, checkbox, and number_list questions, preserve options
-      options: (data.type === "checkbox" || isMatrixQuestion || isNumberList) ? finalOptions : [],
+      // For matrix questions, checkbox, and breakdown questions, preserve options
+      options: (data.type === "checkbox" || isMatrixQuestion || data.type === "breakdown") ? finalOptions : [],
       ...(finalOptionGroups && finalOptionGroups.length > 0 && { optionGroups: finalOptionGroups }),
     },
     // Clear subtext and tooltip buffers when we encounter structured elements
@@ -1042,7 +1217,7 @@ const handleSubtotalLabel = (state: ParserState, data: SubtotalLabelData): Parse
     }
   }
 
-  // For number_list questions, create an option group from the current options
+  // For breakdown questions, create an option group from the current options
   const currentOptions = state.currentQuestion.options
   if (currentOptions.length === 0) return state
 
@@ -1301,6 +1476,10 @@ const reduceParsedLine = (
       return handleOptionShowIf(state, parsedLine.data)
     case "option_other_text":
       return handleOptionOtherText(state, parsedLine.data)
+    case "option_hint":
+      return handleOptionHint(state, parsedLine.data)
+    case "option_tooltip":
+      return handleOptionTooltip(state, parsedLine.data)
     case "subquestion_hint":
       return handleSubquestionHint(state, parsedLine.data)
     case "subquestion_tooltip":

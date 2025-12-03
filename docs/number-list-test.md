@@ -1,9 +1,10 @@
 Q: Employee count breakdown
 
-- Employees on payroll
+- Q: Employees on payroll
   HINT: Number of employees you pay for.
-- External contractors
-- Temporary workers
+- Q: External contractors
+- Q: Temporary workers
+- FTE
   NUMBER
   TOTAL_LABEL: Total employees
   PREFIX: €

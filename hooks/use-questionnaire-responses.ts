@@ -52,7 +52,7 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
    */
   const handleResponse = (
     questionId: string,
-    value: string | string[] | number | boolean
+    value: string | string[] | number | boolean | Record<string, string>
   ): void => {
     setResponses(prev => ({
       ...prev,

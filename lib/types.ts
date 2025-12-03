@@ -30,7 +30,7 @@ export type Question = {
   text: string
   subtext?: string
   tooltip?: string
-  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "number_list"
+  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "breakdown"
   options: Option[]
   optionGroups?: OptionGroup[]
   subquestions?: Subquestion[]
@@ -58,8 +58,10 @@ export type Option = {
   value: string
   label: string
   hint?: string
+  tooltip?: string
   showIf?: string
   allowsOtherText?: boolean
+  subquestions?: Subquestion[]
 }
 
 export type OptionGroup = {
@@ -135,6 +137,8 @@ export type ParsedLine =
   | { type: "option"; raw: string; data: OptionData }
   | { type: "option_show_if"; raw: string; data: OptionShowIfData }
   | { type: "option_other_text"; raw: string; data: OptionOtherTextData }
+  | { type: "option_hint"; raw: string; data: SubtextData }
+  | { type: "option_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }

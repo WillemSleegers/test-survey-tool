@@ -6,6 +6,7 @@ import { TextQuestion } from "./text-question"
 import { NumberQuestion } from "./number-question"
 import { MatrixQuestion } from "./matrix-question"
 import { NumericMatrixQuestion } from "./numeric-matrix-question"
+import { BreakdownQuestion } from "./breakdown-question"
 
 interface QuestionRendererProps {
   /** The question to render */
@@ -15,7 +16,7 @@ interface QuestionRendererProps {
   /** All user variables */
   variables: Variables
   /** Callback when user provides a response */
-  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -119,6 +120,18 @@ export function QuestionRenderer({
 
       return (
         <MatrixQuestion
+          question={question}
+          responses={responses}
+          variables={variables}
+          onResponse={(questionId, value) => onResponse(questionId, value)}
+          startTabIndex={startTabIndex}
+          computedVariables={computedVariables}
+        />
+      )
+
+    case "breakdown":
+      return (
+        <BreakdownQuestion
           question={question}
           responses={responses}
           variables={variables}

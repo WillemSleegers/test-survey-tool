@@ -10,7 +10,7 @@ interface PageContentProps {
   content: VisiblePageContent
   responses: Responses
   variables: Variables
-  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
   computedVariables?: ComputedVariables
 }
 

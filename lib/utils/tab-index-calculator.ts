@@ -38,9 +38,19 @@ function calculateQuestionInputCount(
 ): number {
   if (question.type === 'text' || question.type === 'number') {
     return 1
-  } else if (question.type === 'number_list') {
-    // Number list: one input per option
-    return question.options.length
+  } else if (question.type === 'breakdown') {
+    // Breakdown: one input per option plus inputs for subquestions
+    const typedQuestion = question as Question
+    let inputCount = question.options.length
+
+    // Add inputs for subquestions within options
+    for (const option of typedQuestion.options) {
+      if (option.subquestions) {
+        inputCount += option.subquestions.length
+      }
+    }
+
+    return inputCount
   } else if (question.type === 'multiple_choice') {
     const variableValue = question.variable ? variables[question.variable] : undefined
     const responseString = typeof variableValue === 'string' ? variableValue : ''
