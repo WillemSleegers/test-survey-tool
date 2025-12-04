@@ -34,6 +34,12 @@
 
 ## Medium Priority
 
+- [ ] Review tooltip icon positioning layout
+  - Tooltip icons now positioned absolutely at -left-8 for consistent left-side placement
+  - Main content container has pl-8 padding to accommodate icons
+  - Table containers use -ml-8 pl-8 to prevent double-indentation while keeping icons visible
+  - Should verify this approach is principled and doesn't cause issues with edge cases
+  - Consider whether this pattern scales well for other absolutely positioned elements
 - [ ] Remove subquestions feature from BREAKDOWN questions
   - Currently BREAKDOWN supports subquestions with `- Q:` syntax for hierarchical breakdowns
   - This feature is unnecessary - flat options with descriptive labels work better

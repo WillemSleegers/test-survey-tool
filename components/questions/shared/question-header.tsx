@@ -43,18 +43,18 @@ export function QuestionHeader({ text, subtext, tooltip, variables, computedVari
 
   return (
     <div className="space-y-1">
-      <div className="flex items-start gap-1">
+      <div className="relative">
         {processedTooltip && (
           <button
             type="button"
             onClick={() => setIsTooltipVisible(!isTooltipVisible)}
-            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+            className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
             aria-label="Toggle additional information"
           >
             <Info className="w-5 h-5 text-muted-foreground" />
           </button>
         )}
-        <div className="flex-1">
+        <div>
           <Markdown>{processedText}</Markdown>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function QuestionHeader({ text, subtext, tooltip, variables, computedVari
         </div>
       )}
       {processedTooltip && isTooltipVisible && (
-        <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
+        <div className="text-base text-muted-foreground bg-muted p-3 rounded-md">
           <Markdown>{processedTooltip}</Markdown>
         </div>
       )}

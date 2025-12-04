@@ -226,33 +226,31 @@ export function BreakdownQuestion({
         {/* Main option row */}
         <TableRow className="hover:bg-transparent">
           <TableCell className="align-middle whitespace-normal pl-0">
-            <div>
-              <div className="flex items-start gap-1">
-                {option.tooltip && (
-                  <button
-                    type="button"
-                    onClick={() => toggleTooltip(option.value)}
-                    className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-                    aria-label="Toggle additional information"
-                  >
-                    <Info className="w-5 h-5 text-muted-foreground" />
-                  </button>
-                )}
-                <div className="flex-1">
-                  <div className="text-base">
-                    <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
-                  </div>
-                  {option.hint && (
-                    <div className="text-base text-muted-foreground mt-0.5">
-                      <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
-                    </div>
-                  )}
-                  {option.tooltip && isTooltipVisible && (
-                    <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
-                      <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
-                    </div>
-                  )}
+            <div className="relative">
+              {option.tooltip && (
+                <button
+                  type="button"
+                  onClick={() => toggleTooltip(option.value)}
+                  className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                  aria-label="Toggle additional information"
+                >
+                  <Info className="w-5 h-5 text-muted-foreground" />
+                </button>
+              )}
+              <div>
+                <div className="text-base">
+                  <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                 </div>
+                {option.hint && (
+                  <div className="text-base text-muted-foreground mt-0.5">
+                    <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                  </div>
+                )}
+                {option.tooltip && isTooltipVisible && (
+                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                    <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                  </div>
+                )}
               </div>
             </div>
           </TableCell>
@@ -337,33 +335,31 @@ export function BreakdownQuestion({
                 <TableRow key={option.value} className="hover:bg-transparent">
                   {/* Label column (always shown) */}
                   <TableCell className="align-middle whitespace-normal pl-0">
-                    <div>
-                      <div className="flex items-start gap-1">
-                        {option.tooltip && (
-                          <button
-                            type="button"
-                            onClick={() => toggleTooltip(option.value)}
-                            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-                            aria-label="Toggle additional information"
-                          >
-                            <Info className="w-5 h-5 text-muted-foreground" />
-                          </button>
-                        )}
-                        <div className="flex-1">
-                          <div className="text-base">
-                            <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
-                          </div>
-                          {option.hint && (
-                            <div className="text-base text-muted-foreground mt-0.5">
-                              <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
-                            </div>
-                          )}
-                          {option.tooltip && isTooltipVisible && (
-                            <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
-                              <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
-                            </div>
-                          )}
+                    <div className="relative">
+                      {option.tooltip && (
+                        <button
+                          type="button"
+                          onClick={() => toggleTooltip(option.value)}
+                          className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                          aria-label="Toggle additional information"
+                        >
+                          <Info className="w-5 h-5 text-muted-foreground" />
+                        </button>
+                      )}
+                      <div>
+                        <div className="text-base">
+                          <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                         </div>
+                        {option.hint && (
+                          <div className="text-base text-muted-foreground mt-0.5">
+                            <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                          </div>
+                        )}
+                        {option.tooltip && isTooltipVisible && (
+                          <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                            <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TableCell>
