@@ -267,7 +267,7 @@ export function BreakdownQuestion({
                   type="number"
                   value={value}
                   onChange={(e) => handleRowChange(option.value, e.target.value)}
-                  className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
                   tabIndex={startTabIndex + index}
                 />
                 {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
@@ -298,7 +298,7 @@ export function BreakdownQuestion({
                     type="number"
                     value={sqValue}
                     onChange={(e) => handleSubquestionChange(subquestion.id, e.target.value)}
-                    className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
                   />
                   {suffix && <span className="whitespace-nowrap">{suffix}</span>}
                 </div>
@@ -380,7 +380,7 @@ export function BreakdownQuestion({
                               type="number"
                               value={value}
                               onChange={(e) => handleRowChange(option.value, e.target.value)}
-                              className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                              className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
                               tabIndex={startTabIndex + index}
                             />
                             {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
