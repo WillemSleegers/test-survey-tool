@@ -1,51 +1,3 @@
-NAV: Welkom
-
-# **Welkom bij de vragenlijst**
-
-Bedankt dat u de tijd neemt om deze vragenlijst in te vullen.
-
-## **Uw antwoorden opslaan**
-
-Uw antwoorden worden automatisch opgeslagen als u naar een volgende pagina gaat. Werkt u langere tijd op één pagina? Gebruik dan rechtsboven de knop 'Opslaan' om uw antwoorden te bewaren. Met de knop 'Opslaan en sluiten' rechtsboven kunt u het invullen van de vragenlijst onderbreken om op een later moment verder te gaan.
-
-## **Belangrijk bij het verzenden**
-
-Aan het einde verschijnt een knop waarmee u de vragenlijst kunt verzenden.
-Met de knop 'Akkoord' of 'Akkoord en volgende' geeft u aan dat een pagina volledig is ingevuld.
-De vragenlijst kan verzonden worden als alles akkoord verklaard is.
-De vragenlijst is succesvol verzonden als de ontvangstbevestiging getoond wordt.
-
-## **Heeft u vragen?**
-
-Klik op de 'Help'-knop rechtsboven voor algemene informatie of klik hier voor meer informatie over dit onderzoek.
-Staat uw antwoord hier niet bij? Dan kunt u uw vraag online stellen door het invullen van een webformulier, het correspondentienummer is: 1.
-Of bel ons op (045) 570 6400. Wij zijn bereikbaar van maandag tot en met vrijdag tussen 9.00 en 17.00 uur.
-Klik op 'Volgende' om verder te gaan met de vragenlijst.
-
-NAV: IFRS
-
-# **Externe verslaggeving (IFRS)**
-
-Vanaf 2019 moeten beursgenoteerde bedrijven de IFRS-16-richtlijn volgen. Dit betekent dat ze verplicht zijn om de gebruiksrechten op operationele lease als bezitting op te nemen op de balans. Ook moeten ze de bijbehorende leaseverplichtingen als schuld opnemen.
-
-Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
-
-- Ja
-- Nee
-
-NAV: Verslagjaar
-
-# **Verslagjaar**
-
-**Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
-Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
-
-Q: Begindatum
-NUMBER
-
-Q: Einddatum
-NUMBER
-
 NAV: Werkzame personen
 
 # **Werkzame personen**
@@ -108,13 +60,13 @@ NIET meetellen:
 
 ---
 
-- Omzet industriële activiteiten
+- **Omzet industriële activiteiten**
 - HINT: Omzet uit geleverde zelfvervaardigde producten en industriële diensten
-- Handelsomzet
+- **Handelsomzet**
 - HINT: Betreft omzet uit de levering van niet zelfvervaardigde producten, waarop u niet het intellectueel eigendom heeft, die u koopt en zonder verdere bewerking doorverkoopt.
-- Omzet dienstverlening
+- **Omzet dienstverlening**
 - HINT: Omzet uit overige diensten
-- Overige omzet
+- **Overige omzet**
 - HINT: Omzet uit overige activiteiten. Dit zijn werkzaamheden die een wezenlijk onderdeel vormen van de bedrijfsvoering van het bedrijf, maar geen deel zijn van de industriële activiteit. Doorverkopen van zelfgeproduceerde elektriciteit of stoom hier WEL opnemen
   BREAKDOWN
   PREFIX: €
@@ -125,13 +77,13 @@ NIET meetellen:
 
 Q:
 
-- Omzet uit in het binnenland zelfvervaardigde producten
+- **Omzet uit in het binnenland zelfvervaardigde producten**
 - HINT: In uw eigendom of onder uw regie in Nederland vervaardigde producten. Is onderdeel van 'Omzet industriële activiteiten'.
-- Omzet uit in het buitenland zelfvervaardigde producten
+- **Omzet uit in het buitenland zelfvervaardigde producten**
 - HINT: In uw eigendom of onder uw regie in het buitenland vervaardigde producten. Is onderdeel van 'Omzet industriële activiteiten'.
-- Omzet industriële diensten binnenland
+- **Omzet industriële diensten binnenland**
 - HINT: Aan binnenlandse afnemers geleverde industriële diensten. Is onderdeel van 'Omzet industriële activiteiten'.
-- Omzet industriële diensten buitenland
+- **Omzet industriële diensten buitenland**
 - HINT: Aan buitenlandse afnemers geleverde industriële diensten. Is onderdeel van 'Omzet industriële activiteiten'.
   BREAKDOWN
   PREFIX: €
@@ -152,7 +104,7 @@ Q: Zijn de in het buitenland zelfvervaardigde producten gemaakt met behulp van u
 
 Q:
 
-- Vergoedingen uitleen
+- **Vergoedingen uitleen**
 - HINT: Vergoedingen voor de uitleen van (eigen) werknemers aan bedrijven buiten het eigen concern. Is onderdeel van 'Omzet dienstverlening'
 - TOOLTIP: Uitgeleende (eigen) werknemers zijn personen op de loonlijst die feitelijk werkzaam zijn bij een andere onderneming, niet zijnde een gelieerd (bijv. zuster-) bedrijf. Van uitlenen is sprake indien eigen werknemers onder direct gezag staan van de (in)lenende onderneming.
   BREAKDOWN
@@ -163,10 +115,11 @@ Q:
 
 Q:
 
-- Termijnen einde boekjaar
+- **Termijnen einde boekjaar**
 - HINT: Betreft gefactureerde termijnen voorraad gereed product en onderhanden werk per einde boekjaar
-- Termijnen begin boekjaar
+- **Termijnen begin boekjaar**
 - HINT: Betreft gefactureerde termijnen voorraad gereed product en onderhanden werk per begin boekjaar
+- SUBTRACT
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
@@ -178,22 +131,22 @@ NAV: Overige bedrijfsopbrengsten
 
 Q:
 
-- Eindvoorraad onderhanden werk en/of gereed product
+- **Eindvoorraad onderhanden werk en/of gereed product**
 - HINT: Van nog niet gefactureerde voorraden onderhanden werk en gereed product
-- Beginvoorraad onderhanden werk en/of gereed product
+- COLUMN: 1
+- VARIABLE: eindvoorraad
+- **Beginvoorraad onderhanden werk en/of gereed product**
 - HINT: Van nog niet gefactureerde voorraden onderhanden werk en gereed product
+- COLUMN: 1
+- VARIABLE: beginvoorraad
 - SUBTRACT
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-  TOTAL: Mutatie voorraad onderhanden werk en/of gereed product
-
-Saldo eindvoorraad minus beginvoorraad onderhanden werk en/of gereed product
-Dit is een aanvulling op de omzet. De mutatie onderhanden werk en/of gereed product mag niet al verrekend zijn in de hiervoor gerapporteerde omzet.
-
-Q:
-
-- Subsidies en restituties
+- **Mutatie voorraad onderhanden werk en/of gereed product**
+- HINT: Saldo eindvoorraad minus beginvoorraad onderhanden werk en/of gereed product
+- TOOLTIP: Dit is een aanvulling op de omzet. De mutatie onderhanden werk en/of gereed product mag niet al verrekend zijn in de hiervoor gerapporteerde omzet.
+- COLUMN: 2
+- VALUE: {{eindvoorraad - beginvoorraad}}
+- EXCLUDE
+- **Subsidies en restituties**
 - HINT: Met uitzondering van loon(kosten)subsidies, zie daarvoor rubriek Personele kosten, vraag 'Loon(kosten)subsidies en afdrachtverminderingen'
 - TOOLTIP: ---
 
@@ -206,16 +159,22 @@ Namelijk:
 
 ---
 
-- Geactiveerde productie
+- COLUMN: 2
+- **Geactiveerde productie**
 - HINT: Waarde zelfvervaardigde productie voor eigen bedrijf
 - TOOLTIP: Som van directe en indirecte kosten (lonen, materialen en dergelijke) besteed aan zelfvervaardigde vaste activa die bestemd zijn voor uw eigen bedrijf.
-- Beheersvergoedingen
+- COLUMN: 2
+- **Beheersvergoedingen**
 - HINT: Intraconcernvergoedingen voor diensten van algemeen beheer
-- Opbrengsten uit licenties / royalty's / auteursrechten
-- Ontvangen schade-uitkeringen
+- COLUMN: 2
+- **Opbrengsten uit licenties / royalty's / auteursrechten**
+- COLUMN: 2
+- **Ontvangen schade-uitkeringen**
 - HINT: Exclusief ontvangen ziekengeld, zie daarvoor post 'Ontvangen ziekengeld' onder rubriek 'Personele kosten'. Exclusief schade-uitkeringen bestemd voor de vervanging van duurzame activa, zie daarvoor diverse posten onder rubriek 'Overige bedrijfslasten'.
-- Overige bedrijfsopbrengsten
+- COLUMN: 2
+- **Overige bedrijfsopbrengsten**
 - HINT: Niet eerder genoemd
+- COLUMN: 2
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
@@ -229,20 +188,23 @@ Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
-- Q: Inkoopwaarde grond- en hulpstoffen
+- **Inkoopwaarde grond- en hulpstoffen**
 - HINT: Alle grond-, hulpstoffen en materialen die direct nodig zijn voor het productieproces van in uw eigendom of onder uw regie vervaardigde producten
-- TOOLTIP: Grond- en hulpstoffen zijn alle goederen en materialen die direct in het productieproces opgaan. Opgeven de gefactureerde waarde van de door derden geleverde grond- en hulpstoffen, onder AFTREK van:
+- TOOLTIP: ---
+  Grond- en hulpstoffen zijn alle goederen en materialen die direct in het productieproces opgaan. Opgeven de gefactureerde waarde van de door derden geleverde grond- en hulpstoffen, onder AFTREK van:
 
-* kortingen, bonussen op de inkopen;
-* retouremballage
+- kortingen, bonussen op de inkopen;
+- retouremballage
 
-- Q: Inkoopwaarde handelsgoederen
+---
+
+- **Inkoopwaarde handelsgoederen**
 - HINT: Inkoopwaarde verhandelde goederen, die zonder verdere bewerking zijn doorverkocht
 - TOOLTIP: Opgeven de gefactureerde waarde van de door derden geleverde handelsgoederen, inclusief kosten eenmalige verpakkingsmiddelen, tijdelijke opslag, transport, transportverzekering, invoerrechten e.d. en onder aftrek van kortingen, bonussen
-- Q: Uitbesteed werk
+- **Uitbesteed werk**
 - HINT: Bedrag in rekening gebracht door derden voor uitbesteed werk en loondiensten, exclusief kosten uitzendkrachten en ingeleend personeel (zie daarvoor rubriek Personele kosten, 'Kosten uitzendkrachten' en 'Kosten overige inleen').
 - TOOLTIP: Het betreft hier de factuurwaarde voor werk verricht door derden, zoals industriële diensten en loondiensten, bijvoorbeeld op het gebied van veredeling, onderhoud, reparatie en installatie. Hieronder wordt niet verstaan de betaalde vrachtkosten op inkopen.
-- Q: Overige inkoopwaarde
+- **Overige inkoopwaarde**
 - HINT: Inkoopwaarde niet eerder genoemd, zoals ingezette brandstof bij doorverkochte, zelfgeproduceerde elektriciteit of stoom.
   BREAKDOWN
   PREFIX: €
@@ -257,30 +219,29 @@ Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
-- Q: Brutolonen / -salarissen
+- **Brutolonen / -salarissen**
 - HINT: Van de bij 'Werknemers op de loonlijst' opgegeven werknemers
 - TOOLTIP: Als brutoloon geldt het arbeidsloon, ontvangen ziekengeld, loon(kosten)subsidies en afdrachtverminderingen én het werknemersdeel sociale verzekeringen, bijzondere beloningen waaronder vakantiebijslag, loon in natura, stortingen in het tijdspaarfonds, extra beloningen in de vorm van toeslagen, tantièmes, overwerk, arbeidsvoorwaardenbedrag (individueel keuzebudget (IKB), persoonlijk keuzebudget (PKB), employee benefit of vergelijkbare benamingen), vergoedingen woon-/werkverkeer, bijdragen in (premie)spaarregelingen en uitkeringen als gevolg van ontslagregelingen en betalingen voor ingeleend personeel (van 'moeder, zusters of dochters') met een status vergelijkbaar met die van (eigen) werknemers.
-- Q: Ontvangen ziekengeld
+- **Ontvangen ziekengeld**
 - HINT: Totaal ontvangen ziekengeld. Bij terugbetaling van eerder ontvangen ziekengeld minteken (-) plaatsen in invulvakje
 - SUBTRACT
-- Q: Loon(kosten)subsidies en afdrachtverminderingen
+- **Loon(kosten)subsidies en afdrachtverminderingen**
 - HINT: Totaal ontvangen loon(kosten)subsidies en afdrachtverminderingen. Bij terugbetaling van eerder ontvangen loon(kosten)subsidies minteken (-) plaatsen in invulvakje.
 - SUBTRACT
   SUBTOTAL: Subtotaal
-- Q: Sociale voorzieningen en overige sociale lasten
+- **Sociale voorzieningen en overige sociale lasten**
 - HINT: Werkgeversdeel in de premies sociale verzekeringen waaronder kosten in aanvulling WAO/WIA-gat, bijdragen aan ziektekostenregelingen, kosten van verhuizing, huisvesting en kinderopvang.
 - TOOLTIP: Het betreft hier Aof, Wko, Whk, AWf en Zvw. Als het bedrijf 'eigen risicodrager' is, dienen de desbetreffende uitkeringen hier opgenomen te worden.
-- Q: Pensioenlasten
+- **Pensioenlasten**
 - HINT: Hier ook opnemen inkoopsommen en jaardotaties pensioenvoorzieningen en prepensioen
-- Q: Kosten uitzendkrachten
+- **Kosten uitzendkrachten**
 - HINT: Kosten van uitzendkrachten en ander ingehuurd personeel, aangetrokken van uitzend-, detacheringsbureaus e.d.
-- Q: Kosten overige inleen
+- **Kosten overige inleen**
 - HINT: Kosten van ingeleend personeel van andere bedrijven en zelfstandigen zonder personeel (zzp'ers), dus niet voorkomend op de loonlijst van een moeder-, zuster- en/of dochterbedrijf (deze meetellen bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten').
-- Q: Opleidingskosten
+- **Opleidingskosten**
 - HINT: Voor opleidingen verzorgd door derden
-- Q: Overige personeelskosten
+- **Overige personeelskosten**
 - HINT: Zoals kosten van kantine, arbodiensten, wervingsacties
-  SUBTOTAL: Iets
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
@@ -294,16 +255,64 @@ Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
-- Energiekosten
+- **Energiekosten**
 - HINT: Energiekosten, inclusief netdiensten. Géén brandstofkosten externe vervoermiddelen, deze opnemen bij 'Vervoermiddelen'
 - TOOLTIP: Inclusief vloeibare en vaste brandstoffen, stadsverwarming, brandstoffen voor machines en dergelijke, warm water en stoom voor verwarmingsdoeleinden.
 - Q: Energiekosten: Waarvan aardgas
 - Q: Energiekosten: Waarvan elektriciteit
-- Huisvesting huur / lease
+- **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
-- Milieuheffingen en zuiveringslasten
+- **Milieuheffingen en zuiveringslasten**
 - HINT: Zoals rioolrechten en waterschapslasten
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: Total costs
+
+NAV: Welkom
+
+# **Welkom bij de vragenlijst**
+
+Bedankt dat u de tijd neemt om deze vragenlijst in te vullen.
+
+## **Uw antwoorden opslaan**
+
+Uw antwoorden worden automatisch opgeslagen als u naar een volgende pagina gaat. Werkt u langere tijd op één pagina? Gebruik dan rechtsboven de knop 'Opslaan' om uw antwoorden te bewaren. Met de knop 'Opslaan en sluiten' rechtsboven kunt u het invullen van de vragenlijst onderbreken om op een later moment verder te gaan.
+
+## **Belangrijk bij het verzenden**
+
+Aan het einde verschijnt een knop waarmee u de vragenlijst kunt verzenden.
+Met de knop 'Akkoord' of 'Akkoord en volgende' geeft u aan dat een pagina volledig is ingevuld.
+De vragenlijst kan verzonden worden als alles akkoord verklaard is.
+De vragenlijst is succesvol verzonden als de ontvangstbevestiging getoond wordt.
+
+## **Heeft u vragen?**
+
+Klik op de 'Help'-knop rechtsboven voor algemene informatie of klik hier voor meer informatie over dit onderzoek.
+Staat uw antwoord hier niet bij? Dan kunt u uw vraag online stellen door het invullen van een webformulier, het correspondentienummer is: 1.
+Of bel ons op (045) 570 6400. Wij zijn bereikbaar van maandag tot en met vrijdag tussen 9.00 en 17.00 uur.
+Klik op 'Volgende' om verder te gaan met de vragenlijst.
+
+NAV: IFRS
+
+# **Externe verslaggeving (IFRS)**
+
+Vanaf 2019 moeten beursgenoteerde bedrijven de IFRS-16-richtlijn volgen. Dit betekent dat ze verplicht zijn om de gebruiksrechten op operationele lease als bezitting op te nemen op de balans. Ook moeten ze de bijbehorende leaseverplichtingen als schuld opnemen.
+
+Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
+
+- Ja
+- Nee
+
+NAV: Verslagjaar
+
+# **Verslagjaar**
+
+**Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
+Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
+
+Q: Begindatum
+NUMBER
+
+Q: Einddatum
+NUMBER
