@@ -180,13 +180,13 @@ export function RespondentNavigator({
                 <div key={index} className="space-y-0.5">
                   {/* Level 1 item */}
                   <div
-                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-all ${
+                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm ${
                       isClickable
                         ? "cursor-pointer hover:bg-muted"
                         : "cursor-not-allowed opacity-50"
                     } ${
                       isCurrent || firstChildCurrent
-                        ? "font-bold"
+                        ? "bg-muted font-semibold"
                         : isVisited || anyChildVisited
                         ? ""
                         : "text-muted-foreground"
@@ -194,12 +194,12 @@ export function RespondentNavigator({
                     onClick={() => {
                       if (!isClickable) return // Prevent navigation to unvisited items
 
-                      if (itemHasChildren) {
-                        // If has children, only toggle expansion
+                      // Navigate to the item
+                      onJumpToNavItem(item)
+
+                      // Auto-expand if it has children
+                      if (itemHasChildren && !isExpanded) {
                         toggleItemExpansion(index)
-                      } else {
-                        // If no children, navigate to item
-                        onJumpToNavItem(item)
                       }
                     }}
                   >
@@ -233,13 +233,13 @@ export function RespondentNavigator({
                         return (
                           <div
                             key={`${index}-${childIdx}`}
-                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm transition-all ${
+                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm ${
                               isChildClickable
                                 ? "cursor-pointer hover:bg-muted"
                                 : "cursor-not-allowed opacity-50"
                             } ${
                               isChildCurrent
-                                ? "font-bold"
+                                ? "bg-muted font-semibold"
                                 : isChildVisited
                                 ? ""
                                 : "text-muted-foreground"
