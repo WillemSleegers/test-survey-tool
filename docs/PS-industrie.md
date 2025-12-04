@@ -1,10 +1,60 @@
+NAV: Welkom
+
+# **Welkom bij de vragenlijst**
+
+Bedankt dat u de tijd neemt om deze vragenlijst in te vullen.
+
+## **Uw antwoorden opslaan**
+
+Uw antwoorden worden automatisch opgeslagen als u naar een volgende pagina gaat. Werkt u langere tijd op één pagina? Gebruik dan rechtsboven de knop 'Opslaan' om uw antwoorden te bewaren. Met de knop 'Opslaan en sluiten' rechtsboven kunt u het invullen van de vragenlijst onderbreken om op een later moment verder te gaan.
+
+## **Belangrijk bij het verzenden**
+
+Aan het einde verschijnt een knop waarmee u de vragenlijst kunt verzenden.
+Met de knop 'Akkoord' of 'Akkoord en volgende' geeft u aan dat een pagina volledig is ingevuld.
+De vragenlijst kan verzonden worden als alles akkoord verklaard is.
+De vragenlijst is succesvol verzonden als de ontvangstbevestiging getoond wordt.
+
+## **Heeft u vragen?**
+
+Klik op de 'Help'-knop rechtsboven voor algemene informatie of klik hier voor meer informatie over dit onderzoek.
+Staat uw antwoord hier niet bij? Dan kunt u uw vraag online stellen door het invullen van een webformulier, het correspondentienummer is: 1.
+Of bel ons op (045) 570 6400. Wij zijn bereikbaar van maandag tot en met vrijdag tussen 9.00 en 17.00 uur.
+Klik op 'Volgende' om verder te gaan met de vragenlijst.
+
+NAV: IFRS
+
+# **Externe verslaggeving (IFRS)**
+
+Vanaf 2019 moeten beursgenoteerde bedrijven de IFRS-16-richtlijn volgen. Dit betekent dat ze verplicht zijn om de gebruiksrechten op operationele lease als bezitting op te nemen op de balans. Ook moeten ze de bijbehorende leaseverplichtingen als schuld opnemen.
+
+Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
+
+- Ja
+- Nee
+
+NAV: Verslagjaar
+
+# **Verslagjaar**
+
+**Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
+Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
+
+Q: **Begindatum**
+TEXT
+
+Q: **Einddatum**
+TEXT
+
 NAV: Werkzame personen
 
 # **Werkzame personen**
 
-Q: Werknemers op de loonlijst (in FTE's)
-HINT: Aantal werknemers op de loonlijst, uitgedrukt in voltijdsequivalenten (FTE).
-TOOLTIP: ---
+Q:
+
+- Werknemers op de loonlijst (in FTE's)
+- HINT: Aantal werknemers op de loonlijst, uitgedrukt in voltijdsequivalenten (FTE).
+- TOOLTIP: ---
 
 WEL meetellen:
 
@@ -22,13 +72,15 @@ NIET meetellen:
 
 ---
 
-NUMBER
+BREAKDOWN
+PREFIX: FTE
 
 NAV: Netto omzet
+LEVEL: 1
 
-# **Netto omzet**
+#
 
-Q: Netto omzet
+Q: **Netto omzet**
 HINT: Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 TOOLTIP: ---
 
@@ -72,6 +124,10 @@ NIET meetellen:
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: Totaal netto omzet
+  VARIABLE: totaal_netto_omzet
+
+NAV: **Specificatie Omzet industriële activiteiten**
+LEVEL: 2
 
 # **Specificatie Omzet industriële activiteiten**
 
@@ -100,6 +156,9 @@ Q: Zijn de in het buitenland zelfvervaardigde producten gemaakt met behulp van u
 - Ja
 - Nee
 
+NAV: Specificatie Vergoedingen uitleen
+LEVEL: 2
+
 # **Specificatie Vergoedingen uitleen**
 
 Q:
@@ -110,6 +169,9 @@ Q:
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
+
+NAV: Gefactureerde termijnen
+LEVEL: 2
 
 # **Gefactureerde termijnen**
 
@@ -179,6 +241,7 @@ Namelijk:
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: Totaal overige bedrijfsopbrengsten
+  VARIABLE: totaal_overige_bedrijfsopbrengsten
 
 NAV: Inkoopwaarde
 
@@ -210,6 +273,25 @@ Q:
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: Totaal inkoopwaarde
+  VARIABLE: totaal_inkoopwaarde
+
+NAV: Specificatie inkopen grond- en hulpstoffen, incl. eenmalige verpakkingsmiddelen
+LEVEL: 2
+
+# **Specificatie inkopen grond- en hulpstoffen, incl. eenmalige verpakkingsmiddelen**
+
+betreft de grond- en hulpstoffen die in het verslagjaar ingekocht zijn
+
+Q:
+
+- Hout CPA
+- HINT:m3
+- Staal CPA
+- HINT: kg
+- Rubber CPA
+- HINT: kg
+  BREAKDOWN
+  PREFIX: €
 
 NAV: Personele kosten
 
@@ -222,30 +304,47 @@ Q:
 - **Brutolonen / -salarissen**
 - HINT: Van de bij 'Werknemers op de loonlijst' opgegeven werknemers
 - TOOLTIP: Als brutoloon geldt het arbeidsloon, ontvangen ziekengeld, loon(kosten)subsidies en afdrachtverminderingen én het werknemersdeel sociale verzekeringen, bijzondere beloningen waaronder vakantiebijslag, loon in natura, stortingen in het tijdspaarfonds, extra beloningen in de vorm van toeslagen, tantièmes, overwerk, arbeidsvoorwaardenbedrag (individueel keuzebudget (IKB), persoonlijk keuzebudget (PKB), employee benefit of vergelijkbare benamingen), vergoedingen woon-/werkverkeer, bijdragen in (premie)spaarregelingen en uitkeringen als gevolg van ontslagregelingen en betalingen voor ingeleend personeel (van 'moeder, zusters of dochters') met een status vergelijkbaar met die van (eigen) werknemers.
+- COLUMN: 1
+- VARIABLE: brutoloon
 - **Ontvangen ziekengeld**
 - HINT: Totaal ontvangen ziekengeld. Bij terugbetaling van eerder ontvangen ziekengeld minteken (-) plaatsen in invulvakje
 - SUBTRACT
+- COLUMN: 1
+- VARIABLE: ziekengeld
 - **Loon(kosten)subsidies en afdrachtverminderingen**
 - HINT: Totaal ontvangen loon(kosten)subsidies en afdrachtverminderingen. Bij terugbetaling van eerder ontvangen loon(kosten)subsidies minteken (-) plaatsen in invulvakje.
 - SUBTRACT
-  SUBTOTAL: Subtotaal
+- COLUMN: 1
+- VARIABLE: subsidies
+- **Brutolonen / -salarissen na aftrek ziekengeld en loonkostensubsidies**
+- HINT: Van de bij 'Werknemers op de loonlijst' opgegeven werknemers, na aftrek van ziekengeld en loonkostensubsidies en afdrachtverminderingen
+- VALUE: {{brutoloon - ziekengeld - subsidies}}
+- COLUMN: 2
+- EXCLUDE
 - **Sociale voorzieningen en overige sociale lasten**
 - HINT: Werkgeversdeel in de premies sociale verzekeringen waaronder kosten in aanvulling WAO/WIA-gat, bijdragen aan ziektekostenregelingen, kosten van verhuizing, huisvesting en kinderopvang.
 - TOOLTIP: Het betreft hier Aof, Wko, Whk, AWf en Zvw. Als het bedrijf 'eigen risicodrager' is, dienen de desbetreffende uitkeringen hier opgenomen te worden.
+- COLUMN: 2
 - **Pensioenlasten**
 - HINT: Hier ook opnemen inkoopsommen en jaardotaties pensioenvoorzieningen en prepensioen
+- COLUMN: 2
 - **Kosten uitzendkrachten**
 - HINT: Kosten van uitzendkrachten en ander ingehuurd personeel, aangetrokken van uitzend-, detacheringsbureaus e.d.
+- COLUMN: 2
 - **Kosten overige inleen**
 - HINT: Kosten van ingeleend personeel van andere bedrijven en zelfstandigen zonder personeel (zzp'ers), dus niet voorkomend op de loonlijst van een moeder-, zuster- en/of dochterbedrijf (deze meetellen bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten').
+- COLUMN: 2
 - **Opleidingskosten**
 - HINT: Voor opleidingen verzorgd door derden
+- COLUMN: 2
 - **Overige personeelskosten**
 - HINT: Zoals kosten van kantine, arbodiensten, wervingsacties
+- COLUMN: 2
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: Totaal personele kosten
+  VARIABLE: totaal_personele_kosten
 
 NAV: Overige bedrijfslasten
 
@@ -258,61 +357,180 @@ Q:
 - **Energiekosten**
 - HINT: Energiekosten, inclusief netdiensten. Géén brandstofkosten externe vervoermiddelen, deze opnemen bij 'Vervoermiddelen'
 - TOOLTIP: Inclusief vloeibare en vaste brandstoffen, stadsverwarming, brandstoffen voor machines en dergelijke, warm water en stoom voor verwarmingsdoeleinden.
-- Q: Energiekosten: Waarvan aardgas
-- Q: Energiekosten: Waarvan elektriciteit
+- COLUMN: 2
+- Energiekosten: Waarvan aardgas
+- COLUMN: 1
+- EXCLUDE
+- Energiekosten: Waarvan elektriciteit
+- COLUMN: 1
+- EXCLUDE
 - **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
+- COLUMN: 2
 - **Milieuheffingen en zuiveringslasten**
 - HINT: Zoals rioolrechten en waterschapslasten
+- COLUMN: 2
+- **Onroerendezaakbelasting**
+- COLUMN: 2
+- **Overige huisvesting**
+- HINT: Schoonmaak, onderhoud / reparatie van gebouwen en terreinen, verzekeringspremies opstal en inboedel, inrichtingen, waterverbruik. Kosten waterverbruik voor het productieproces NIET meetellen, zie daarvoor rubriek Inkoopwaarde, vraag 'Inkopen grond- en hulpstoffen'
+- COLUMN: 2
+- **Apparatuur / inventaris**
+- HINT: Huur / lease, onderhoud / reparatie, verzekering van inventaris, machines, installaties, interne transportmiddelen en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar. Afdracht softwarelicenties hier niet opgeven, zie daarvoor 'Licenties e.d.'
+- COLUMN: 2
+- **Huur en operationele lease externe vervoermiddelen**
+- HINT: Met externe vervoermiddelen worden de vervoermiddelen bedoeld die buiten het eigen terrein worden gebruikt.
+- COLUMN: 2
+- **Reparatie en onderhoud vervoermiddelen**
+- COLUMN: 2
+- **Brandstofkosten externe vervoermiddelen**
+- HINT: Met externe vervoermiddelen worden de vervoermiddelen bedoeld die buiten het eigen terrein worden gebruikt.
+- COLUMN: 2
+- **Houderschapsbelasting**
+- HINT: Motorrijtuigenbelasting
+- COLUMN: 2
+- **Verzekering vervoermiddelen**
+- COLUMN: 2
+- **Overige kosten vervoermiddelen**
+- HINT: Niet eerder genoemde kosten externe vervoermiddelen
+- COLUMN: 2
+- **Verkoopkosten**
+- COLUMN: 2
+- **Communicatie**
+- HINT: Zoals porto, telefoon, fax, mobiele telefoon, e-mail, internet
+- COLUMN: 2
+- **Automatisering**
+- HINT: Kosten automatiseringsdiensten verricht door derden. In deze post ook opgeven de niet-geactiveerde aankopen van maatwerksoftware in verslagjaar en de kosten van nieuwe releases. Afdracht softwarelicenties hier niet opgeven, zie daarvoor 'Licenties e.d.'
+- COLUMN: 2
+- **Vrachtkosten op verkopen**
+- HINT: van uitbestede vrachten
+- VARIABLE: vrachtkosten
+- **waarvan doorberekend aan afnemers**
+- VARIABLE: doorberekend
+- SUBTRACT
+- **Saldo vrachtkosten op verkopen**
+- VALUE: {{vrachtkosten - doorberekend}}
+- EXCLUDE
+- COLUMN: 2
+- **Research & development**
+- HINT: Onderzoek & ontwikkeling verricht door derden
+- COLUMN: 2
+- **Andere diensten door derden**
+- HINT: Zoals bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking
+- COLUMN: 2
+- **Licenties e.d.**
+- HINT: Betreft afdracht van software- en andere licenties, zoals royalty's en auteursrechten
+- COLUMN: 2
+- **Beheerskosten**
+- HINT: Kosten diensten algemeen beheer in rekening gebracht door moeder-, dochter- en/of zusterondernemingen, waaronder management fees
+- COLUMN: 2
+- **Overige kostprijsverhogende belastingen**
+- HINT: ---
+  Zoals heffingen in het kader van EU-regelingen, administratieve heffingen van publiekrechtelijke bedrijfsorganisaties (PBO's), assurantiebelasting, beurs- en overdrachtsbelasting en niet eerder genoemde invoerrechten.
+
+NIET meetellen:
+
+- aan afnemers in rekening gebrachte belastingen, zoals accijnzen, BPM, afvalstoffenheffing (geïnd door stortplaatsexploitanten) en toeristenbelasting."
+
+---
+
+- COLUMN: 2
+- **Overige algemene kosten**
+- HINT: Alle overige kosten niet eerder genoemd, behalve afschrijvingen. Deze vermelden in de Resultatenrekening
+- COLUMN: 2
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
-  TOTAL: Total costs
+  TOTAL: Totaal overige bedrijfslasten
+  VARIABLE: totaal_overige_bedrijfslasten
 
-NAV: Welkom
+NAV: Resultatenrekening
+LEVEL: 1
 
-# **Welkom bij de vragenlijst**
+# **Resultatenrekening**
 
-Bedankt dat u de tijd neemt om deze vragenlijst in te vullen.
+Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
-## **Uw antwoorden opslaan**
+Q: **Bedrijfsopbrengsten**
 
-Uw antwoorden worden automatisch opgeslagen als u naar een volgende pagina gaat. Werkt u langere tijd op één pagina? Gebruik dan rechtsboven de knop 'Opslaan' om uw antwoorden te bewaren. Met de knop 'Opslaan en sluiten' rechtsboven kunt u het invullen van de vragenlijst onderbreken om op een later moment verder te gaan.
+- **Netto omzet**
+- HINT: Overgenomen van vraag 'Totaal netto omzet'
+- VALUE: {{totaal_netto_omzet}}
+- **Overige bedrijfsopbrengsten**
+- HINT: Overgenomen van vraag 'Totaal overige bedrijfsopbrengsten'
+- VALUE: {{totaal_overige_bedrijfsopbrengsten}}
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+  TOTAL: Bedrijfsopbrengsten totaal
+  VARIABLE: bedrijfsopbrengsten_totaal
 
-## **Belangrijk bij het verzenden**
+Q: **Bedrijfslasten**
 
-Aan het einde verschijnt een knop waarmee u de vragenlijst kunt verzenden.
-Met de knop 'Akkoord' of 'Akkoord en volgende' geeft u aan dat een pagina volledig is ingevuld.
-De vragenlijst kan verzonden worden als alles akkoord verklaard is.
-De vragenlijst is succesvol verzonden als de ontvangstbevestiging getoond wordt.
+- **Inkoopwaarde**
+- HINT: Overgenomen van vraag 'Totaal inkoopwaarde'
+- VALUE: {{totaal_inkoopwaarde}}
+- **Personele kosten**
+- HINT: Overgenomen van vraag 'Totaal personele kosten'
+- VALUE: {{totaal_personele_kosten}}
+- **Overige bedrijfslasten**
+- HINT: Overgenomen van vraag 'Totaal overige bedrijfslasten'
+- VALUE: {{totaal_overige_bedrijfslasten}}
+- **Afschrijvingen**
+- HINT: Op (im-)materiële vaste activa. Bijzondere waardevermeerderingen/-verminderingen van (im)materiële vaste activa opnemen bij 'Saldo bijzondere waardevermeerderingen/-verminderingen'
+- **Saldo boekwinsten / verliezen**
+- HINT: Bij verkoop / afstoot van (im)materiële vaste activa. Bij negatief saldo minteken (-) plaatsen in invulvakje
+- **Saldo bijzondere waardevermeerderingen / -verminderingen**
+- HINT: Bijzondere waardevermeerderingen/-verminderingen van (im)materiële vaste activa. Bij negatief saldo minteken (-) plaatsen in invulvakje
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+  TOTAL: Bedrijfslasten totaal
+  VARIABLE: bedrijfslasten_totaal
 
-## **Heeft u vragen?**
+Q:
 
-Klik op de 'Help'-knop rechtsboven voor algemene informatie of klik hier voor meer informatie over dit onderzoek.
-Staat uw antwoord hier niet bij? Dan kunt u uw vraag online stellen door het invullen van een webformulier, het correspondentienummer is: 1.
-Of bel ons op (045) 570 6400. Wij zijn bereikbaar van maandag tot en met vrijdag tussen 9.00 en 17.00 uur.
-Klik op 'Volgende' om verder te gaan met de vragenlijst.
+- **Bedrijfsresultaat**
+- VALUE: {{bedrijfsopbrengsten_totaal - bedrijfslasten_totaal}}
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
 
-NAV: IFRS
+Q:
 
-# **Externe verslaggeving (IFRS)**
+- **Vrijval van voorzieningen**
+- HINT: Via de V&W-rekening
+- **Dotaties voorzieningen**
+- HINT: Voorzover niet meegenomen in de post 'Bedrijfslasten totaal'
+- SUBTRACT
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+  TOTAL: Saldo voorzieningen
+  VARIABLE: saldo_voorzieningen
 
-Vanaf 2019 moeten beursgenoteerde bedrijven de IFRS-16-richtlijn volgen. Dit betekent dat ze verplicht zijn om de gebruiksrechten op operationele lease als bezitting op te nemen op de balans. Ook moeten ze de bijbehorende leaseverplichtingen als schuld opnemen.
+Q:
 
-Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
+- **Saldo financiële baten / lasten, resultaat uit deelnemingen**
+- HINT: Rentebaten, -lasten, baten / lasten uit deelnemingen, dividenden, winst / verlies op beleggingen en overige financiële baten en lasten. Bij negatief saldo minteken (-) plaatsen in invulvakje
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+  VARIABLE: saldo_financiele_baten
 
-- Ja
-- Nee
+Q:
 
-NAV: Verslagjaar
+- **Saldo uitzonderlijke baten / lasten**
+- HINT: Bij negatief saldo minteken (-) plaatsen in invulvakje
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+  VARIABLE: saldo_uitzonderlijke_baten
 
-# **Verslagjaar**
+Q:
 
-**Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
-Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
-
-Q: Begindatum
-NUMBER
-
-Q: Einddatum
-NUMBER
+- **Resultaat voor belastingen**
+- VALUE: {{bedrijfsopbrengsten_totaal - bedrijfslasten_totaal + saldo_voorzieningen + saldo_financiele_baten + saldo_uitzonderlijke_baten}}
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-

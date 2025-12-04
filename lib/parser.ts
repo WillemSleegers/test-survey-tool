@@ -110,6 +110,20 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
   }
 
+  // Check for structured keywords (when no buffer is active)
+  if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX", "BREAKDOWN"].includes(trimmed)) return "input_type"
+  if (trimmed.startsWith("VARIABLE:")) return "variable"
+  if (trimmed.startsWith("SHOW_IF:")) return "show_if"
+  if (trimmed.startsWith("TOTAL:")) return "total_label"
+  if (trimmed.startsWith("TOTAL_COLUMN:")) return "total_column"
+  if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
+  if (trimmed.startsWith("PREFIX:")) return "prefix"
+  if (trimmed.startsWith("SUFFIX:")) return "suffix"
+  if (trimmed.startsWith("COMPUTE:")) return "compute"
+  if (trimmed.startsWith("NAV:")) return "nav_item"
+  if (trimmed.startsWith("LEVEL:")) return "nav_level"
+  if (trimmed.startsWith("BLOCK:")) return "block"
+
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a matrix row (- Q: ...)
     if (trimmed.match(/^-\s*Q:/)) {
@@ -164,18 +178,6 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
     return state.currentQuestion ? "option" : "content"
   }
-  if (["TEXT", "ESSAY", "NUMBER", "CHECKBOX", "BREAKDOWN"].includes(trimmed)) return "input_type"
-  if (trimmed.startsWith("VARIABLE:")) return "variable"
-  if (trimmed.startsWith("SHOW_IF:")) return "show_if"
-  if (trimmed.startsWith("TOTAL:")) return "total_label"
-  if (trimmed.startsWith("TOTAL_COLUMN:")) return "total_column"
-  if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
-  if (trimmed.startsWith("PREFIX:")) return "prefix"
-  if (trimmed.startsWith("SUFFIX:")) return "suffix"
-  if (trimmed.startsWith("COMPUTE:")) return "compute"
-  if (trimmed.startsWith("NAV:")) return "nav_item"
-  if (trimmed.startsWith("LEVEL:")) return "nav_level"
-  if (trimmed.startsWith("BLOCK:")) return "block"
 
   return "content"
 }
@@ -821,20 +823,20 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
         ...state.currentSubquestion,
         subtext: isDelimiterMode ? "" : data.subtext,
       },
-      // Start collecting with delimiter marker if in delimiter mode
-      subtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.subtext],
+      // Only start buffer if in delimiter mode
+      subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
     }
   }
 
-  // Otherwise assign to the question itself (original behavior)
+  // Otherwise assign to the question itself
   return {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
       subtext: isDelimiterMode ? "" : data.subtext,
     },
-    // Start collecting with delimiter marker if in delimiter mode
-    subtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.subtext],
+    // Only start buffer if in delimiter mode
+    subtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
   }
 }
 
@@ -850,8 +852,8 @@ const handleTooltip = (state: ParserState, data: TooltipData): ParserState => {
       ...state.currentQuestion,
       tooltip: isDelimiterMode ? "" : data.tooltip,
     },
-    // Start collecting with delimiter marker if in delimiter mode
-    tooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : [data.tooltip],
+    // Only start buffer if in delimiter mode
+    tooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
   }
 }
 
