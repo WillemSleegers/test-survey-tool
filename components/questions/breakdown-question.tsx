@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import Markdown from "react-markdown"
+import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
@@ -101,6 +102,11 @@ export function BreakdownQuestion({
   const calculateSubtotal = (options: typeof question.options): number => {
     let total = 0
     for (const option of options) {
+      // Skip excluded options
+      if (option.exclude) {
+        continue
+      }
+
       const key = optionToKey(option.value)
       const numValue = parseFloat(currentValues[key] || "")
       if (!isNaN(numValue)) {
@@ -119,10 +125,31 @@ export function BreakdownQuestion({
   const calculateTotal = (): number => {
     let total = 0
 
+    // If totalColumn is specified, only sum values from that column
+    const targetColumn = question.totalColumn
+
     // Only sum values from main options
     for (const option of question.options) {
+      // Skip excluded options
+      if (option.exclude) {
+        continue
+      }
+
+      // Skip options not in the target column (if specified)
+      if (targetColumn !== undefined && option.column !== targetColumn) {
+        continue
+      }
+
       const key = optionToKey(option.value)
-      const numValue = parseFloat(currentValues[key] || "")
+
+      // Get value - either from user input or from calculated prefillValue
+      let valueStr = currentValues[key] || ""
+      if (!valueStr && option.prefillValue) {
+        // For read-only options with VALUE, calculate the value
+        valueStr = replacePlaceholders(option.prefillValue, variables, computedVariables)
+      }
+
+      const numValue = parseFloat(valueStr)
       if (!isNaN(numValue)) {
         // Subtract if the option has the subtract flag, otherwise add
         if (option.subtract) {
@@ -137,7 +164,7 @@ export function BreakdownQuestion({
   }
 
   const total = calculateTotal()
-  const totalLabel = question.totalLabel || "Total"
+  const totalLabel = question.totalLabel
   const prefix = question.prefix || ""
   const suffix = question.suffix || ""
 
@@ -148,11 +175,51 @@ export function BreakdownQuestion({
   // Check if any options have subquestions
   const hasSubquestions = question.options.some(opt => opt.subquestions && opt.subquestions.length > 0)
 
+  // Check if we're using columns
+  const hasColumns = question.options.some(opt => opt.column !== undefined)
+
+  // Group options by column if columns are used
+  const optionsByColumn = new Map<number, typeof question.options>()
+  if (hasColumns) {
+    question.options.forEach(option => {
+      const col = option.column ?? 1 // Default to column 1 if not specified
+      if (!optionsByColumn.has(col)) {
+        optionsByColumn.set(col, [])
+      }
+      optionsByColumn.get(col)!.push(option)
+    })
+  }
+
+  // State for tracking which option tooltips are visible
+  const [visibleTooltips, setVisibleTooltips] = useState<Set<string>>(new Set())
+
+  const toggleTooltip = (optionValue: string) => {
+    setVisibleTooltips(prev => {
+      const next = new Set(prev)
+      if (next.has(optionValue)) {
+        next.delete(optionValue)
+      } else {
+        next.add(optionValue)
+      }
+      return next
+    })
+  }
+
   // Render a single option as table rows (main row + optional subquestion rows)
   const renderOptionRows = (option: typeof question.options[0], index: number) => {
     const key = optionToKey(option.value)
-    const value = currentValues[key] || ""
+
+    // Determine if this option is read-only (has prefillValue)
+    const isReadOnly = !!option.prefillValue
+
+    // Use prefillValue if present (replaces placeholders on every render)
+    let value = currentValues[key] || ""
+    if (isReadOnly) {
+      value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+    }
+
     const optionHasSubquestions = option.subquestions && option.subquestions.length > 0
+    const isTooltipVisible = visibleTooltips.has(option.value)
 
     return (
       <React.Fragment key={option.value}>
@@ -160,27 +227,52 @@ export function BreakdownQuestion({
         <TableRow>
           <TableCell className="align-middle whitespace-normal">
             <div>
-              <div className="text-base">
-                <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
-              </div>
-              {option.hint && (
-                <div className="text-base text-muted-foreground mt-0.5">
-                  <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+              <div className="flex items-start gap-1">
+                {option.tooltip && (
+                  <button
+                    type="button"
+                    onClick={() => toggleTooltip(option.value)}
+                    className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                    aria-label="Toggle additional information"
+                  >
+                    <Info className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                )}
+                <div className="flex-1">
+                  <div className="text-base">
+                    <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                  </div>
+                  {option.hint && (
+                    <div className="text-base text-muted-foreground mt-0.5">
+                      <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                    </div>
+                  )}
+                  {option.tooltip && isTooltipVisible && (
+                    <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
+                      <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </TableCell>
           <TableCell className="text-right align-middle">
             <div className="flex items-center justify-end gap-1">
               {prefix && <span className="text-muted-foreground">{prefix}</span>}
-              <Input
-                id={`${question.id}-${key}`}
-                type="number"
-                value={value}
-                onChange={(e) => handleRowChange(option.value, e.target.value)}
-                className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                tabIndex={startTabIndex + index}
-              />
+              {isReadOnly ? (
+                <div className="w-24 text-right py-2 font-medium">
+                  {value}
+                </div>
+              ) : (
+                <Input
+                  id={`${question.id}-${key}`}
+                  type="number"
+                  value={value}
+                  onChange={(e) => handleRowChange(option.value, e.target.value)}
+                  className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  tabIndex={startTabIndex + index}
+                />
+              )}
               {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
             </div>
           </TableCell>
@@ -220,10 +312,119 @@ export function BreakdownQuestion({
     )
   }
 
+  // Render column-based layout - label in first column, inputs in different columns
+  const renderColumnLayout = () => {
+    // Get sorted column numbers to determine number of value columns
+    const columnNumbers = Array.from(optionsByColumn.keys()).sort((a, b) => a - b)
+    const numColumns = columnNumbers.length
+
+    return (
+      <div className="space-y-2">
+        <Table>
+          <TableBody>
+            {/* Render each option as a row */}
+            {question.options.map((option, index) => {
+              const key = optionToKey(option.value)
+              const isReadOnly = !!option.prefillValue
+              let value = currentValues[key] || ""
+              if (isReadOnly) {
+                value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+              }
+              const isTooltipVisible = visibleTooltips.has(option.value)
+              const optionColumn = option.column ?? 1
+
+              return (
+                <TableRow key={option.value}>
+                  {/* Label column (always shown) */}
+                  <TableCell className="align-middle whitespace-normal">
+                    <div>
+                      <div className="flex items-start gap-1">
+                        {option.tooltip && (
+                          <button
+                            type="button"
+                            onClick={() => toggleTooltip(option.value)}
+                            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                            aria-label="Toggle additional information"
+                          >
+                            <Info className="w-5 h-5 text-muted-foreground" />
+                          </button>
+                        )}
+                        <div className="flex-1">
+                          <div className="text-base">
+                            <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                          </div>
+                          {option.hint && (
+                            <div className="text-base text-muted-foreground mt-0.5">
+                              <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                            </div>
+                          )}
+                          {option.tooltip && isTooltipVisible && (
+                            <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
+                              <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* Value columns - render empty cells for non-matching columns */}
+                  {columnNumbers.map(colNum => (
+                    <TableCell key={colNum} className="text-right align-middle">
+                      {optionColumn === colNum ? (
+                        <div className="flex items-center justify-end gap-1">
+                          {prefix && <span className="text-muted-foreground">{prefix}</span>}
+                          {isReadOnly ? (
+                            <div className="w-24 text-right py-2 font-medium">
+                              {value}
+                            </div>
+                          ) : (
+                            <Input
+                              id={`${question.id}-${key}`}
+                              type="number"
+                              value={value}
+                              onChange={(e) => handleRowChange(option.value, e.target.value)}
+                              className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                              tabIndex={startTabIndex + index}
+                            />
+                          )}
+                          {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )
+            })}
+
+            {/* Total row */}
+            {totalLabel && (
+              <TableRow className="font-semibold border-t border-border">
+                <TableCell className="text-base pt-4">
+                  {replacePlaceholders(totalLabel, variables, computedVariables)}
+                </TableCell>
+                {columnNumbers.map((colNum, idx) => (
+                  <TableCell key={colNum} className="text-right pt-4 py-2">
+                    {/* Only show total in the last column or the totalColumn if specified */}
+                    {(question.totalColumn === colNum || (!question.totalColumn && idx === columnNumbers.length - 1)) ? (
+                      <>{prefix}{total}{suffix}</>
+                    ) : null}
+                  </TableCell>
+                ))}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
   return (
     <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
       <div className="space-y-2">
-        {hasGroups ? (
+        {hasColumns ? (
+          renderColumnLayout()
+        ) : hasGroups ? (
           <div className="space-y-4">
             {question.optionGroups!.map((group, groupIndex) => {
               const subtotal = calculateSubtotal(group.options)
@@ -263,6 +464,23 @@ export function BreakdownQuestion({
                 </div>
               )
             })}
+
+            {/* Total row after all groups */}
+            {totalLabel && (
+              <Table>
+                <TableBody>
+                  <TableRow className="font-semibold border-t border-border">
+                    <TableCell className="text-base pt-4">
+                      {replacePlaceholders(totalLabel, variables, computedVariables)}
+                    </TableCell>
+                    <TableCell className="text-right pt-4 py-2">
+                      {prefix}{total}{suffix}
+                    </TableCell>
+                    {hasSubquestions && <TableCell />}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
           </div>
         ) : (
           <Table>
@@ -270,15 +488,17 @@ export function BreakdownQuestion({
               {question.options.map((option, index) => renderOptionRows(option, index))}
 
               {/* Total row */}
-              <TableRow className="font-semibold border-t border-border">
-                <TableCell className="text-base pt-4">
-                  {replacePlaceholders(totalLabel, variables, computedVariables)}
-                </TableCell>
-                <TableCell className="text-right pt-4 py-2">
-                  {prefix}{total}{suffix}
-                </TableCell>
-                {hasSubquestions && <TableCell />}
-              </TableRow>
+              {totalLabel && (
+                <TableRow className="font-semibold border-t border-border">
+                  <TableCell className="text-base pt-4">
+                    {replacePlaceholders(totalLabel, variables, computedVariables)}
+                  </TableCell>
+                  <TableCell className="text-right pt-4 py-2">
+                    {prefix}{total}{suffix}
+                  </TableCell>
+                  {hasSubquestions && <TableCell />}
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         )}

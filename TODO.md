@@ -9,6 +9,17 @@
   - ✅ Complex multi-line content with lists requires `---` opening and closing delimiters
   - ✅ Works for all contexts: question-level, option-level, and subquestion-level tooltips/hints
   - ✅ Backward compatible with single-line tooltips/hints
+- [x] Implement COLUMN/EXCLUDE keywords for breakdown questions
+  - ✅ Added `COLUMN:` keyword to organize breakdown options into multiple value columns
+  - ✅ Added `TOTAL_COLUMN:` to specify which column values contribute to total
+  - ✅ Added option-level `VARIABLE:` to store individual option values
+  - ✅ Added `VALUE:` for calculated read-only option values
+  - ✅ Added `EXCLUDE` keyword to display options without including in totals
+  - ✅ All calculation functions respect exclude flag (calculateTotal, calculateSubtotal, calculateBreakdownTotal)
+- [ ] Add BREAKDOWN documentation to text-format-guide.tsx
+  - Currently missing from user-facing documentation
+  - Should document: BREAKDOWN, COLUMN, TOTAL_COLUMN, VALUE, VARIABLE (option-level), EXCLUDE, SUBTRACT
+  - Belongs in "Intermediate" section (requires understanding tables and variables)
 - [ ] Fix forward slashes in question options causing variable comparison issues
   - Forward slashes in option text break conditional logic when comparing variables to option values
   - Need to investigate escaping or normalization in condition evaluation
@@ -49,7 +60,30 @@
 
 ## Ideas to Explore
 
+- [ ] Refactor Question type to use discriminated unions
+  - Current single Question type has many optional fields that don't apply to all question types
+  - Using discriminated unions would provide better type safety and autocomplete
+  - Each question type (MultipleChoiceQuestion, BreakdownQuestion, MatrixQuestion, etc.) would have only relevant fields
+  - TypeScript could enforce requirements (e.g., breakdown must have options, matrix must have subquestions)
+  - Would require refactoring parser and components but improve developer experience
+  - **Recommendation**: Wait until text format stabilizes before attempting this large refactor
+- [ ] Add validation for incompatible feature combinations
+  - Warn if breakdown option has both `prefillValue` (VALUE) and no `exclude` flag when in `totalColumn`
+  - Warn if `COLUMN` used without `BREAKDOWN`
+  - Warn if `TOTAL_COLUMN` references non-existent column number
+  - Would help catch user errors early
+- [ ] Extract shared calculation logic
+  - Both `breakdown-question.tsx` and `use-questionnaire-responses.ts` have similar `calculateBreakdownTotal` logic
+  - Could extract to shared utility function in `lib/breakdown-calculations.ts`
+  - Low priority - current duplication is minimal and contexts slightly differ
+- [ ] Add example questionnaires for documentation
+  - Create `docs/examples/breakdown-with-columns.md` showing COLUMN/EXCLUDE usage
+  - Create `docs/examples/conditional-logic-advanced.md` for complex SHOW_IF patterns
+  - Would help users learn features through working examples
 - [ ] Enhanced variable validation
+  - Validate variable names follow consistent naming convention
+  - Check for variable shadowing (same name used in different scopes)
+  - Warn about unused variables
 - [ ] Mobile-first responsive design review
 - [ ] Simplify lazy vs eager computed variable evaluation
   - Consider consolidating dual evaluation paths for computed variables

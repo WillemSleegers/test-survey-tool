@@ -38,6 +38,7 @@ export type Question = {
   variable?: string
   showIf?: string
   totalLabel?: string
+  totalColumn?: number
   prefix?: string
   suffix?: string
 }
@@ -63,6 +64,10 @@ export type Option = {
   allowsOtherText?: boolean
   subquestions?: Subquestion[]
   subtract?: boolean
+  prefillValue?: string
+  variable?: string
+  column?: number
+  exclude?: boolean
 }
 
 export type OptionGroup = {
@@ -127,9 +132,12 @@ export type SubquestionData = { id: string; text: string }
 export type SubquestionSubtractData = { subtract: true }
 export type SubquestionValueData = { value: string }
 export type TotalLabelData = { totalLabel: string }
+export type TotalColumnData = { totalColumn: number }
 export type SubtotalLabelData = { subtotalLabel: string }
 export type PrefixData = { prefix: string }
 export type SuffixData = { suffix: string }
+export type ColumnData = { column: number }
+export type OptionExcludeData = { exclude: true }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
@@ -142,6 +150,10 @@ export type ParsedLine =
   | { type: "option_subtract"; raw: string; data: OptionSubtractData }
   | { type: "option_hint"; raw: string; data: SubtextData }
   | { type: "option_tooltip"; raw: string; data: TooltipData }
+  | { type: "option_value"; raw: string; data: SubquestionValueData }
+  | { type: "option_variable"; raw: string; data: VariableData }
+  | { type: "option_column"; raw: string; data: ColumnData }
+  | { type: "option_exclude"; raw: string; data: OptionExcludeData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }
@@ -151,6 +163,7 @@ export type ParsedLine =
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
   | { type: "total_label"; raw: string; data: TotalLabelData }
+  | { type: "total_column"; raw: string; data: TotalColumnData }
   | { type: "subtotal_label"; raw: string; data: SubtotalLabelData }
   | { type: "prefix"; raw: string; data: PrefixData }
   | { type: "suffix"; raw: string; data: SuffixData }

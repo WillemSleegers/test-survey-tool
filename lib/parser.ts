@@ -19,9 +19,12 @@ import {
   VariableData,
   ShowIfData,
   TotalLabelData,
+  TotalColumnData,
   SubtotalLabelData,
   PrefixData,
   SuffixData,
+  ColumnData,
+  OptionExcludeData,
   ContentData,
   ComputeData,
   BlockData,
@@ -132,7 +135,24 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     }
     // Check if this is a subquestion value (- VALUE: ...)
     if (trimmed.match(/^-\s*VALUE:/)) {
-      return state.currentSubquestion ? "subquestion_value" : "content"
+      if (state.currentSubquestion) return "subquestion_value"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_value"
+      return "content"
+    }
+    // Check if this is an option variable (- VARIABLE: ...)
+    if (trimmed.match(/^-\s*VARIABLE:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_variable"
+      return "content"
+    }
+    // Check if this is an option column (- COLUMN: ...)
+    if (trimmed.match(/^-\s*COLUMN:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_column"
+      return "content"
+    }
+    // Check if this is an exclude flag (- EXCLUDE)
+    if (trimmed.match(/^-\s*EXCLUDE\s*$/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_exclude"
+      return "content"
     }
     // Check if this is a conditional option modifier
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
@@ -148,6 +168,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("TOTAL:")) return "total_label"
+  if (trimmed.startsWith("TOTAL_COLUMN:")) return "total_column"
   if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
   if (trimmed.startsWith("PREFIX:")) return "prefix"
   if (trimmed.startsWith("SUFFIX:")) return "suffix"
@@ -289,6 +310,18 @@ const parseTotalLabel = (line: string): TotalLabelData => {
   return { totalLabel }
 }
 
+const parseTotalColumn = (line: string): TotalColumnData => {
+  const trimmed = line.trim()
+  const columnStr = trimmed.substring(13).trim() // Remove "TOTAL_COLUMN:" prefix
+  const totalColumn = parseInt(columnStr, 10)
+
+  if (isNaN(totalColumn) || totalColumn < 1) {
+    throw new Error(`Invalid TOTAL_COLUMN syntax: ${line}. Expected a positive number (1, 2, etc.)`)
+  }
+
+  return { totalColumn }
+}
+
 const parseSubtotalLabel = (line: string): SubtotalLabelData => {
   const trimmed = line.trim()
   const subtotalLabel = trimmed.substring(9).trim() // Remove "SUBTOTAL:" prefix
@@ -322,10 +355,39 @@ const parseOptionSubtract = (): OptionSubtractData => ({
   subtract: true,
 })
 
+const parseOptionExclude = (): OptionExcludeData => ({
+  exclude: true,
+})
+
 const parseOptionHint = (line: string): SubtextData => {
   const trimmed = line.trim()
   const match = trimmed.match(/^-\s*HINT:\s*(.*)/)
   return { subtext: match ? match[1] : "" }
+}
+
+const parseOptionValue = (line: string): SubquestionValueData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*VALUE:\s*(.*)/)
+  return { value: match ? match[1] : "" }
+}
+
+const parseOptionVariable = (line: string): VariableData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*VARIABLE:\s*(.*)/)
+  return { variable: match ? match[1] : "" }
+}
+
+const parseOptionColumn = (line: string): ColumnData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*COLUMN:\s*(.*)/)
+  const columnStr = match ? match[1] : ""
+  const column = parseInt(columnStr, 10)
+
+  if (isNaN(column) || column < 1) {
+    throw new Error(`Invalid COLUMN syntax: ${line}. Expected a positive number (1, 2, etc.)`)
+  }
+
+  return { column }
 }
 
 const parseOptionTooltip = (line: string): TooltipData => {
@@ -407,6 +469,14 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionHint(line) }
     case "option_tooltip":
       return { type, raw: line, data: parseOptionTooltip(line) }
+    case "option_value":
+      return { type, raw: line, data: parseOptionValue(line) }
+    case "option_variable":
+      return { type, raw: line, data: parseOptionVariable(line) }
+    case "option_column":
+      return { type, raw: line, data: parseOptionColumn(line) }
+    case "option_exclude":
+      return { type, raw: line, data: parseOptionExclude() }
     case "subquestion_hint":
       return { type, raw: line, data: parseSubquestionHint(line) }
     case "subquestion_tooltip":
@@ -425,6 +495,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseShowIf(line) }
     case "total_label":
       return { type, raw: line, data: parseTotalLabel(line) }
+    case "total_column":
+      return { type, raw: line, data: parseTotalColumn(line) }
     case "subtotal_label":
       return { type, raw: line, data: parseSubtotalLabel(line) }
     case "prefix":
@@ -1058,6 +1130,25 @@ const handleOptionTooltip = (state: ParserState, data: TooltipData): ParserState
   }
 }
 
+const handleOptionValue = (state: ParserState, data: SubquestionValueData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    prefillValue: data.value
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
 const handleOptionOtherText = (state: ParserState, data: OptionOtherTextData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
@@ -1087,6 +1178,66 @@ const handleOptionSubtract = (state: ParserState, data: OptionSubtractData): Par
   updatedOptions[lastOptionIndex] = {
     ...updatedOptions[lastOptionIndex],
     subtract: data.subtract
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionExclude = (state: ParserState, data: OptionExcludeData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the exclude flag to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    exclude: data.exclude
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionVariable = (state: ParserState, data: VariableData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the variable to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    variable: data.variable
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionColumn = (state: ParserState, data: ColumnData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the column to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    column: data.column
   }
 
   return {
@@ -1325,6 +1476,18 @@ const handleTotalLabel = (state: ParserState, data: TotalLabelData): ParserState
     currentQuestion: {
       ...state.currentQuestion,
       totalLabel: data.totalLabel,
+    },
+  }
+}
+
+const handleTotalColumn = (state: ParserState, data: TotalColumnData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      totalColumn: data.totalColumn,
     },
   }
 }
@@ -1820,6 +1983,14 @@ const reduceParsedLine = (
       return handleOptionHint(state, parsedLine.data)
     case "option_tooltip":
       return handleOptionTooltip(state, parsedLine.data)
+    case "option_value":
+      return handleOptionValue(state, parsedLine.data)
+    case "option_variable":
+      return handleOptionVariable(state, parsedLine.data)
+    case "option_column":
+      return handleOptionColumn(state, parsedLine.data)
+    case "option_exclude":
+      return handleOptionExclude(state, parsedLine.data)
     case "subquestion_hint":
       return handleSubquestionHint(state, parsedLine.data)
     case "subquestion_tooltip":
@@ -1838,6 +2009,8 @@ const reduceParsedLine = (
       return handleShowIf(state, parsedLine.data)
     case "total_label":
       return handleTotalLabel(state, parsedLine.data)
+    case "total_column":
+      return handleTotalColumn(state, parsedLine.data)
     case "subtotal_label":
       return handleSubtotalLabel(state, parsedLine.data)
     case "prefix":
