@@ -224,8 +224,8 @@ export function BreakdownQuestion({
     return (
       <React.Fragment key={option.value}>
         {/* Main option row */}
-        <TableRow>
-          <TableCell className="align-middle whitespace-normal">
+        <TableRow className="hover:bg-transparent">
+          <TableCell className="align-middle whitespace-normal pl-0">
             <div>
               <div className="flex items-start gap-1">
                 {option.tooltip && (
@@ -248,7 +248,7 @@ export function BreakdownQuestion({
                     </div>
                   )}
                   {option.tooltip && isTooltipVisible && (
-                    <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
+                    <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
                       <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                     </div>
                   )}
@@ -257,13 +257,13 @@ export function BreakdownQuestion({
             </div>
           </TableCell>
           <TableCell className="text-right align-middle">
-            <div className="flex items-center justify-end gap-1">
-              {prefix && <span className="text-muted-foreground">{prefix}</span>}
-              {isReadOnly ? (
-                <div className="w-24 text-right py-2 font-medium">
-                  {value}
-                </div>
-              ) : (
+            {isReadOnly ? (
+              <div className="flex items-center justify-end text-muted-foreground">
+                {prefix}{value}{suffix}
+              </div>
+            ) : (
+              <div className="flex items-center justify-end gap-1">
+                {prefix && <span className="text-muted-foreground">{prefix}</span>}
                 <Input
                   id={`${question.id}-${key}`}
                   type="number"
@@ -272,9 +272,9 @@ export function BreakdownQuestion({
                   className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                   tabIndex={startTabIndex + index}
                 />
-              )}
-              {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
-            </div>
+                {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
+              </div>
+            )}
           </TableCell>
           {hasSubquestions && <TableCell className="text-right align-middle" />}
         </TableRow>
@@ -285,8 +285,8 @@ export function BreakdownQuestion({
           const sqValue = currentValues[sqKey] || ""
 
           return (
-            <TableRow key={subquestion.id}>
-              <TableCell className="align-middle whitespace-normal pl-8">
+            <TableRow key={subquestion.id} className="hover:bg-transparent">
+              <TableCell className="align-middle whitespace-normal pl-6">
                 <div className="text-base">
                   <Markdown>{replacePlaceholders(subquestion.text, variables, computedVariables)}</Markdown>
                 </div>
@@ -334,9 +334,9 @@ export function BreakdownQuestion({
               const optionColumn = option.column ?? 1
 
               return (
-                <TableRow key={option.value}>
+                <TableRow key={option.value} className="hover:bg-transparent">
                   {/* Label column (always shown) */}
-                  <TableCell className="align-middle whitespace-normal">
+                  <TableCell className="align-middle whitespace-normal pl-0">
                     <div>
                       <div className="flex items-start gap-1">
                         {option.tooltip && (
@@ -372,13 +372,13 @@ export function BreakdownQuestion({
                   {columnNumbers.map(colNum => (
                     <TableCell key={colNum} className="text-right align-middle">
                       {optionColumn === colNum ? (
-                        <div className="flex items-center justify-end gap-1">
-                          {prefix && <span className="text-muted-foreground">{prefix}</span>}
-                          {isReadOnly ? (
-                            <div className="w-24 text-right py-2 font-medium">
-                              {value}
-                            </div>
-                          ) : (
+                        isReadOnly ? (
+                          <div className="flex items-center justify-end text-muted-foreground">
+                            {prefix}{value}{suffix}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1">
+                            {prefix && <span className="text-muted-foreground">{prefix}</span>}
                             <Input
                               id={`${question.id}-${key}`}
                               type="number"
@@ -387,9 +387,9 @@ export function BreakdownQuestion({
                               className="w-24 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                               tabIndex={startTabIndex + index}
                             />
-                          )}
-                          {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
-                        </div>
+                            {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
+                          </div>
+                        )
                       ) : null}
                     </TableCell>
                   ))}
@@ -400,7 +400,7 @@ export function BreakdownQuestion({
             {/* Total row */}
             {totalLabel && (
               <TableRow className="font-semibold border-t border-border">
-                <TableCell className="text-base pt-4">
+                <TableCell className="text-base pt-4 pl-0">
                   {replacePlaceholders(totalLabel, variables, computedVariables)}
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
@@ -443,8 +443,8 @@ export function BreakdownQuestion({
 
                       {/* Subtotal row */}
                       {group.subtotalLabel && (
-                        <TableRow className="font-medium">
-                          <TableCell className="text-base">
+                        <TableRow className="font-medium hover:bg-transparent">
+                          <TableCell className="text-base pl-0">
                             {replacePlaceholders(group.subtotalLabel, variables, computedVariables)}
                           </TableCell>
                           <TableCell className="text-right">
@@ -470,7 +470,7 @@ export function BreakdownQuestion({
               <Table>
                 <TableBody>
                   <TableRow className="font-semibold border-t border-border">
-                    <TableCell className="text-base pt-4">
+                    <TableCell className="text-base pt-4 pl-0">
                       {replacePlaceholders(totalLabel, variables, computedVariables)}
                     </TableCell>
                     <TableCell className="text-right pt-4 py-2">
@@ -490,7 +490,7 @@ export function BreakdownQuestion({
               {/* Total row */}
               {totalLabel && (
                 <TableRow className="font-semibold border-t border-border">
-                  <TableCell className="text-base pt-4">
+                  <TableCell className="text-base pt-4 pl-0">
                     {replacePlaceholders(totalLabel, variables, computedVariables)}
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">

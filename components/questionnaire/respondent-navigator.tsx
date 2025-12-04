@@ -205,7 +205,7 @@ export function RespondentNavigator({
                   >
                     {/* Item title */}
                     <div className="flex-1 min-w-0">
-                      <div className="truncate">
+                      <div className="wrap-break-word">
                         {item.name
                           ? cleanTitle(item.name)
                           : `Section ${index + 1}`}
@@ -250,7 +250,7 @@ export function RespondentNavigator({
                             }}
                           >
                             {/* Child title */}
-                            <div className="flex-1 min-w-0 truncate">
+                            <div className="flex-1 min-w-0 wrap-break-word">
                               {child.name
                                 ? cleanTitle(child.name)
                                 : `Subsection ${childIdx + 1}`}

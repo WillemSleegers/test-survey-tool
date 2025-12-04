@@ -217,11 +217,11 @@ export function PageNavigator({
 
                           {/* Block info */}
                           <div className="flex-1 min-w-0">
-                            <div className="truncate font-medium">
+                            <div className="font-medium wrap-break-word">
                               {cleanTitle(block.name)}
                             </div>
                             {block.showIf && (
-                              <div className="text-xs text-muted-foreground truncate">
+                              <div className="text-xs text-muted-foreground wrap-break-word">
                                 SHOW_IF: {block.showIf}
                               </div>
                             )}
@@ -276,11 +276,11 @@ export function PageNavigator({
 
                             {/* Page info */}
                             <div className="flex-1 min-w-0">
-                              <div className="truncate font-medium">
+                              <div className="font-medium wrap-break-word">
                                 {page.title ? `Page ${globalPageIndex + 1}: ${cleanTitle(page.title)}` : `Page ${globalPageIndex + 1}`}
                               </div>
                               {page.showIf && (
-                                <div className="text-xs text-muted-foreground truncate">
+                                <div className="text-xs text-muted-foreground wrap-break-word">
                                   SHOW_IF: {page.showIf}
                                 </div>
                               )}

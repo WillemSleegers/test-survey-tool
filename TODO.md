@@ -34,11 +34,14 @@
 
 ## Medium Priority
 
-- [ ] Simplify BREAKDOWN syntax to remove `- Q:` prefix requirement
-  - Currently BREAKDOWN supports both `- Option` and `- Q: Option` syntax
-  - The `- Q:` syntax was added for compatibility but creates confusion
-  - Should standardize on simple `- Option` syntax for BREAKDOWN questions
-  - Update PS-industrie.md to use simpler syntax once decided
+- [ ] Remove subquestions feature from BREAKDOWN questions
+  - Currently BREAKDOWN supports subquestions with `- Q:` syntax for hierarchical breakdowns
+  - This feature is unnecessary - flat options with descriptive labels work better
+  - Subquestions add complexity (3-column layout) and confusion
+  - The `- Q:` syntax was added for compatibility but creates ambiguity
+  - Should remove this feature entirely and standardize on flat `- Option` syntax
+  - Use descriptive labels like "Energiekosten: Waarvan aardgas" instead of parent-child structure
+  - Simpler to understand and maintain, consistent with other BREAKDOWN questions
 - [x] Clean up legacy mainQuestions array
   - ✅ Removed always-empty `mainQuestions` array from `hooks/use-visible-pages.ts:46`
   - ✅ Updated `VisiblePageContent` type to remove mainQuestions
