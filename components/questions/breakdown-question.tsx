@@ -395,7 +395,7 @@ export function BreakdownQuestion({
 
             {/* Total row */}
             {totalLabel && (
-              <TableRow className="font-semibold border-t border-border">
+              <TableRow className="font-bold border-t border-border">
                 <TableCell className="text-base pt-4 pl-0">
                   {replacePlaceholders(totalLabel, variables, computedVariables)}
                 </TableCell>
