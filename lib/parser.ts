@@ -1451,8 +1451,9 @@ const handleInputType = (
 
   const questionType = isMatrixQuestion ? "matrix" : data.type
 
-  // Valid input types for matrix questions (excludes matrix and breakdown)
-  const validInputTypes: Question["inputType"][] = ["multiple_choice", "checkbox", "text", "essay", "number"]
+  // Valid input types for matrix questions (excludes matrix, breakdown, and number)
+  // Note: NUMBER is not supported for matrix questions - use BREAKDOWN instead
+  const validInputTypes: Question["inputType"][] = ["multiple_choice", "checkbox", "text", "essay"]
   const isValidInputType = (type: Question["type"]): type is NonNullable<Question["inputType"]> => {
     return validInputTypes.includes(type as Question["inputType"])
   }

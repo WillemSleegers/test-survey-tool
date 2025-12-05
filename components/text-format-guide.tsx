@@ -216,18 +216,8 @@ export function TextFormatGuide() {
                 <li>Multiple <code>- Q:</code> lines create multiple rows sharing the same options</li>
                 <li>Regular <code>- Option</code> lines after matrix rows become shared response options</li>
                 <li>Can be used with CHECKBOX for multiple selections per row</li>
-                <li>Can be used with NUMBER for numeric input fields</li>
                 <li>Creates a table layout where each row is a separate question</li>
-              </ul>
-            </li>
-            <li>
-              <code>TOTAL_LABEL: label text</code>
-              <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
-                <li>Displays column totals for numeric matrix questions</li>
-                <li>Only works with matrix questions using NUMBER type</li>
-                <li>Adds a row at the bottom summing each column with custom label</li>
-                <li>Should be placed after the NUMBER keyword</li>
-                <li>Example: <code>TOTAL_LABEL: Total Hours</code></li>
+                <li>Note: For numeric grids with totals, use BREAKDOWN questions instead</li>
               </ul>
             </li>
           </ul>

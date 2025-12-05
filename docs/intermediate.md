@@ -53,12 +53,12 @@ Q: How would you rate each aspect of the survey tool?
 Q: How many hours per month do you spend using different features?
 HINT: Enter estimated hours for each feature
 
-- Q: Creating surveys
-- Q: Testing surveys
-- Q: Analyzing results
-- Hours
-  NUMBER
-  TOTAL_LABEL: Total Hours
+- Creating surveys
+- Testing surveys
+- Analyzing results
+  BREAKDOWN
+  TOTAL: Total Hours
+  SUFFIX:  hrs
 
 #
 
