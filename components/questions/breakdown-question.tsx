@@ -260,10 +260,38 @@ export function BreakdownQuestion({
         subtotal = calculateSubtotal(optionsToSum)
       }
 
+      const isTooltipVisible = visibleTooltips.has(option.value)
+
       return (
         <TableRow key={option.value} className="font-bold hover:bg-transparent">
           <TableCell className="text-base pl-0">
-            <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+            <div className="relative">
+              {option.tooltip && (
+                <button
+                  type="button"
+                  onClick={() => toggleTooltip(option.value)}
+                  className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                  aria-label="Toggle additional information"
+                >
+                  <Info className="w-5 h-5 text-muted-foreground" />
+                </button>
+              )}
+              <div>
+                <div className="text-base">
+                  <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                </div>
+                {option.hint && (
+                  <div className="text-base text-muted-foreground mt-0.5">
+                    <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                  </div>
+                )}
+                {option.tooltip && isTooltipVisible && (
+                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                    <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                  </div>
+                )}
+              </div>
+            </div>
           </TableCell>
           <TableCell className="text-right py-1">
             {prefix}{subtotal}{suffix}
@@ -432,11 +460,38 @@ export function BreakdownQuestion({
 
                 // Determine which column to show the subtotal in - use option.column if specified, otherwise last column
                 const subtotalCol = option.column ?? columnNumbers[columnNumbers.length - 1]
+                const isTooltipVisible = visibleTooltips.has(option.value)
 
                 return (
                   <TableRow key={option.value} className="font-bold hover:bg-transparent">
                     <TableCell className="text-base pl-0">
-                      <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                      <div className="relative">
+                        {option.tooltip && (
+                          <button
+                            type="button"
+                            onClick={() => toggleTooltip(option.value)}
+                            className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                            aria-label="Toggle additional information"
+                          >
+                            <Info className="w-5 h-5 text-muted-foreground" />
+                          </button>
+                        )}
+                        <div>
+                          <div className="text-base">
+                            <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                          </div>
+                          {option.hint && (
+                            <div className="text-base text-muted-foreground mt-0.5">
+                              <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                            </div>
+                          )}
+                          {option.tooltip && isTooltipVisible && (
+                            <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                              <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
                     {columnNumbers.map((colNum) => (
                       <TableCell key={colNum} className="text-right py-1">
