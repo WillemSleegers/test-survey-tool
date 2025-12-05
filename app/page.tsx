@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { FileUpload } from "@/components/file-upload"
+import { TextEditor } from "@/components/text-editor"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { TextFormatGuide } from "@/components/text-format-guide"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
@@ -26,6 +27,7 @@ const QuestionnaireApp = () => {
   const [questionnaire, setQuestionnaire] = useState<ParsedQuestionnaire | null>(null)
   const [error, setError] = useState<string>("")
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
+  const [showTextEditor, setShowTextEditor] = useState<boolean>(false)
   const { isVisible: isNavVisible } = useNavigation()
 
   const handleFileLoaded = (content: string) => {
@@ -58,6 +60,17 @@ const QuestionnaireApp = () => {
     setQuestionnaire(null)
     setError("")
     setIsPreviewMode(false)
+    setShowTextEditor(false)
+  }
+
+  const handleTextEditorLoad = (content: string) => {
+    handleFileLoaded(content)
+    setShowTextEditor(false)
+  }
+
+  const handleTextEditorCancel = () => {
+    setShowTextEditor(false)
+    setError("")
   }
 
   if (isPreviewMode && questionnaire) {
@@ -80,19 +93,31 @@ const QuestionnaireApp = () => {
 
       {/* Main Content */}
       <div className="space-y-8">
-        <FileUpload onFileLoaded={handleFileLoaded} onError={setError} />
+        {showTextEditor ? (
+          <TextEditor
+            onLoadContent={handleTextEditorLoad}
+            onCancel={handleTextEditorCancel}
+          />
+        ) : (
+          <>
+            <FileUpload onFileLoaded={handleFileLoaded} onError={setError} />
 
-        <div className="flex items-center gap-4">
-          <div className="flex-1 border-t border-border"></div>
-          <span className="text-muted-foreground text-sm">OR</span>
-          <div className="flex-1 border-t border-border"></div>
-        </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 border-t border-border"></div>
+              <span className="text-muted-foreground text-sm">OR</span>
+              <div className="flex-1 border-t border-border"></div>
+            </div>
 
-        <div className="space-y-4 flex justify-center">
-          <Button onClick={loadSample} variant="outline">
-            Load Sample Survey
-          </Button>
-        </div>
+            <div className="space-y-4 flex justify-center gap-2">
+              <Button onClick={() => setShowTextEditor(true)} variant="outline">
+                Draft Survey
+              </Button>
+              <Button onClick={loadSample} variant="outline">
+                Load Sample Survey
+              </Button>
+            </div>
+          </>
+        )}
 
         {error && (
           <Alert variant="destructive">
