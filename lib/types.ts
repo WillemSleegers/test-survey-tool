@@ -32,7 +32,6 @@ export type Question = {
   tooltip?: string
   type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "breakdown"
   options: Option[]
-  optionGroups?: OptionGroup[]
   subquestions?: Subquestion[]
   inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
   variable?: string
@@ -68,14 +67,11 @@ export type Option = {
   variable?: string
   column?: number
   exclude?: boolean
-}
-
-export type OptionGroup = {
-  label?: string
-  options: Option[]
+  header?: boolean
   subtotalLabel?: string
+  separator?: boolean
+  custom?: string
 }
-
 
 export type Variables = {
   [variableName: string]: string | string[] | number | boolean | Record<string, string>
@@ -138,6 +134,9 @@ export type PrefixData = { prefix: string }
 export type SuffixData = { suffix: string }
 export type ColumnData = { column: number }
 export type OptionExcludeData = { exclude: true }
+export type OptionHeaderData = { label: string }
+export type OptionSeparatorData = { separator: true }
+export type CustomData = { custom: string }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
@@ -154,6 +153,10 @@ export type ParsedLine =
   | { type: "option_variable"; raw: string; data: VariableData }
   | { type: "option_column"; raw: string; data: ColumnData }
   | { type: "option_exclude"; raw: string; data: OptionExcludeData }
+  | { type: "option_header"; raw: string; data: OptionHeaderData }
+  | { type: "option_separator"; raw: string; data: OptionSeparatorData }
+  | { type: "option_subtotal"; raw: string; data: SubtotalLabelData }
+  | { type: "option_custom"; raw: string; data: CustomData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }

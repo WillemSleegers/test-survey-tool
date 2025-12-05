@@ -25,6 +25,9 @@ import {
   SuffixData,
   ColumnData,
   OptionExcludeData,
+  OptionHeaderData,
+  OptionSeparatorData,
+  CustomData,
   ContentData,
   ComputeData,
   BlockData,
@@ -32,6 +35,7 @@ import {
   NavLevelData,
   ParsedLine,
   ParserState,
+  Option,
 } from "@/lib/types"
 import {
   validateVariableNames,
@@ -117,6 +121,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("TOTAL:")) return "total_label"
   if (trimmed.startsWith("TOTAL_COLUMN:")) return "total_column"
   if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
+  if (trimmed.startsWith("CUSTOM:")) return "content"  // CUSTOM is only valid under options
   if (trimmed.startsWith("PREFIX:")) return "prefix"
   if (trimmed.startsWith("SUFFIX:")) return "suffix"
   if (trimmed.startsWith("COMPUTE:")) return "compute"
@@ -166,6 +171,26 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     // Check if this is an exclude flag (- EXCLUDE)
     if (trimmed.match(/^-\s*EXCLUDE\s*$/)) {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_exclude"
+      return "content"
+    }
+    // Check if this is a custom calculation (- CUSTOM: ...)
+    if (trimmed.match(/^-\s*CUSTOM:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_custom"
+      return "content"
+    }
+    // Check if this is a header label (- HEADER: ...)
+    if (trimmed.match(/^-\s*HEADER:/)) {
+      if (state.currentQuestion) return "option_header"
+      return "content"
+    }
+    // Check if this is a separator (- SEPARATOR)
+    if (trimmed.match(/^-\s*SEPARATOR\s*$/)) {
+      if (state.currentQuestion) return "option_separator"
+      return "content"
+    }
+    // Check if this is a subtotal label (- SUBTOTAL: ...)
+    if (trimmed.match(/^-\s*SUBTOTAL:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_subtotal"
       return "content"
     }
     // Check if this is a conditional option modifier
@@ -361,6 +386,28 @@ const parseOptionExclude = (): OptionExcludeData => ({
   exclude: true,
 })
 
+const parseOptionHeader = (line: string): OptionHeaderData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*HEADER:\s*(.*)/)
+  return { label: match ? match[1] : "" }
+}
+
+const parseOptionSeparator = (): OptionSeparatorData => ({
+  separator: true,
+})
+
+const parseOptionCustom = (line: string): CustomData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*CUSTOM:\s*(.*)/)
+  return { custom: match ? match[1] : "" }
+}
+
+const parseOptionSubtotal = (line: string): SubtotalLabelData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*SUBTOTAL:\s*(.*)/)
+  return { subtotalLabel: match ? match[1] : "" }
+}
+
 const parseOptionHint = (line: string): SubtextData => {
   const trimmed = line.trim()
   const match = trimmed.match(/^-\s*HINT:\s*(.*)/)
@@ -479,6 +526,14 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionColumn(line) }
     case "option_exclude":
       return { type, raw: line, data: parseOptionExclude() }
+    case "option_custom":
+      return { type, raw: line, data: parseOptionCustom(line) }
+    case "option_header":
+      return { type, raw: line, data: parseOptionHeader(line) }
+    case "option_separator":
+      return { type, raw: line, data: parseOptionSeparator() }
+    case "option_subtotal":
+      return { type, raw: line, data: parseOptionSubtotal(line) }
     case "subquestion_hint":
       return { type, raw: line, data: parseSubquestionHint(line) }
     case "subquestion_tooltip":
@@ -1211,6 +1266,66 @@ const handleOptionExclude = (state: ParserState, data: OptionExcludeData): Parse
   }
 }
 
+const handleOptionCustom = (state: ParserState, data: CustomData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the custom calculation to the last option (typically a subtotal)
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    custom: data.custom
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionHeader = (state: ParserState, data: OptionHeaderData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Create a new option for the header
+  const newOption: Option = {
+    value: data.label,
+    label: data.label,
+    header: true,
+    exclude: true  // Headers are automatically excluded from calculations
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: [...state.currentQuestion.options, newOption],
+    },
+  }
+}
+
+const handleOptionSeparator = (state: ParserState, data: OptionSeparatorData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Create a new option for the separator (blank row)
+  const newOption: Option = {
+    value: `separator-${state.currentQuestion.options.length}`,
+    label: "",
+    separator: true,
+    exclude: true  // Separators are automatically excluded from calculations
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: [...state.currentQuestion.options, newOption],
+    },
+  }
+}
+
 const handleOptionVariable = (state: ParserState, data: VariableData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
@@ -1342,25 +1457,6 @@ const handleInputType = (
     return validInputTypes.includes(type as Question["inputType"])
   }
 
-  // For breakdown questions, finalize any ungrouped options
-  let finalOptions = state.currentQuestion.options
-  let finalOptionGroups = state.currentQuestion.optionGroups
-
-  if (data.type === "breakdown") {
-    // Finalize any ungrouped options
-    if (finalOptionGroups && finalOptionGroups.length > 0) {
-      // If we have ungrouped options and already have groups, add remaining options as a final group
-      finalOptionGroups = [
-        ...finalOptionGroups,
-        {
-          options: finalOptions,
-        },
-      ]
-      finalOptions = []
-    }
-    // Otherwise, keep the options as-is (flat list without groups)
-  }
-
   return {
     ...state,
     currentQuestion: {
@@ -1369,8 +1465,7 @@ const handleInputType = (
       // Store the actual input type for matrix questions to know if it should be radio or checkbox
       ...(isMatrixQuestion && data.type !== "matrix" && isValidInputType(data.type) && { inputType: data.type }),
       // For matrix questions, checkbox, and breakdown questions, preserve options
-      options: (data.type === "checkbox" || isMatrixQuestion || data.type === "breakdown") ? finalOptions : [],
-      ...(finalOptionGroups && finalOptionGroups.length > 0 && { optionGroups: finalOptionGroups }),
+      options: (data.type === "checkbox" || isMatrixQuestion || data.type === "breakdown") ? state.currentQuestion.options : [],
     },
     // Clear subtext and tooltip buffers when we encounter structured elements
     subtextBuffer: null,
@@ -1521,25 +1616,19 @@ const handleSubtotalLabel = (state: ParserState, data: SubtotalLabelData): Parse
     }
   }
 
-  // For breakdown questions, create an option group from the current options
-  const currentOptions = state.currentQuestion.options
-  if (currentOptions.length === 0) return state
-
-  const newGroup = {
-    options: currentOptions,
+  // For breakdown questions, create a new option with subtotalLabel
+  const newOption: Option = {
+    value: data.subtotalLabel,
+    label: data.subtotalLabel,
     subtotalLabel: data.subtotalLabel,
+    exclude: true  // Subtotals are automatically excluded from the final total
   }
 
   return {
     ...state,
     currentQuestion: {
       ...state.currentQuestion,
-      optionGroups: [
-        ...(state.currentQuestion.optionGroups || []),
-        newGroup,
-      ],
-      // Clear options for the next group
-      options: [],
+      options: [...state.currentQuestion.options, newOption],
     },
   }
 }
@@ -1993,6 +2082,14 @@ const reduceParsedLine = (
       return handleOptionColumn(state, parsedLine.data)
     case "option_exclude":
       return handleOptionExclude(state, parsedLine.data)
+    case "option_custom":
+      return handleOptionCustom(state, parsedLine.data)
+    case "option_header":
+      return handleOptionHeader(state, parsedLine.data)
+    case "option_separator":
+      return handleOptionSeparator(state, parsedLine.data)
+    case "option_subtotal":
+      return handleSubtotalLabel(state, parsedLine.data)
     case "subquestion_hint":
       return handleSubquestionHint(state, parsedLine.data)
     case "subquestion_tooltip":

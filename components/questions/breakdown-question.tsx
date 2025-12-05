@@ -108,7 +108,15 @@ export function BreakdownQuestion({
       }
 
       const key = optionToKey(option.value)
-      const numValue = parseFloat(currentValues[key] || "")
+
+      // Get value - either from user input or from calculated prefillValue
+      let valueStr = currentValues[key] || ""
+      if (!valueStr && option.prefillValue) {
+        // For read-only options with VALUE, calculate the value
+        valueStr = replacePlaceholders(option.prefillValue, variables, computedVariables)
+      }
+
+      const numValue = parseFloat(valueStr)
       if (!isNaN(numValue)) {
         // Subtract if the option has the subtract flag, otherwise add
         if (option.subtract) {
@@ -168,10 +176,6 @@ export function BreakdownQuestion({
   const prefix = question.prefix || ""
   const suffix = question.suffix || ""
 
-  // Determine if we're using groups or flat list
-  const hasGroups = question.optionGroups && question.optionGroups.length > 0
-  let tabIndexOffset = 0
-
   // Check if any options have subquestions
   const hasSubquestions = question.options.some(opt => opt.subquestions && opt.subquestions.length > 0)
 
@@ -208,6 +212,66 @@ export function BreakdownQuestion({
   // Render a single option as table rows (main row + optional subquestion rows)
   const renderOptionRows = (option: typeof question.options[0], index: number) => {
     const key = optionToKey(option.value)
+
+    // If this is a header row, render it without an input field
+    if (option.header) {
+      return (
+        <TableRow key={option.value} className="font-bold hover:bg-transparent">
+          <TableCell className="text-base pl-0" colSpan={hasSubquestions ? 3 : 2}>
+            <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+          </TableCell>
+        </TableRow>
+      )
+    }
+
+    // If this is a separator row, render a blank row
+    if (option.separator) {
+      return (
+        <TableRow key={option.value} className="hover:bg-transparent border-none">
+          <TableCell className="h-12 pl-0 border-none" colSpan={hasSubquestions ? 3 : 2}>
+            {/* Blank row for spacing */}
+          </TableCell>
+        </TableRow>
+      )
+    }
+
+    // If this is a subtotal row, calculate and render the subtotal
+    if (option.subtotalLabel) {
+      let subtotal: number
+
+      // If custom calculation is provided, use it; otherwise auto-calculate
+      if (option.custom) {
+        const customValue = replacePlaceholders(option.custom, variables, computedVariables)
+        subtotal = parseFloat(customValue) || 0
+      } else {
+        // Calculate subtotal from the last subtotal/header (or start) to current position
+        const optionIndex = question.options.indexOf(option)
+        let startIndex = 0
+
+        // Find the last subtotal or header before this one
+        for (let i = optionIndex - 1; i >= 0; i--) {
+          if (question.options[i].subtotalLabel || question.options[i].header) {
+            startIndex = i + 1
+            break
+          }
+        }
+
+        const optionsToSum = question.options.slice(startIndex, optionIndex)
+        subtotal = calculateSubtotal(optionsToSum)
+      }
+
+      return (
+        <TableRow key={option.value} className="font-bold hover:bg-transparent">
+          <TableCell className="text-base pl-0">
+            <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+          </TableCell>
+          <TableCell className="text-right py-1">
+            {prefix}{subtotal}{suffix}
+          </TableCell>
+          {hasSubquestions && <TableCell />}
+        </TableRow>
+      )
+    }
 
     // Determine if this option is read-only (has prefillValue)
     const isReadOnly = !!option.prefillValue
@@ -322,6 +386,67 @@ export function BreakdownQuestion({
           <TableBody>
             {/* Render each option as a row */}
             {question.options.map((option, index) => {
+              // If this is a header row, render it without input fields
+              if (option.header) {
+                return (
+                  <TableRow key={option.value} className="font-bold hover:bg-transparent">
+                    <TableCell className="text-base pl-0" colSpan={numColumns + 1}>
+                      <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                    </TableCell>
+                  </TableRow>
+                )
+              }
+
+              // If this is a separator row, render a blank row
+              if (option.separator) {
+                return (
+                  <TableRow key={option.value} className="hover:bg-transparent border-none">
+                    <TableCell className="h-12 pl-0 border-none" colSpan={numColumns + 1}>
+                      {/* Blank row for spacing */}
+                    </TableCell>
+                  </TableRow>
+                )
+              }
+
+              // If this is a subtotal row, calculate and render the subtotal
+              if (option.subtotalLabel) {
+                let subtotal: number
+
+                // If custom calculation is provided, use it; otherwise auto-calculate
+                if (option.custom) {
+                  const customValue = replacePlaceholders(option.custom, variables, computedVariables)
+                  subtotal = parseFloat(customValue) || 0
+                } else {
+                  // Calculate subtotal from the last subtotal/header (or start) to current position
+                  let startIndex = 0
+                  for (let i = index - 1; i >= 0; i--) {
+                    if (question.options[i].subtotalLabel || question.options[i].header) {
+                      startIndex = i + 1
+                      break
+                    }
+                  }
+
+                  const optionsToSum = question.options.slice(startIndex, index)
+                  subtotal = calculateSubtotal(optionsToSum)
+                }
+
+                // Determine which column to show the subtotal in - use option.column if specified, otherwise last column
+                const subtotalCol = option.column ?? columnNumbers[columnNumbers.length - 1]
+
+                return (
+                  <TableRow key={option.value} className="font-bold hover:bg-transparent">
+                    <TableCell className="text-base pl-0">
+                      <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                    </TableCell>
+                    {columnNumbers.map((colNum) => (
+                      <TableCell key={colNum} className="text-right py-1">
+                        {colNum === subtotalCol ? `${prefix}${subtotal}${suffix}` : null}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              }
+
               const key = optionToKey(option.value)
               const isReadOnly = !!option.prefillValue
               let value = currentValues[key] || ""
@@ -420,64 +545,6 @@ export function BreakdownQuestion({
       <div className="space-y-2">
         {hasColumns ? (
           renderColumnLayout()
-        ) : hasGroups ? (
-          <div className="space-y-4">
-            {question.optionGroups!.map((group, groupIndex) => {
-              const subtotal = calculateSubtotal(group.options)
-
-              return (
-                <div key={groupIndex} className="space-y-2">
-                  <Table>
-                    <TableBody>
-                      {group.options.map((option, optionIndex) => {
-                        const rendered = renderOptionRows(option, tabIndexOffset + optionIndex)
-                        if (optionIndex === group.options.length - 1) {
-                          tabIndexOffset += group.options.length
-                        }
-                        return rendered
-                      })}
-
-                      {/* Subtotal row */}
-                      {group.subtotalLabel && (
-                        <TableRow className="font-medium hover:bg-transparent">
-                          <TableCell className="text-base pl-0">
-                            {replacePlaceholders(group.subtotalLabel, variables, computedVariables)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {prefix && <span>{prefix}</span>}
-                              <div className="w-24 text-right py-1">
-                                {subtotal}
-                              </div>
-                              {suffix && <span className="whitespace-nowrap">{suffix}</span>}
-                            </div>
-                          </TableCell>
-                          {hasSubquestions && <TableCell />}
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )
-            })}
-
-            {/* Total row after all groups */}
-            {totalLabel && (
-              <Table>
-                <TableBody>
-                  <TableRow className="font-semibold border-t border-border">
-                    <TableCell className="text-base pt-4 pl-0">
-                      {replacePlaceholders(totalLabel, variables, computedVariables)}
-                    </TableCell>
-                    <TableCell className="text-right pt-4 py-2">
-                      {prefix}{total}{suffix}
-                    </TableCell>
-                    {hasSubquestions && <TableCell />}
-                  </TableRow>
-                </TableBody>
-              </Table>
-            )}
-          </div>
         ) : (
           <Table>
             <TableBody>

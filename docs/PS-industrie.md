@@ -451,86 +451,77 @@ LEVEL: 1
 
 Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
-Q: **Bedrijfsopbrengsten**
+Q:
 
 - **Netto omzet**
 - HINT: Overgenomen van vraag 'Totaal netto omzet'
 - VALUE: {{totaal_netto_omzet}}
+- COLUMN: 1
 - **Overige bedrijfsopbrengsten**
 - HINT: Overgenomen van vraag 'Totaal overige bedrijfsopbrengsten'
 - VALUE: {{totaal_overige_bedrijfsopbrengsten}}
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-  TOTAL: Bedrijfsopbrengsten totaal
-  VARIABLE: bedrijfsopbrengsten_totaal
-
-Q: **Bedrijfslasten**
-
+- COLUMN: 1
+- SUBTOTAL: Bedrijfsopbrengsten totaal
+- VARIABLE: bedrijfsopbrengsten_totaal
+- COLUMN: 2
+- SEPARATOR
 - **Inkoopwaarde**
 - HINT: Overgenomen van vraag 'Totaal inkoopwaarde'
 - VALUE: {{totaal_inkoopwaarde}}
+- COLUMN: 1
+- SUBTRACT
 - **Personele kosten**
 - HINT: Overgenomen van vraag 'Totaal personele kosten'
 - VALUE: {{totaal_personele_kosten}}
+- COLUMN: 1
+- SUBTRACT
 - **Overige bedrijfslasten**
 - HINT: Overgenomen van vraag 'Totaal overige bedrijfslasten'
 - VALUE: {{totaal_overige_bedrijfslasten}}
+- COLUMN: 1
+- SUBTRACT
 - **Afschrijvingen**
 - HINT: Op (im-)materiële vaste activa. Bijzondere waardevermeerderingen/-verminderingen van (im)materiële vaste activa opnemen bij 'Saldo bijzondere waardevermeerderingen/-verminderingen'
+- COLUMN: 1
+- SUBTRACT
+- VARIABLE: afschrijvingen
 - **Saldo boekwinsten / verliezen**
 - HINT: Bij verkoop / afstoot van (im)materiële vaste activa. Bij negatief saldo minteken (-) plaatsen in invulvakje
+- COLUMN: 1
+- SUBTRACT
+- VARIABLE: saldo_boekwinsten_verliezen
 - **Saldo bijzondere waardevermeerderingen / -verminderingen**
 - HINT: Bijzondere waardevermeerderingen/-verminderingen van (im)materiële vaste activa. Bij negatief saldo minteken (-) plaatsen in invulvakje
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-  TOTAL: Bedrijfslasten totaal
-  VARIABLE: bedrijfslasten_totaal
-
-Q:
-
-- **Bedrijfsresultaat**
-- VALUE: {{bedrijfsopbrengsten_totaal - bedrijfslasten_totaal}}
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-
-Q:
-
+- SUBTRACT
+- VARIABLE: saldo_bijzonder
+- SUBTOTAL: Bedrijfslasten totaal
+- CUSTOM: {{totaal_inkoopwaarde + totaal_personele_kosten + totaal_overige_bedrijfslasten + afschrijvingen + saldo_boekwinsten_verliezen + saldo_bijzonder}}
+- COLUMN: 2
+- VARIABLE: bedrijfslasten_totaal
+- SEPARATOR
+- SUBTOTAL: Bedrijfsresultaat
+- CUSTOM: {{bedrijfsopbrengsten_totaal - bedrijfslasten_totaal}}
+- COLUMN: 2
+- SEPARATOR
 - **Vrijval van voorzieningen**
 - HINT: Via de V&W-rekening
+- COLUMN: 1
 - **Dotaties voorzieningen**
 - HINT: Voorzover niet meegenomen in de post 'Bedrijfslasten totaal'
+- COLUMN: 1
 - SUBTRACT
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-  TOTAL: Saldo voorzieningen
-  VARIABLE: saldo_voorzieningen
-
-Q:
-
+- SUBTOTAL: Saldo voorzieningen
+- COLUMN: 2
+- SEPARATOR
 - **Saldo financiële baten / lasten, resultaat uit deelnemingen**
 - HINT: Rentebaten, -lasten, baten / lasten uit deelnemingen, dividenden, winst / verlies op beleggingen en overige financiële baten en lasten. Bij negatief saldo minteken (-) plaatsen in invulvakje
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
-  VARIABLE: saldo_financiele_baten
-
-Q:
-
+- COLUMN: 2
+- SEPARATOR
 - **Saldo uitzonderlijke baten / lasten**
 - HINT: Bij negatief saldo minteken (-) plaatsen in invulvakje
+- COLUMN: 2
+- SEPARATOR
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
-  VARIABLE: saldo_uitzonderlijke_baten
-
-Q:
-
-- **Resultaat voor belastingen**
-- VALUE: {{bedrijfsopbrengsten_totaal - bedrijfslasten_totaal + saldo_voorzieningen + saldo_financiele_baten + saldo_uitzonderlijke_baten}}
-  BREAKDOWN
-  PREFIX: €
-  SUFFIX: .000,-
+  TOTAL: Resultaat voor belastingen
