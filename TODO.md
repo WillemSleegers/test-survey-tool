@@ -75,13 +75,39 @@
 
 ## Ideas to Explore
 
-- [ ] Refactor Question type to use discriminated unions
-  - Current single Question type has many optional fields that don't apply to all question types
-  - Using discriminated unions would provide better type safety and autocomplete
-  - Each question type (MultipleChoiceQuestion, BreakdownQuestion, MatrixQuestion, etc.) would have only relevant fields
-  - TypeScript could enforce requirements (e.g., breakdown must have options, matrix must have subquestions)
-  - Would require refactoring parser and components but improve developer experience
-  - **Recommendation**: Wait until text format stabilizes before attempting this large refactor
+- [x] Refactor Question type to use discriminated unions
+  - ✅ Implemented discriminated union types for all 7 question types
+  - ✅ Each question type (MultipleChoiceQuestion, CheckboxQuestion, TextQuestion, EssayQuestion, NumberQuestion, MatrixQuestion, BreakdownQuestion) has only relevant fields
+  - ✅ Added ParsedQuestion as flexible internal type for parser
+  - ✅ Updated all components to use specific types
+  - ✅ TypeScript now enforces requirements and provides better type safety
+  - Benefits: Component-level type safety, compile-time error detection, better IDE autocomplete
+- [ ] Refactor parser to use specialized parsing functions per question type
+  - **Problem**: Current parser is a single large state machine handling all question types with shared conditional logic
+  - **Proposal**: Split into specialized parser functions (e.g., `parseTextQuestion()`, `parseBreakdownQuestion()`, `parseMatrixQuestion()`)
+  - **Approach**:
+    1. Look ahead from `Q:` line to determine question type (scan for type keywords or `- Q:` pattern)
+    2. Call specialized parser function for that type
+    3. Each function returns the correct discriminated union type directly
+    4. Extract shared logic (HINT, TOOLTIP, VARIABLE) into helper functions
+  - **Benefits**:
+    - Separation of concerns - each question type parser is isolated and self-contained
+    - Simpler logic - no more "does this question type support this keyword?" conditionals
+    - Easier to understand - each parser function is readable on its own
+    - Easier to test - unit test each question type parser independently
+    - No ParsedQuestion needed - return proper types directly
+    - Easier to add new question types
+  - **Challenges**:
+    - Need to extract and reuse shared parsing logic (hints, tooltips, variables)
+    - Look-ahead logic needs to scan for type keywords without consuming lines
+    - Buffer management for multi-line content (TOOLTIP: ---, HINT: ---)
+  - **Priority**: Medium - Would significantly reduce parser complexity, but requires careful design
+  - **Next steps when ready**:
+    1. Design look-ahead function to determine question type
+    2. Create proof-of-concept for simplest type (TEXT) to validate approach
+    3. Extract shared parsing helpers (parseHint, parseTooltip, parseVariable, etc.)
+    4. Implement specialized parsers one by one
+    5. Replace main parser logic to dispatch to specialized functions
 - [ ] Add validation for incompatible feature combinations
   - Warn if breakdown option has both `prefillValue` (VALUE) and no `exclude` flag when in `totalColumn`
   - Warn if `COLUMN` used without `BREAKDOWN`
