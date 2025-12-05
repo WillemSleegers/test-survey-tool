@@ -85,6 +85,8 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   const hasActiveBuffer = !!(
     state.tooltipBuffer ||
     state.subtextBuffer ||
+    state.pageTooltipBuffer ||
+    state.sectionTooltipBuffer ||
     state.subquestionTooltipBuffer ||
     state.subquestionSubtextBuffer ||
     state.optionTooltipBuffer ||
@@ -101,6 +103,8 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
     const bufferHasContent =
       hasRealContent(state.tooltipBuffer) ||
       hasRealContent(state.subtextBuffer) ||
+      hasRealContent(state.pageTooltipBuffer) ||
+      hasRealContent(state.sectionTooltipBuffer) ||
       hasRealContent(state.subquestionTooltipBuffer) ||
       hasRealContent(state.subquestionSubtextBuffer) ||
       hasRealContent(state.optionTooltipBuffer) ||
@@ -905,20 +909,62 @@ const handleSubtext = (state: ParserState, data: SubtextData): ParserState => {
 }
 
 const handleTooltip = (state: ParserState, data: TooltipData): ParserState => {
-  if (!state.currentQuestion) return state
-
   // Check if delimiter mode is being activated
   const isDelimiterMode = data.tooltip === "---"
 
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      tooltip: isDelimiterMode ? "" : data.tooltip,
-    },
-    // Only start buffer if in delimiter mode
-    tooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
+  // If we have a current question, apply tooltip to question
+  if (state.currentQuestion) {
+    return {
+      ...state,
+      currentQuestion: {
+        ...state.currentQuestion,
+        tooltip: isDelimiterMode ? "" : data.tooltip,
+      },
+      tooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
+    }
   }
+
+  // If we have a current section with content or questions, apply tooltip to section
+  // (Don't apply to default empty sections - those are for page-level tooltips)
+  if (state.currentSection && state.currentPage) {
+    const hasContent = state.currentSection.content.trim() !== ""
+    const hasQuestions = state.currentSection.questions.length > 0
+
+    if (hasContent || hasQuestions) {
+      const sectionIndex = state.currentPage.sections.findIndex(s => s === state.currentSection)
+      if (sectionIndex !== -1) {
+        const updatedSections = [...state.currentPage.sections]
+        updatedSections[sectionIndex] = {
+          ...updatedSections[sectionIndex],
+          tooltip: isDelimiterMode ? "" : data.tooltip,
+        }
+
+        return {
+          ...state,
+          currentPage: {
+            ...state.currentPage,
+            sections: updatedSections,
+          },
+          currentSection: updatedSections[sectionIndex],
+          sectionTooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
+        }
+      }
+    }
+  }
+
+  // If we have a current page, apply tooltip to page
+  if (state.currentPage) {
+    return {
+      ...state,
+      currentPage: {
+        ...state.currentPage,
+        tooltip: isDelimiterMode ? "" : data.tooltip,
+      },
+      pageTooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
+    }
+  }
+
+  return state
 }
 
 const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserState => {
@@ -1681,6 +1727,8 @@ const handleContent = (
     const hasActiveBuffer = !!(
       state.tooltipBuffer ||
       state.subtextBuffer ||
+      state.pageTooltipBuffer ||
+      state.sectionTooltipBuffer ||
       state.subquestionTooltipBuffer ||
       state.subquestionSubtextBuffer ||
       state.optionTooltipBuffer ||
@@ -1699,6 +1747,8 @@ const handleContent = (
       const bufferHasContent =
         hasRealContent(state.tooltipBuffer) ||
         hasRealContent(state.subtextBuffer) ||
+        hasRealContent(state.pageTooltipBuffer) ||
+        hasRealContent(state.sectionTooltipBuffer) ||
         hasRealContent(state.subquestionTooltipBuffer) ||
         hasRealContent(state.subquestionSubtextBuffer) ||
         hasRealContent(state.optionTooltipBuffer) ||
@@ -1721,6 +1771,31 @@ const handleContent = (
           newState.currentQuestion = {
             ...newState.currentQuestion,
             subtext: joinBuffer(state.subtextBuffer),
+          }
+        }
+
+        // Apply page tooltip buffer
+        if (state.pageTooltipBuffer && newState.currentPage) {
+          newState.currentPage = {
+            ...newState.currentPage,
+            tooltip: joinBuffer(state.pageTooltipBuffer),
+          }
+        }
+
+        // Apply section tooltip buffer
+        if (state.sectionTooltipBuffer && newState.currentSection && newState.currentPage) {
+          const sectionIndex = newState.currentPage.sections.findIndex(s => s === newState.currentSection)
+          if (sectionIndex !== -1) {
+            const updatedSections = [...newState.currentPage.sections]
+            updatedSections[sectionIndex] = {
+              ...updatedSections[sectionIndex],
+              tooltip: joinBuffer(state.sectionTooltipBuffer),
+            }
+            newState.currentPage = {
+              ...newState.currentPage,
+              sections: updatedSections,
+            }
+            newState.currentSection = updatedSections[sectionIndex]
           }
         }
 
@@ -1807,6 +1882,8 @@ const handleContent = (
           ...newState,
           tooltipBuffer: null,
           subtextBuffer: null,
+          pageTooltipBuffer: null,
+          sectionTooltipBuffer: null,
           subquestionTooltipBuffer: null,
           subquestionSubtextBuffer: null,
           optionTooltipBuffer: null,
@@ -1820,6 +1897,8 @@ const handleContent = (
           ...state,
           tooltipBuffer: state.tooltipBuffer ? [...state.tooltipBuffer, delimiterMarker] : state.tooltipBuffer,
           subtextBuffer: state.subtextBuffer ? [...state.subtextBuffer, delimiterMarker] : state.subtextBuffer,
+          pageTooltipBuffer: state.pageTooltipBuffer ? [...state.pageTooltipBuffer, delimiterMarker] : state.pageTooltipBuffer,
+          sectionTooltipBuffer: state.sectionTooltipBuffer ? [...state.sectionTooltipBuffer, delimiterMarker] : state.sectionTooltipBuffer,
           subquestionTooltipBuffer: state.subquestionTooltipBuffer ? [...state.subquestionTooltipBuffer, delimiterMarker] : state.subquestionTooltipBuffer,
           subquestionSubtextBuffer: state.subquestionSubtextBuffer ? [...state.subquestionSubtextBuffer, delimiterMarker] : state.subquestionSubtextBuffer,
           optionTooltipBuffer: state.optionTooltipBuffer ? [...state.optionTooltipBuffer, delimiterMarker] : state.optionTooltipBuffer,
@@ -1831,6 +1910,42 @@ const handleContent = (
 
   // Strip indentation from content lines when they're part of a buffer
   const cleanedLine = removeIndentation(originalLine)
+
+  // If we have a page tooltip buffer, append to page tooltip
+  if (state.pageTooltipBuffer && state.currentPage) {
+    const updatedBuffer = [...state.pageTooltipBuffer, cleanedLine]
+    return {
+      ...state,
+      pageTooltipBuffer: updatedBuffer,
+      currentPage: {
+        ...state.currentPage,
+        tooltip: joinBuffer(updatedBuffer),
+      },
+    }
+  }
+
+  // If we have a section tooltip buffer, append to section tooltip
+  if (state.sectionTooltipBuffer && state.currentSection && state.currentPage) {
+    const updatedBuffer = [...state.sectionTooltipBuffer, cleanedLine]
+    const sectionIndex = state.currentPage.sections.findIndex(s => s === state.currentSection)
+    if (sectionIndex !== -1) {
+      const updatedSections = [...state.currentPage.sections]
+      updatedSections[sectionIndex] = {
+        ...updatedSections[sectionIndex],
+        tooltip: joinBuffer(updatedBuffer),
+      }
+
+      return {
+        ...state,
+        sectionTooltipBuffer: updatedBuffer,
+        currentPage: {
+          ...state.currentPage,
+          sections: updatedSections,
+        },
+        currentSection: updatedSections[sectionIndex],
+      }
+    }
+  }
 
   // If we have an option tooltip buffer, append to the last option's tooltip
   if (state.currentQuestion && state.optionTooltipBuffer && state.currentQuestion.options.length > 0) {
@@ -2184,6 +2299,8 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
       currentSubquestion: null,
       subtextBuffer: null,
       tooltipBuffer: null,
+      pageTooltipBuffer: null,
+      sectionTooltipBuffer: null,
       subquestionSubtextBuffer: null,
       subquestionTooltipBuffer: null,
       optionSubtextBuffer: null,

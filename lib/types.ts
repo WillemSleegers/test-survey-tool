@@ -15,6 +15,7 @@ export type NavItem = {
 
 export type Page = {
   title: string
+  tooltip?: string
   sections: Section[]
   showIf?: string
   computedVariables: ComputedVariable[]
@@ -22,6 +23,7 @@ export type Page = {
 
 export type Section = {
   content: string
+  tooltip?: string
   questions: Question[]
 }
 
@@ -160,6 +162,7 @@ export type ConditionalPlaceholder = {
 
 export type VisibleSection = {
   content: string
+  tooltip?: string
   questions: Question[]
 }
 
@@ -249,6 +252,8 @@ export type ParserState = {
   currentSubquestion: Subquestion | null
   subtextBuffer: string[] | null
   tooltipBuffer: string[] | null
+  pageTooltipBuffer: string[] | null
+  sectionTooltipBuffer: string[] | null
   subquestionSubtextBuffer: string[] | null
   subquestionTooltipBuffer: string[] | null
   optionSubtextBuffer: string[] | null

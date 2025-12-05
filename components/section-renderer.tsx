@@ -1,6 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
+import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 import { VisibleSection, Responses, Variables, ComputedVariables } from "@/lib/types"
@@ -24,6 +25,8 @@ export function SectionRenderer({
   startTabIndex,
   computedVariables,
 }: SectionRendererProps) {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+
   return (
     <div className="space-y-6">
       {/* Section Header */}
@@ -32,41 +35,64 @@ export function SectionRenderer({
 
         if (!processedContent) return null
 
+        const processedTooltip = section.tooltip
+          ? replacePlaceholders(section.tooltip, variables, computedVariables)
+          : null
+
         return (
-          <div className="whitespace-pre-wrap">
-            <Markdown
-              components={{
-                code: (props) => {
-                  const { children, className, ...rest } = props as {
-                    className?: string
-                    children?: React.ReactNode
-                  }
+          <div className="whitespace-pre-wrap space-y-2">
+            <div className="relative">
+              {processedTooltip && (
+                <button
+                  type="button"
+                  onClick={() => setIsTooltipVisible(!isTooltipVisible)}
+                  className="absolute left-0 top-0 p-1 rounded-full hover:bg-muted transition-colors -translate-x-8"
+                  aria-label="Toggle section information"
+                >
+                  <Info className="w-5 h-5 text-muted-foreground" />
+                </button>
+              )}
+              <div>
+                <Markdown
+                  components={{
+                    code: (props) => {
+                      const { children, className, ...rest } = props as {
+                        className?: string
+                        children?: React.ReactNode
+                      }
 
-                  // Inline code (no className)
-                  if (!className) {
-                    return (
-                      <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...rest}>
+                      // Inline code (no className)
+                      if (!className) {
+                        return (
+                          <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...rest}>
+                            {children}
+                          </code>
+                        )
+                      }
+
+                      // Block code (wrapped in pre, will be styled by pre component)
+                      return (
+                        <code className="font-mono text-sm" {...rest}>
+                          {children}
+                        </code>
+                      )
+                    },
+                    pre: ({ children }) => (
+                      <div className="my-4 bg-muted p-4 rounded-lg overflow-x-auto">
                         {children}
-                      </code>
-                    )
-                  }
-
-                  // Block code (wrapped in pre, will be styled by pre component)
-                  return (
-                    <code className="font-mono text-sm" {...rest}>
-                      {children}
-                    </code>
-                  )
-                },
-                pre: ({ children }) => (
-                  <div className="my-4 bg-muted p-4 rounded-lg overflow-x-auto">
-                    {children}
-                  </div>
-                ),
-              }}
-            >
-              {processedContent}
-            </Markdown>
+                      </div>
+                    ),
+                  }}
+                >
+                  {processedContent}
+                </Markdown>
+              </div>
+            </div>
+            {processedTooltip && isTooltipVisible && (
+              <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
+                <Markdown>{processedTooltip}</Markdown>
+              </div>
+            )}
           </div>
         )
       })()}
