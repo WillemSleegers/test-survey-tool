@@ -264,7 +264,7 @@ export function BreakdownQuestion({
 
       return (
         <TableRow key={option.value} className="font-bold hover:bg-transparent">
-          <TableCell className="text-base pl-0">
+          <TableCell className="align-middle whitespace-normal text-base pl-0">
             <div className="relative">
               {option.tooltip && (
                 <button
@@ -281,12 +281,12 @@ export function BreakdownQuestion({
                   <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
                 </div>
                 {option.hint && (
-                  <div className="text-base text-muted-foreground mt-0.5">
+                  <div className="text-base text-muted-foreground mt-0.5 font-normal">
                     <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                   </div>
                 )}
                 {option.tooltip && isTooltipVisible && (
-                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
                     <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                   </div>
                 )}
@@ -334,12 +334,12 @@ export function BreakdownQuestion({
                   <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                 </div>
                 {option.hint && (
-                  <div className="text-base text-muted-foreground mt-0.5">
+                  <div className="text-base text-muted-foreground mt-0.5 font-normal">
                     <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                   </div>
                 )}
                 {option.tooltip && isTooltipVisible && (
-                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
                     <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                   </div>
                 )}
@@ -464,7 +464,7 @@ export function BreakdownQuestion({
 
                 return (
                   <TableRow key={option.value} className="font-bold hover:bg-transparent">
-                    <TableCell className="text-base pl-0">
+                    <TableCell className="align-middle whitespace-normal text-base pl-0">
                       <div className="relative">
                         {option.tooltip && (
                           <button
@@ -481,12 +481,12 @@ export function BreakdownQuestion({
                             <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
                           </div>
                           {option.hint && (
-                            <div className="text-base text-muted-foreground mt-0.5">
+                            <div className="text-base text-muted-foreground mt-0.5 font-normal">
                               <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                             </div>
                           )}
                           {option.tooltip && isTooltipVisible && (
-                            <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
+                            <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
                               <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                             </div>
                           )}

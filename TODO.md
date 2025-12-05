@@ -20,6 +20,12 @@
   - Currently missing from user-facing documentation
   - Should document: BREAKDOWN, COLUMN, TOTAL_COLUMN, VALUE, VARIABLE (option-level), EXCLUDE, SUBTRACT
   - Belongs in "Intermediate" section (requires understanding tables and variables)
+- [ ] Remove hardcoded bold styling from SUBTOTAL rows
+  - Currently SUBTOTAL rows have `className="font-bold"` hardcoded in the component
+  - This prevents users from controlling text styling via Markdown in the SUBTOTAL label
+  - Should remove `font-bold` class and let users add `**bold**` in Markdown if desired
+  - Applies to both single-column (line 266) and multi-column (line 466) layouts
+  - Gives users full control over formatting (bold, italic, etc.) via Markdown
 - [ ] Fix forward slashes in question options causing variable comparison issues
   - Forward slashes in option text break conditional logic when comparing variables to option values
   - Need to investigate escaping or normalization in condition evaluation
