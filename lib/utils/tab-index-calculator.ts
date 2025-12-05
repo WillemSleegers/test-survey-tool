@@ -33,18 +33,17 @@ export function calculateTotalTabInputs(
  * Calculates input count for a single question based on type and answer state
  */
 function calculateQuestionInputCount(
-  question: { type: string; options: Array<unknown>; id: string; variable?: string },
+  question: Question,
   variables: Variables
 ): number {
-  if (question.type === 'text' || question.type === 'number') {
+  if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
     return 1
   } else if (question.type === 'breakdown') {
     // Breakdown: one input per option plus inputs for subquestions
-    const typedQuestion = question as Question
     let inputCount = question.options.length
 
     // Add inputs for subquestions within options
-    for (const option of typedQuestion.options) {
+    for (const option of question.options) {
       if (option.subquestions) {
         inputCount += option.subquestions.length
       }
@@ -63,44 +62,42 @@ function calculateQuestionInputCount(
         if (colonIndex === -1) {
           return response
         }
-        
+
         const potentialBaseValue = response.substring(0, colonIndex)
-        const typedQuestion = question as Question
-        const matchingOption = typedQuestion.options.find(opt => opt.value === potentialBaseValue)
-        
+        const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
+
         if (matchingOption?.allowsOtherText) {
           return potentialBaseValue
         }
-        
+
         // Otherwise, treat the entire response as the selected value
         return response
       }
-      
+
       const selectedValue = parseResponse(responseString)
-      
-      // Cast to proper Question type to access options
-      const typedQuestion = question as Question
-      const selectedOption = typedQuestion.options.find(opt => opt.value === selectedValue)
-      
+      const selectedOption = question.options.find(opt => opt.value === selectedValue)
+
       // Radio: 1 for selection + 1 for text input if option allows it
       return selectedOption?.allowsOtherText ? 2 : 1
     } else {
       // Not answered: all options are tabbable + any text inputs for options with TEXT
-      const typedQuestion = question as Question
-      const textInputCount = typedQuestion.options.filter(opt => opt.allowsOtherText).length
+      const textInputCount = question.options.filter(opt => opt.allowsOtherText).length
       return question.options.length + textInputCount
     }
   } else if (question.type === 'checkbox') {
     // For checkboxes, count actual slots needed: 1 per checkbox + 1 per text input
-    const typedQuestion = question as Question
-    let totalSlots = typedQuestion.options.length // All checkboxes
-    
+    let totalSlots = question.options.length // All checkboxes
+
     // Add slots for all text inputs
-    const textInputCount = typedQuestion.options.filter(opt => opt.allowsOtherText).length
+    const textInputCount = question.options.filter(opt => opt.allowsOtherText).length
     totalSlots += textInputCount
-    
+
     return totalSlots
-  } else {
+  } else if (question.type === 'matrix') {
+    // For matrix questions, return the number of options (columns)
     return question.options.length
+  } else {
+    // Default fallback for any other question types
+    return 1
   }
 }

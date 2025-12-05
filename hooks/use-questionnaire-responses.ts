@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Variables, Responses, Page, Question } from "@/lib/types"
+import { Variables, Responses, Page, Question, BreakdownQuestion } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 /**
@@ -33,29 +33,33 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
           questionVariableMap.set(question.id, question.variable)
         }
 
-        // Subquestion variables
-        question.subquestions?.forEach(subquestion => {
-          if (subquestion.variable) {
-            questionVariableMap.set(subquestion.id, subquestion.variable)
-          }
-        })
+        // Subquestion variables (only for matrix questions)
+        if (question.type === 'matrix' && question.subquestions) {
+          question.subquestions.forEach(subquestion => {
+            if (subquestion.variable) {
+              questionVariableMap.set(subquestion.id, subquestion.variable)
+            }
+          })
+        }
 
-        // Option variables (for breakdown questions with VARIABLE at option level)
-        question.options?.forEach(option => {
-          if (option.variable) {
-            // Create a unique key for this option: questionId + option value
-            const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
-            const optionKey = `${question.id}:${key}`
-            optionVariableMap.set(optionKey, option.variable)
-          }
-        })
+        // Option variables (for breakdown and other questions with options)
+        if ('options' in question && question.options) {
+          question.options.forEach(option => {
+            if (option.variable) {
+              // Create a unique key for this option: questionId + option value
+              const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
+              const optionKey = `${question.id}:${key}`
+              optionVariableMap.set(optionKey, option.variable)
+            }
+          })
+        }
       })
     })
   })
 
   // Helper function to calculate breakdown question total
   const calculateBreakdownTotal = (
-    question: Question,
+    question: BreakdownQuestion,
     responseValue: Record<string, string>
   ): number => {
     let total = 0

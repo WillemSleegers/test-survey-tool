@@ -128,8 +128,8 @@ export function QuestionRenderer({
 
     default:
       // Exhaustive check - TypeScript will error if we miss a case
-      const _exhaustive: never = question.type
-      console.warn(`Unknown question type: ${_exhaustive}`)
+      const _exhaustive: never = question
+      console.warn(`Unknown question type: ${(_exhaustive as Question).type}`)
       return null
   }
 }

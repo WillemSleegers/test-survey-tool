@@ -79,16 +79,22 @@ export function SectionRenderer({
           for (let i = 0; i < index; i++) {
             const prevQuestion = section.questions[i]
             let inputCount
-            if (prevQuestion.type === 'text' || prevQuestion.type === 'number') {
+            if (prevQuestion.type === 'text' || prevQuestion.type === 'essay' || prevQuestion.type === 'number') {
               inputCount = 1
             } else if (prevQuestion.type === 'multiple_choice') {
               // For radio buttons, use 1 slot if answered, all options if not answered
               const responseValue = responses[prevQuestion.id]
               const isAnswered = responseValue !== undefined && responseValue !== ""
               inputCount = isAnswered ? 1 : prevQuestion.options.length
-            } else {
+            } else if (prevQuestion.type === 'checkbox') {
               // For checkboxes, always use all options
               inputCount = prevQuestion.options.length
+            } else if (prevQuestion.type === 'matrix' || prevQuestion.type === 'breakdown') {
+              // For matrix and breakdown, use options length
+              inputCount = prevQuestion.options.length
+            } else {
+              // Default fallback
+              inputCount = 1
             }
             questionStartTabIndex += inputCount
           }

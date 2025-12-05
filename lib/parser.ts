@@ -1,5 +1,7 @@
 import {
   Question,
+  ParsedQuestion,
+  MatrixQuestion,
   Page,
   Block,
   NavItem,
@@ -42,6 +44,13 @@ import {
   validateConditionReferences,
   validateComputedVariableReferences,
 } from "@/lib/validation"
+
+// Convert ParsedQuestion to properly typed Question
+const convertToQuestion = (parsed: ParsedQuestion): Question => {
+  // At this point we trust that the parser has built a valid question
+  // The type assertion is safe because we control the parser logic
+  return parsed as Question
+}
 
 // Helper function to remove leading indentation (2+ spaces or 1 tab)
 const removeIndentation = (line: string): string => {
@@ -578,12 +587,12 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
 
 // State management
 
-const createQuestion = (id: string, text: string): Question => ({
+// Create a question with a flexible type that gets refined as we parse
+const createQuestion = (id: string, text: string): ParsedQuestion => ({
   id,
   text,
   type: "multiple_choice",
   options: [],
-  subquestions: [],
 })
 
 const createBlock = (name: string): Block => ({
@@ -626,7 +635,7 @@ const saveCurrentQuestion = (state: ParserState): ParserState => {
     if (sectionIndex !== -1) {
       const updatedSections = [...state.currentPage.sections]
       const section = state.currentSection as Section
-      const question = state.currentQuestion as Question
+      const question = convertToQuestion(state.currentQuestion)
 
       updatedSections[sectionIndex] = {
         content: section.content,
@@ -1453,9 +1462,10 @@ const handleInputType = (
 
   // Valid input types for matrix questions (excludes matrix, breakdown, and number)
   // Note: NUMBER is not supported for matrix questions - use BREAKDOWN instead
-  const validInputTypes: Question["inputType"][] = ["multiple_choice", "checkbox", "text", "essay"]
-  const isValidInputType = (type: Question["type"]): type is NonNullable<Question["inputType"]> => {
-    return validInputTypes.includes(type as Question["inputType"])
+  type ValidMatrixInputType = "checkbox" | "text" | "essay"
+  const validInputTypes: ValidMatrixInputType[] = ["checkbox", "text", "essay"]
+  const isValidInputType = (type: Question["type"]): type is ValidMatrixInputType => {
+    return validInputTypes.includes(type as ValidMatrixInputType)
   }
 
   return {

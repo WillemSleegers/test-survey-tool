@@ -68,8 +68,8 @@ export function validateConditionReferences(blocks: Block[]): void {
         if (question.variable) {
           definedVariables.add(question.variable)
         }
-        // Add subquestion variables
-        if (question.subquestions) {
+        // Add subquestion variables (only for matrix questions)
+        if (question.type === 'matrix' && question.subquestions) {
           for (const subquestion of question.subquestions) {
             if (subquestion.variable) {
               definedVariables.add(subquestion.variable)
@@ -119,11 +119,14 @@ export function validateConditionReferences(blocks: Block[]): void {
           }
         }
 
-        for (const option of question.options) {
-          if (option.showIf) {
-            const missingVars = findUndefinedVariables(option.showIf, definedVariables)
-            if (missingVars.length > 0) {
-              errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+        // Check options (only for questions that have options)
+        if ('options' in question && question.options) {
+          for (const option of question.options) {
+            if (option.showIf) {
+              const missingVars = findUndefinedVariables(option.showIf, definedVariables)
+              if (missingVars.length > 0) {
+                errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+              }
             }
           }
         }
@@ -153,8 +156,8 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
         if (question.variable) {
           definedVariables.add(question.variable)
         }
-        // Add subquestion variables
-        if (question.subquestions) {
+        // Add subquestion variables (only for matrix questions)
+        if (question.type === 'matrix' && question.subquestions) {
           for (const subquestion of question.subquestions) {
             if (subquestion.variable) {
               definedVariables.add(subquestion.variable)

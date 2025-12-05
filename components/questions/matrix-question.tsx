@@ -12,13 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { MatrixQuestion as MatrixQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 interface MatrixQuestionProps {
   /** The question configuration */
-  question: Question
+  question: MatrixQuestionType
   /** User responses */
   responses: Responses
   /** User variables */

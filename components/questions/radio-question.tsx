@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { MultipleChoiceQuestion, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
@@ -11,7 +11,7 @@ import Markdown from "react-markdown"
 
 interface RadioQuestionProps {
   /** The question configuration */
-  question: Question
+  question: MultipleChoiceQuestion
   /** User responses */
   responses: Responses
   /** User variables */

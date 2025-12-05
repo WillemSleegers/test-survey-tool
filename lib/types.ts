@@ -25,7 +25,68 @@ export type Section = {
   questions: Question[]
 }
 
-export type Question = {
+// Base fields common to all questions
+type QuestionBase = {
+  id: string
+  text: string
+  subtext?: string
+  tooltip?: string
+  variable?: string
+  showIf?: string
+}
+
+export type MultipleChoiceQuestion = QuestionBase & {
+  type: "multiple_choice"
+  options: Option[]
+}
+
+export type CheckboxQuestion = QuestionBase & {
+  type: "checkbox"
+  options: Option[]
+}
+
+export type TextQuestion = QuestionBase & {
+  type: "text"
+}
+
+export type EssayQuestion = QuestionBase & {
+  type: "essay"
+}
+
+export type NumberQuestion = QuestionBase & {
+  type: "number"
+  prefix?: string
+  suffix?: string
+}
+
+export type MatrixQuestion = QuestionBase & {
+  type: "matrix"
+  subquestions: Subquestion[]
+  options: Option[]
+  inputType?: "checkbox" | "text" | "essay"
+}
+
+export type BreakdownQuestion = QuestionBase & {
+  type: "breakdown"
+  options: Option[]
+  totalLabel?: string
+  totalColumn?: number
+  prefix?: string
+  suffix?: string
+}
+
+export type Question =
+  | MultipleChoiceQuestion
+  | CheckboxQuestion
+  | TextQuestion
+  | EssayQuestion
+  | NumberQuestion
+  | MatrixQuestion
+  | BreakdownQuestion
+
+// Internal parser type that allows all field combinations during parsing
+// This gets converted to the proper discriminated Question type after parsing is complete
+export type ParsedQuestion = {
   id: string
   text: string
   subtext?: string
@@ -33,7 +94,7 @@ export type Question = {
   type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "breakdown"
   options: Option[]
   subquestions?: Subquestion[]
-  inputType?: "multiple_choice" | "checkbox" | "text" | "essay" | "number"
+  inputType?: "checkbox" | "text" | "essay"
   variable?: string
   showIf?: string
   totalLabel?: string
@@ -184,7 +245,7 @@ export type ParserState = {
   currentNavLevel: number
   currentPage: Page | null
   currentSection: Section | null
-  currentQuestion: Question | null
+  currentQuestion: ParsedQuestion | null
   currentSubquestion: Subquestion | null
   subtextBuffer: string[] | null
   tooltipBuffer: string[] | null
