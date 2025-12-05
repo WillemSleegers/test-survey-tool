@@ -39,17 +39,8 @@ function calculateQuestionInputCount(
   if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
     return 1
   } else if (question.type === 'breakdown') {
-    // Breakdown: one input per option plus inputs for subquestions
-    let inputCount = question.options.length
-
-    // Add inputs for subquestions within options
-    for (const option of question.options) {
-      if (option.subquestions) {
-        inputCount += option.subquestions.length
-      }
-    }
-
-    return inputCount
+    // Breakdown: one input per option
+    return question.options.length
   } else if (question.type === 'multiple_choice') {
     const variableValue = question.variable ? variables[question.variable] : undefined
     const responseString = typeof variableValue === 'string' ? variableValue : ''

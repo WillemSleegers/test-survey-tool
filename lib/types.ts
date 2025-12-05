@@ -68,9 +68,11 @@ export type MatrixQuestion = QuestionBase & {
   inputType?: "checkbox" | "text" | "essay"
 }
 
+export type BreakdownOption = Omit<Option, 'subquestions' | 'allowsOtherText'>
+
 export type BreakdownQuestion = QuestionBase & {
   type: "breakdown"
-  options: Option[]
+  options: BreakdownOption[]
   totalLabel?: string
   totalColumn?: number
   prefix?: string

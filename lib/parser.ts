@@ -301,15 +301,8 @@ const parseSubquestion = (line: string, state: ParserState): SubquestionData => 
   // Generate ID as questionId_rowNumber (e.g., Q1_1, Q1_2, etc.)
   const currentQuestionId = state.currentQuestion?.id || "Q0"
 
-  // Count existing subquestions - check both question-level (matrix) and option-level (breakdown)
-  let existingSubquestionCount = state.currentQuestion?.subquestions?.length || 0
-
-  // For breakdown questions, also count subquestions in options
-  if (state.currentQuestion?.options) {
-    for (const option of state.currentQuestion.options) {
-      existingSubquestionCount += option.subquestions?.length || 0
-    }
-  }
+  // Count existing subquestions (matrix questions only)
+  const existingSubquestionCount = state.currentQuestion?.subquestions?.length || 0
 
   const rowNumber = existingSubquestionCount + 1
   const id = `${currentQuestionId}_${rowNumber}`
@@ -973,58 +966,25 @@ const handleSubquestionHint = (state: ParserState, data: SubtextData): ParserSta
   // Check if delimiter mode is being activated
   const isDelimiterMode = data.subtext === "---"
 
-  // Check if subquestion is attached to an option (breakdown) or question (matrix)
-  const hasOptions = state.currentQuestion.options.length > 0
-  const hasQuestionSubquestions = (state.currentQuestion.subquestions?.length || 0) > 0
+  // Matrix: update subquestion at question level
+  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+    row.id === state.currentSubquestion!.id
+      ? { ...row, subtext: isDelimiterMode ? "" : data.subtext }
+      : row
+  ) || []
 
-  if (hasOptions) {
-    // Number_list: update subquestion in option
-    const updatedOptions = state.currentQuestion.options.map(option => ({
-      ...option,
-      subquestions: option.subquestions?.map(sq =>
-        sq.id === state.currentSubquestion!.id
-          ? { ...sq, subtext: isDelimiterMode ? "" : data.subtext }
-          : sq
-      ),
-    }))
-
-    return {
-      ...state,
-      currentQuestion: {
-        ...state.currentQuestion,
-        options: updatedOptions,
-      },
-      currentSubquestion: {
-        ...state.currentSubquestion,
-        subtext: isDelimiterMode ? "" : data.subtext,
-      },
-      subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
-    }
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      subquestions: updatedSubquestions,
+    },
+    currentSubquestion: {
+      ...state.currentSubquestion,
+      subtext: isDelimiterMode ? "" : data.subtext,
+    },
+    subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
   }
-
-  if (hasQuestionSubquestions) {
-    // Matrix: update subquestion at question level
-    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
-      row.id === state.currentSubquestion!.id
-        ? { ...row, subtext: isDelimiterMode ? "" : data.subtext }
-        : row
-    ) || []
-
-    return {
-      ...state,
-      currentQuestion: {
-        ...state.currentQuestion,
-        subquestions: updatedSubquestions,
-      },
-      currentSubquestion: {
-        ...state.currentSubquestion,
-        subtext: isDelimiterMode ? "" : data.subtext,
-      },
-      subquestionSubtextBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
-    }
-  }
-
-  return state
 }
 
 const handleSubquestionTooltip = (state: ParserState, data: TooltipData): ParserState => {
@@ -1032,26 +992,6 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
 
   // Check if delimiter mode is being activated
   const isDelimiterMode = data.tooltip === "---"
-
-  const hasOptions = state.currentQuestion.options.length > 0
-
-  if (hasOptions) {
-    const updatedOptions = state.currentQuestion.options.map(option => ({
-      ...option,
-      subquestions: option.subquestions?.map(sq =>
-        sq.id === state.currentSubquestion!.id
-          ? { ...sq, tooltip: isDelimiterMode ? "" : data.tooltip }
-          : sq
-      ),
-    }))
-
-    return {
-      ...state,
-      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
-      currentSubquestion: { ...state.currentSubquestion, tooltip: isDelimiterMode ? "" : data.tooltip },
-      subquestionTooltipBuffer: isDelimiterMode ? ["---DELIMITER---"] : null,
-    }
-  }
 
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
@@ -1070,25 +1010,6 @@ const handleSubquestionTooltip = (state: ParserState, data: TooltipData): Parser
 const handleSubquestionSubtract = (state: ParserState, data: SubquestionSubtractData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
 
-  const hasOptions = state.currentQuestion.options.length > 0
-
-  if (hasOptions) {
-    const updatedOptions = state.currentQuestion.options.map(option => ({
-      ...option,
-      subquestions: option.subquestions?.map(sq =>
-        sq.id === state.currentSubquestion!.id
-          ? { ...sq, subtract: data.subtract }
-          : sq
-      ),
-    }))
-
-    return {
-      ...state,
-      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
-      currentSubquestion: { ...state.currentSubquestion, subtract: data.subtract },
-    }
-  }
-
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
       ? { ...row, subtract: data.subtract }
@@ -1104,25 +1025,6 @@ const handleSubquestionSubtract = (state: ParserState, data: SubquestionSubtract
 
 const handleSubquestionValue = (state: ParserState, data: SubquestionValueData): ParserState => {
   if (!state.currentQuestion || !state.currentSubquestion) return state
-
-  const hasOptions = state.currentQuestion.options.length > 0
-
-  if (hasOptions) {
-    const updatedOptions = state.currentQuestion.options.map(option => ({
-      ...option,
-      subquestions: option.subquestions?.map(sq =>
-        sq.id === state.currentSubquestion!.id
-          ? { ...sq, value: data.value }
-          : sq
-      ),
-    }))
-
-    return {
-      ...state,
-      currentQuestion: { ...state.currentQuestion, options: updatedOptions },
-      currentSubquestion: { ...state.currentSubquestion, value: data.value },
-    }
-  }
 
   const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
     row.id === state.currentSubquestion!.id
@@ -1423,46 +1325,6 @@ const handleOptionColumn = (state: ParserState, data: ColumnData): ParserState =
 
 const handleSubquestion = (state: ParserState, data: SubquestionData): ParserState => {
   if (!state.currentQuestion) return state
-
-  // Check if we have options (breakdown context) - attach subquestion to last option
-  const hasOptions = state.currentQuestion.options.length > 0
-
-  if (hasOptions) {
-    // Breakdown: attach subquestion to the last option
-    const lastOptionIndex = state.currentQuestion.options.length - 1
-    const updatedOptions = [...state.currentQuestion.options]
-    const lastOption = updatedOptions[lastOptionIndex]
-
-    updatedOptions[lastOptionIndex] = {
-      ...lastOption,
-      subquestions: [
-        ...(lastOption.subquestions || []),
-        {
-          id: data.id,
-          text: data.text
-        },
-      ],
-    }
-
-    return {
-      ...state,
-      currentQuestion: {
-        ...state.currentQuestion,
-        options: updatedOptions,
-      },
-      currentSubquestion: {
-        id: data.id,
-        text: data.text
-      },
-      // Clear subtext and tooltip buffers when we encounter structured elements
-      subtextBuffer: null,
-      tooltipBuffer: null,
-      subquestionSubtextBuffer: null,
-      subquestionTooltipBuffer: null,
-    optionSubtextBuffer: null,
-    optionTooltipBuffer: null,
-    }
-  }
 
   // Matrix: attach to question-level subquestions
   // Set question type to matrix when we encounter the first matrix row
@@ -1833,48 +1695,22 @@ const handleContent = (
 
         // Apply subquestion tooltip buffer
         if (state.subquestionTooltipBuffer && state.currentSubquestion && newState.currentQuestion) {
-          const hasOptions = newState.currentQuestion.options.length > 0
-          if (hasOptions) {
-            const updatedOptions = newState.currentQuestion.options.map(option => ({
-              ...option,
-              subquestions: option.subquestions?.map(sq =>
-                sq.id === state.currentSubquestion!.id
-                  ? { ...sq, tooltip: joinBuffer(state.subquestionTooltipBuffer!) }
-                  : sq
-              ),
-            }))
-            newState.currentQuestion = { ...newState.currentQuestion, options: updatedOptions }
-          } else {
-            const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
-              row.id === state.currentSubquestion!.id
-                ? { ...row, tooltip: joinBuffer(state.subquestionTooltipBuffer!) }
-                : row
-            ) || []
-            newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
-          }
+          const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
+            row.id === state.currentSubquestion!.id
+              ? { ...row, tooltip: joinBuffer(state.subquestionTooltipBuffer!) }
+              : row
+          ) || []
+          newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
         }
 
         // Apply subquestion subtext buffer
         if (state.subquestionSubtextBuffer && state.currentSubquestion && newState.currentQuestion) {
-          const hasOptions = newState.currentQuestion.options.length > 0
-          if (hasOptions) {
-            const updatedOptions = newState.currentQuestion.options.map(option => ({
-              ...option,
-              subquestions: option.subquestions?.map(sq =>
-                sq.id === state.currentSubquestion!.id
-                  ? { ...sq, subtext: joinBuffer(state.subquestionSubtextBuffer!) }
-                  : sq
-              ),
-            }))
-            newState.currentQuestion = { ...newState.currentQuestion, options: updatedOptions }
-          } else {
-            const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
-              row.id === state.currentSubquestion!.id
-                ? { ...row, subtext: joinBuffer(state.subquestionSubtextBuffer!) }
-                : row
-            ) || []
-            newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
-          }
+          const updatedSubquestions = newState.currentQuestion.subquestions?.map(row =>
+            row.id === state.currentSubquestion!.id
+              ? { ...row, subtext: joinBuffer(state.subquestionSubtextBuffer!) }
+              : row
+          ) || []
+          newState.currentQuestion = { ...newState.currentQuestion, subquestions: updatedSubquestions }
         }
 
         // Clear all buffers

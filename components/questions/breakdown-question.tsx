@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -27,9 +27,8 @@ interface BreakdownQuestionProps {
  *
  * Features:
  * - Multiple number input rows based on options
- * - Support for subquestions that break down each option
  * - Automatic sum calculation displayed at bottom
- * - Two or three column layout depending on subquestions
+ * - Single or multi-column layouts with COLUMN keyword
  * - Individual row responses stored separately
  * - Optional total label customization
  *
@@ -65,28 +64,9 @@ export function BreakdownQuestion({
     return optionValue.toLowerCase().replace(/[^a-z0-9]/g, '_')
   }
 
-  // Convert subquestion ID to key
-  const subquestionToKey = (subquestionId: string): string => {
-    return subquestionId.toLowerCase().replace(/[^a-z0-9]/g, '_')
-  }
-
-  // Handle input change for a specific row (main option)
+  // Handle input change for a specific row
   const handleRowChange = (optionValue: string, value: string) => {
     const key = optionToKey(optionValue)
-    const newValues = { ...currentValues }
-
-    if (value === "") {
-      delete newValues[key]
-    } else {
-      newValues[key] = value
-    }
-
-    onResponse(question.id, newValues)
-  }
-
-  // Handle input change for a subquestion
-  const handleSubquestionChange = (subquestionId: string, value: string) => {
-    const key = subquestionToKey(subquestionId)
     const newValues = { ...currentValues }
 
     if (value === "") {
@@ -176,9 +156,6 @@ export function BreakdownQuestion({
   const prefix = question.prefix || ""
   const suffix = question.suffix || ""
 
-  // Check if any options have subquestions
-  const hasSubquestions = question.options.some(opt => opt.subquestions && opt.subquestions.length > 0)
-
   // Check if we're using columns
   const hasColumns = question.options.some(opt => opt.column !== undefined)
 
@@ -209,7 +186,7 @@ export function BreakdownQuestion({
     })
   }
 
-  // Render a single option as table rows (main row + optional subquestion rows)
+  // Render a single option as a table row
   const renderOptionRows = (option: typeof question.options[0], index: number) => {
     const key = optionToKey(option.value)
 
@@ -217,7 +194,7 @@ export function BreakdownQuestion({
     if (option.header) {
       return (
         <TableRow key={option.value} className="font-bold hover:bg-transparent">
-          <TableCell className="text-base pl-0" colSpan={hasSubquestions ? 3 : 2}>
+          <TableCell className="text-base pl-0" colSpan={2}>
             <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
         </TableRow>
@@ -228,7 +205,7 @@ export function BreakdownQuestion({
     if (option.separator) {
       return (
         <TableRow key={option.value} className="hover:bg-transparent border-none">
-          <TableCell className="h-12 pl-0 border-none" colSpan={hasSubquestions ? 3 : 2}>
+          <TableCell className="h-12 pl-0 border-none" colSpan={2}>
             {/* Blank row for spacing */}
           </TableCell>
         </TableRow>
@@ -296,7 +273,6 @@ export function BreakdownQuestion({
           <TableCell className="text-right py-1">
             {prefix}{subtotal}{suffix}
           </TableCell>
-          {hasSubquestions && <TableCell />}
         </TableRow>
       )
     }
@@ -310,95 +286,60 @@ export function BreakdownQuestion({
       value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
     }
 
-    const optionHasSubquestions = option.subquestions && option.subquestions.length > 0
     const isTooltipVisible = visibleTooltips.has(option.value)
 
     return (
-      <React.Fragment key={option.value}>
-        {/* Main option row */}
-        <TableRow className="hover:bg-transparent">
-          <TableCell className="align-middle whitespace-normal pl-0">
-            <div className="relative">
-              {option.tooltip && (
-                <button
-                  type="button"
-                  onClick={() => toggleTooltip(option.value)}
-                  className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-                  aria-label="Toggle additional information"
-                >
-                  <Info className="w-5 h-5 text-muted-foreground" />
-                </button>
-              )}
-              <div>
-                <div className="text-base">
-                  <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
-                </div>
-                {option.hint && (
-                  <div className="text-base text-muted-foreground mt-0.5 font-normal">
-                    <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
-                  </div>
-                )}
-                {option.tooltip && isTooltipVisible && (
-                  <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-                    <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
-                  </div>
-                )}
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="text-right align-middle">
-            {isReadOnly ? (
-              <div className="flex items-center justify-end text-muted-foreground">
-                {prefix}{value}{suffix}
-              </div>
-            ) : (
-              <div className="flex items-center justify-end gap-1">
-                {prefix && <span className="text-muted-foreground">{prefix}</span>}
-                <Input
-                  id={`${question.id}-${key}`}
-                  type="number"
-                  value={value}
-                  onChange={(e) => handleRowChange(option.value, e.target.value)}
-                  className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
-                  tabIndex={startTabIndex + index}
-                />
-                {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
-              </div>
+      <TableRow key={option.value} className="hover:bg-transparent">
+        <TableCell className="align-middle whitespace-normal pl-0">
+          <div className="relative">
+            {option.tooltip && (
+              <button
+                type="button"
+                onClick={() => toggleTooltip(option.value)}
+                className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+                aria-label="Toggle additional information"
+              >
+                <Info className="w-5 h-5 text-muted-foreground" />
+              </button>
             )}
-          </TableCell>
-          {hasSubquestions && <TableCell className="text-right align-middle" />}
-        </TableRow>
-
-        {/* Subquestion rows (indented, with input in column 2) */}
-        {optionHasSubquestions && option.subquestions!.map((subquestion) => {
-          const sqKey = subquestionToKey(subquestion.id)
-          const sqValue = currentValues[sqKey] || ""
-
-          return (
-            <TableRow key={subquestion.id} className="hover:bg-transparent">
-              <TableCell className="align-middle whitespace-normal pl-6">
-                <div className="text-base">
-                  <Markdown>{replacePlaceholders(subquestion.text, variables, computedVariables)}</Markdown>
+            <div>
+              <div className="text-base">
+                <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+              </div>
+              {option.hint && (
+                <div className="text-base text-muted-foreground mt-0.5 font-normal">
+                  <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                 </div>
-              </TableCell>
-              <TableCell className="text-right align-middle" />
-              <TableCell className="text-right align-middle">
-                <div className="flex items-center justify-end gap-1">
-                  {prefix && <span>{prefix}</span>}
-                  <Input
-                    id={`${question.id}-${sqKey}`}
-                    type="number"
-                    value={sqValue}
-                    onChange={(e) => handleSubquestionChange(subquestion.id, e.target.value)}
-                    className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
-                  />
-                  {suffix && <span className="whitespace-nowrap">{suffix}</span>}
+              )}
+              {option.tooltip && isTooltipVisible && (
+                <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
+                  <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                 </div>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </React.Fragment>
+              )}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="text-right align-middle">
+          {isReadOnly ? (
+            <div className="flex items-center justify-end text-muted-foreground">
+              {prefix}{value}{suffix}
+            </div>
+          ) : (
+            <div className="flex items-center justify-end gap-1">
+              {prefix && <span className="text-muted-foreground">{prefix}</span>}
+              <Input
+                id={`${question.id}-${key}`}
+                type="number"
+                value={value}
+                onChange={(e) => handleRowChange(option.value, e.target.value)}
+                className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
+                tabIndex={startTabIndex + index}
+              />
+              {suffix && <span className="text-muted-foreground whitespace-nowrap">{suffix}</span>}
+            </div>
+          )}
+        </TableCell>
+      </TableRow>
     )
   }
 
@@ -614,7 +555,6 @@ export function BreakdownQuestion({
                   <TableCell className="text-right pt-4 py-2">
                     {prefix}{total}{suffix}
                   </TableCell>
-                  {hasSubquestions && <TableCell />}
                 </TableRow>
               )}
             </TableBody>
