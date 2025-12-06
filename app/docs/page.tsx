@@ -2,27 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarRail,
-} from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { BASIC_SAMPLE_TEXT, INTERMEDIATE_SAMPLE_TEXT, ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
+import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
 
-type Section =
+export type Section =
   | "overview"
   | "pages"
   | "sections"
@@ -39,109 +25,24 @@ type Section =
   | "arithmetic"
   | "computed"
   | "list-formatting"
-  | "conditional-text"
-  | "conditions"
-  | "starts-with"
+  | "conditionals"
   | "hints"
   | "tooltips"
   | "option-text"
   | "markdown"
-  | "example-basic"
-  | "example-intermediate"
-  | "example-advanced"
-
-const navMain = [
-  {
-    title: "Survey Structure",
-    items: [
-      { title: "Overview", section: "overview" as Section },
-      { title: "Pages", section: "pages" as Section },
-      { title: "Sections", section: "sections" as Section },
-      { title: "Blocks", section: "blocks" as Section },
-      { title: "Navigation", section: "navigation" as Section },
-    ],
-  },
-  {
-    title: "Question Types",
-    items: [
-      { title: "Questions", section: "basic-questions" as Section },
-      { title: "Text Input", section: "text" as Section },
-      { title: "Number", section: "number" as Section },
-      { title: "Multiple Choice", section: "multiple-choice" as Section },
-      { title: "Checkbox", section: "checkbox" as Section },
-      { title: "Breakdown", section: "breakdown" as Section },
-      { title: "Matrix", section: "matrix" as Section },
-    ],
-  },
-  {
-    title: "Dynamic Features",
-    items: [
-      { title: "Variables", section: "variables" as Section },
-      { title: "Arithmetic", section: "arithmetic" as Section },
-      { title: "Computed Variables", section: "computed" as Section },
-      { title: "List Formatting", section: "list-formatting" as Section },
-      { title: "Conditional Text", section: "conditional-text" as Section },
-      { title: "Conditional Logic", section: "conditions" as Section },
-      { title: "STARTS_WITH", section: "starts-with" as Section },
-    ],
-  },
-  {
-    title: "Customization",
-    items: [
-      { title: "Hints", section: "hints" as Section },
-      { title: "Tooltips", section: "tooltips" as Section },
-      { title: "Text on Options", section: "option-text" as Section },
-      { title: "Markdown", section: "markdown" as Section },
-    ],
-  },
-  {
-    title: "Examples",
-    items: [
-      { title: "Basic Example", section: "example-basic" as Section },
-      { title: "With Variables", section: "example-intermediate" as Section },
-      { title: "Advanced Example", section: "example-advanced" as Section },
-    ],
-  },
-]
 
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState<Section>("overview")
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar>
-        <SidebarContent>
-          {navMain.map((item) => (
-            <SidebarGroup key={item.title}>
-              <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {item.items.map((subItem) => (
-                    <SidebarMenuItem key={subItem.section}>
-                      <SidebarMenuButton
-                        isActive={activeSection === subItem.section}
-                        onClick={() => setActiveSection(subItem.section)}
-                      >
-                        {subItem.title}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
-        </SidebarContent>
-        <SidebarRail />
-      </Sidebar>
-
+      <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
           <Link href="/">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
+              Back
             </Button>
           </Link>
         </header>
@@ -167,9 +68,17 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
     case "overview":
       return (
         <div className="space-y-4">
-          <h1 className="text-4xl font-bold">Text Format Guide</h1>
+          <h1 className="text-4xl font-bold">Documentation</h1>
           <p className="text-lg text-muted-foreground">
-            Learn how to create surveys using the TST text format. Select a topic from the sidebar to get started.
+            Learn how to create surveys using the TST text format.
+          </p>
+
+          <h2 className="text-2xl font-bold pt-4">Basic Example</h2>
+          <p>Here's a simple survey to get you started:</p>
+          {renderCodeBlock(BASIC_SAMPLE_TEXT)}
+
+          <p className="text-muted-foreground">
+            Select a topic from the sidebar to learn about specific features and capabilities.
           </p>
         </div>
       )
@@ -401,27 +310,16 @@ You selected {interests AS INLINE_LIST}.`)}
         </div>
       )
 
-    case "conditional-text":
+    case "conditionals":
       return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Conditional Text</h2>
-          <p>Display dynamic text based on variables and conditions.</p>
-          {renderCodeBlock(`Q: Are you a student?
-- Yes
-- No
-VARIABLE: student
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold">Conditionals</h2>
+          <p>Control what content appears based on user responses.</p>
 
-Q: {{IF student == Yes THEN What is your major? ELSE What is your occupation?}}
-TEXT`)}
-        </div>
-      )
-
-    case "conditions":
-      return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Conditional Logic (SHOW_IF)</h2>
-          <p>Show or hide questions based on previous answers.</p>
-          {renderCodeBlock(`Q: Do you have pets?
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold">Conditional Logic (SHOW_IF)</h3>
+            <p>Show or hide questions based on previous answers.</p>
+            {renderCodeBlock(`Q: Do you have pets?
 - Yes
 - No
 VARIABLE: has_pets
@@ -431,18 +329,27 @@ SHOW_IF: has_pets == Yes
 - Dog
 - Cat
 - Other`)}
-          <p className="text-sm text-muted-foreground">
-            Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND, OR, NOT
-          </p>
-        </div>
-      )
+            <p className="text-sm text-muted-foreground">
+              Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND, OR, NOT
+            </p>
+          </div>
 
-    case "starts-with":
-      return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">STARTS_WITH Operator</h2>
-          <p>Test multiple variables with a common prefix at once.</p>
-          {renderCodeBlock(`Q: Did you witness fraud?
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold">Conditional Text</h3>
+            <p>Display dynamic text based on variables and conditions.</p>
+            {renderCodeBlock(`Q: Are you a student?
+- Yes
+- No
+VARIABLE: student
+
+Q: {{IF student == Yes THEN What is your major? ELSE What is your occupation?}}
+TEXT`)}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-2xl font-semibold">STARTS_WITH Operator</h3>
+            <p>Test multiple variables with a common prefix at once.</p>
+            {renderCodeBlock(`Q: Did you witness fraud?
 - Yes
 - No
 VARIABLE: fraud_witnessed
@@ -457,6 +364,7 @@ SHOW_IF: STARTS_WITH fraud == Yes
 
 Q: Provide details
 ESSAY`)}
+          </div>
         </div>
       )
 
@@ -508,30 +416,6 @@ Please answer **honestly** and *thoughtfully*.
 Q: Do you agree with the **terms**?
 - Yes
 - No`)}
-        </div>
-      )
-
-    case "example-basic":
-      return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Basic Survey Example</h2>
-          {renderCodeBlock(BASIC_SAMPLE_TEXT)}
-        </div>
-      )
-
-    case "example-intermediate":
-      return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Survey with Variables & Conditions</h2>
-          {renderCodeBlock(INTERMEDIATE_SAMPLE_TEXT)}
-        </div>
-      )
-
-    case "example-advanced":
-      return (
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Advanced Survey with Blocks & Computed Variables</h2>
-          {renderCodeBlock(ADVANCED_SAMPLE_TEXT)}
         </div>
       )
 

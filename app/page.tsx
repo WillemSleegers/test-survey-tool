@@ -10,7 +10,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 import { Settings } from "@/components/settings"
 import { useNavigation } from "@/contexts/navigation-context"
-import { BookOpen } from "lucide-react"
 
 import { parseQuestionnaire } from "@/lib/parser"
 import { validateNavigationSettings } from "@/lib/validation"
@@ -131,18 +130,10 @@ const QuestionnaireApp = () => {
         </div>
 
         <div className="border-t border-border pt-6">
-          <div className="text-center space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Need Help?</h3>
-              <p className="text-muted-foreground mb-4">
-                Learn how to create surveys with our comprehensive documentation
-              </p>
-            </div>
-            <Link href="/docs">
-              <Button variant="outline" size="lg">
-                <BookOpen className="w-4 h-4 mr-2" />
-                View Documentation
-              </Button>
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Help</h3>
+            <Link href="/docs" className="text-primary hover:underline">
+              Documentation
             </Link>
           </div>
         </div>
