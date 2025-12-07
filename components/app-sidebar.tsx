@@ -22,12 +22,6 @@ import type { Section } from "@/app/docs/page"
 
 const navMain = [
   {
-    title: "Overview",
-    items: [
-      { title: "Overview", section: "overview" as Section },
-    ],
-  },
-  {
     title: "Survey Structure",
     items: [
       { title: "Pages", section: "pages" as Section },
@@ -84,6 +78,20 @@ export function AppSidebar({
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0 overflow-x-hidden">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeSection === "overview"}
+                  onClick={() => onSectionChange("overview")}
+                >
+                  <span>Overview</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {navMain.map((group) => (
           <Collapsible key={group.title} defaultOpen className="group/collapsible">
             <SidebarGroup>

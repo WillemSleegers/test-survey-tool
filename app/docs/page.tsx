@@ -3,7 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 
-import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
@@ -33,12 +38,21 @@ export type Section =
   | "option-text"
   | "markdown"
 
-function DocsPageContent({ activeSection, setActiveSection }: { activeSection: Section, setActiveSection: (section: Section) => void }) {
+function DocsPageContent({
+  activeSection,
+  setActiveSection,
+}: {
+  activeSection: Section
+  setActiveSection: (section: Section) => void
+}) {
   const { isMobile } = useSidebar()
 
   return (
     <>
-      <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <AppSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">
           {isMobile && <SidebarTrigger className="-ml-1" />}
@@ -49,8 +63,8 @@ function DocsPageContent({ activeSection, setActiveSection }: { activeSection: S
           </Link>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="max-w-4xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto w-full p-4 pb-24">
             <DocumentationContent activeSection={activeSection} />
           </div>
         </div>
@@ -64,7 +78,10 @@ export default function DocsPage() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <DocsPageContent activeSection={activeSection} setActiveSection={setActiveSection} />
+      <DocsPageContent
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+      />
     </SidebarProvider>
   )
 }
@@ -81,11 +98,12 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
       const parsed = parseQuestionnaire(code)
       return (
         <div className="space-y-0 rounded-lg border border-border overflow-hidden">
-          <div className="bg-background p-6 max-h-[600px] overflow-y-auto">
+          <div className="bg-background p-6">
             <QuestionnaireViewer
               questionnaire={parsed.blocks}
               navItems={parsed.navItems}
               onResetToUpload={() => {}}
+              hidePageNavigator={true}
             />
           </div>
           <div className="bg-muted p-4 border-t border-border">
@@ -111,12 +129,15 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
 
           <div className="space-y-3">
             <h2 className="text-2xl font-semibold">Basic Example</h2>
-            <p className="text-muted-foreground">Here's a simple survey to get you started:</p>
+            <p className="text-muted-foreground">
+              Here's a simple survey to get you started:
+            </p>
             {renderExample(BASIC_SAMPLE_TEXT)}
           </div>
 
           <p className="text-muted-foreground">
-            Select a topic from the sidebar to learn about specific features and capabilities.
+            Select a topic from the sidebar to learn about specific features and
+            capabilities.
           </p>
         </div>
       )
@@ -126,7 +147,10 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Pages</h2>
-            <p className="text-muted-foreground mt-2">Pages are the top-level containers in your survey. Each page is displayed separately with navigation controls.</p>
+            <p className="text-muted-foreground mt-2">
+              Pages are the top-level containers in your survey. Each page is
+              displayed separately with navigation controls.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -135,10 +159,17 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
 or
 #`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Each <code>#</code> starts a new page with an optional title</li>
+              <li>
+                Each <code>#</code> starts a new page with an optional title
+              </li>
               <li>Not including a title simply creates a new page</li>
-              <li>Use multiple pages to break long surveys into manageable sections</li>
-              <li>Respondents navigate between pages using Next/Previous buttons</li>
+              <li>
+                Use multiple pages to break long surveys into manageable
+                sections
+              </li>
+              <li>
+                Respondents navigate between pages using Next/Previous buttons
+              </li>
             </ul>
           </div>
 
@@ -160,7 +191,10 @@ TEXT`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Sections</h2>
-            <p className="text-muted-foreground mt-2">Sections organize questions within a page. They're optional but help structure longer pages.</p>
+            <p className="text-muted-foreground mt-2">
+              Sections organize questions within a page. They're optional but
+              help structure longer pages.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -170,7 +204,9 @@ TEXT`)}
 Sections create visual groupings of related questions.`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Creates a section within a page</li>
-              <li>Usually followed by text to provide additional instructions</li>
+              <li>
+                Usually followed by text to provide additional instructions
+              </li>
               <li>Helps visually group related questions together</li>
             </ul>
           </div>
@@ -178,6 +214,10 @@ Sections create visual groupings of related questions.`)}
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
             {renderExample(`# Contact Information
+
+Q: Are you interested in receiving updates?
+- Yes
+- No
 
 ## Personal Details
 Q: What is your name?
@@ -200,7 +240,9 @@ Q: How would you like to be contacted?
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Blocks</h2>
-            <p className="text-muted-foreground mt-2">Group multiple pages together for conditional logic.</p>
+            <p className="text-muted-foreground mt-2">
+              Group multiple pages together for conditional logic.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -218,8 +260,13 @@ TEXT`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Groups multiple pages together for conditional logic</li>
               <li>All pages until the next BLOCK belong to this block</li>
-              <li>Can be used with SHOW_IF to hide/show multiple pages at once</li>
-              <li><strong>Note:</strong> BLOCKs are for logic only - use NAV for respondent navigation</li>
+              <li>
+                Can be used with SHOW_IF to hide/show multiple pages at once
+              </li>
+              <li>
+                <strong>Note:</strong> BLOCKs are for logic only - use NAV for
+                respondent navigation
+              </li>
             </ul>
           </div>
 
@@ -254,7 +301,10 @@ Q: Would you recommend us?
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Navigation</h2>
-            <p className="text-muted-foreground mt-2">Create navigation items in the survey sidebar for easier navigation.</p>
+            <p className="text-muted-foreground mt-2">
+              Create navigation items in the survey sidebar for easier
+              navigation.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -273,13 +323,25 @@ LEVEL: 2
               <li>Creates a navigation item in the survey sidebar</li>
               <li>All pages until the next NAV belong to this item</li>
               <li>Defaults to level 1 (top-level) navigation</li>
-              <li>Appears as clickable item in navigation for respondents to jump to sections</li>
-              <li>Shows completion status (visited/current/upcoming) automatically</li>
-              <li><strong>LEVEL:</strong> Must come immediately after NAV declaration
+              <li>
+                Appears as clickable item in navigation for respondents to jump
+                to sections
+              </li>
+              <li>
+                Shows completion status (visited/current/upcoming) automatically
+              </li>
+              <li>
+                <strong>LEVEL:</strong> Must come immediately after NAV
+                declaration
                 <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>Level 1 = top-level navigation (default, can be omitted)</li>
+                  <li>
+                    Level 1 = top-level navigation (default, can be omitted)
+                  </li>
                   <li>Level 2 = nested under the previous level 1 item</li>
-                  <li>Level 1 items with level 2 children become collapsible sections</li>
+                  <li>
+                    Level 1 items with level 2 children become collapsible
+                    sections
+                  </li>
                 </ul>
               </li>
             </ul>
@@ -292,7 +354,9 @@ LEVEL: 2
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Questions</h2>
-            <p className="text-muted-foreground mt-2">Questions are the core of your survey.</p>
+            <p className="text-muted-foreground mt-2">
+              Questions are the core of your survey.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -305,7 +369,10 @@ Both formats work. Use numbers when you want to reference questions explicitly.`
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Creates a question</li>
               <li>Content on following lines gets appended to question text</li>
-              <li>By default, a question is a multiple choice question (unless you specify a type like TEXT, NUMBER, etc.)</li>
+              <li>
+                By default, a question is a multiple choice question (unless you
+                specify a type like TEXT, NUMBER, etc.)
+              </li>
             </ul>
           </div>
 
@@ -325,7 +392,9 @@ Q: What is your favorite color?
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Text Input</h2>
-            <p className="text-muted-foreground mt-2">Single-line text input (TEXT) or multi-line text area (ESSAY).</p>
+            <p className="text-muted-foreground mt-2">
+              Single-line text input (TEXT) or multi-line text area (ESSAY).
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -359,7 +428,9 @@ ESSAY`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Number Input</h2>
-            <p className="text-muted-foreground mt-2">Numeric input with validation.</p>
+            <p className="text-muted-foreground mt-2">
+              Numeric input with validation.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -387,7 +458,9 @@ NUMBER`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Multiple Choice</h2>
-            <p className="text-muted-foreground mt-2">Radio button selection - choose one option.</p>
+            <p className="text-muted-foreground mt-2">
+              Radio button selection - choose one option.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -397,9 +470,13 @@ NUMBER`)}
 - Blue
 - Green`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates radio button options where only one can be selected</li>
+              <li>
+                Creates radio button options where only one can be selected
+              </li>
               <li>Each option starts with a dash (-) and space</li>
-              <li>Default question type when options are present without CHECKBOX</li>
+              <li>
+                Default question type when options are present without CHECKBOX
+              </li>
             </ul>
           </div>
 
@@ -419,7 +496,9 @@ Q: What is your favorite color?
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Checkbox</h2>
-            <p className="text-muted-foreground mt-2">Multiple selection - choose multiple options.</p>
+            <p className="text-muted-foreground mt-2">
+              Multiple selection - choose multiple options.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -453,7 +532,9 @@ CHECKBOX`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Breakdown</h2>
-            <p className="text-muted-foreground mt-2">Display options in a table with number inputs for each row.</p>
+            <p className="text-muted-foreground mt-2">
+              Display options in a table with number inputs for each row.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -489,7 +570,10 @@ BREAKDOWN`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Matrix</h2>
-            <p className="text-muted-foreground mt-2">Table layout with rows and columns where each cell is a radio button.</p>
+            <p className="text-muted-foreground mt-2">
+              Table layout with rows and columns where each cell is a radio
+              button.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -503,11 +587,22 @@ BREAKDOWN`)}
 - Excellent`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Creates a matrix question row (sub-question)</li>
-              <li>Multiple <code>- Q:</code> lines create multiple rows sharing the same options</li>
-              <li>Regular <code>- Option</code> lines after matrix rows become shared response options</li>
+              <li>
+                Multiple <code>- Q:</code> lines create multiple rows sharing
+                the same options
+              </li>
+              <li>
+                Regular <code>- Option</code> lines after matrix rows become
+                shared response options
+              </li>
               <li>Can be used with CHECKBOX for multiple selections per row</li>
-              <li>Creates a table layout where each row is a separate question</li>
-              <li><strong>Note:</strong> For numeric grids with totals, use BREAKDOWN questions instead</li>
+              <li>
+                Creates a table layout where each row is a separate question
+              </li>
+              <li>
+                <strong>Note:</strong> For numeric grids with totals, use
+                BREAKDOWN questions instead
+              </li>
             </ul>
           </div>
 
@@ -531,7 +626,10 @@ Q: Rate the following
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Variables</h2>
-            <p className="text-muted-foreground mt-2">Assign variable names to questions to reference their answers later.</p>
+            <p className="text-muted-foreground mt-2">
+              Assign variable names to questions to reference their answers
+              later.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -544,9 +642,17 @@ VARIABLE: name
 Hello {name}!`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Stores the response to the question into a variable</li>
-              <li>Can be used to insert the response into texts later in the survey or for use in conditions</li>
-              <li>Should be placed after the question or last question option</li>
-              <li>Use <code>{"{name}"}</code> syntax to insert variable values into page texts and question texts</li>
+              <li>
+                Can be used to insert the response into texts later in the
+                survey or for use in conditions
+              </li>
+              <li>
+                Should be placed after the question or last question option
+              </li>
+              <li>
+                Use <code>{"{name}"}</code> syntax to insert variable values
+                into page texts and question texts
+              </li>
             </ul>
           </div>
 
@@ -572,7 +678,9 @@ Welcome {name}! You are {age} years old.`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Arithmetic Expressions</h2>
-            <p className="text-muted-foreground mt-2">Perform calculations using variables.</p>
+            <p className="text-muted-foreground mt-2">
+              Perform calculations using variables.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -588,9 +696,14 @@ VARIABLE: oranges
 # Summary
 You have {apples + oranges} fruits total.`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Use <code>{"{var1 + var2}"}</code> to add, subtract, multiply, divide variables</li>
+              <li>
+                Use <code>{"{var1 + var2}"}</code> to add, subtract, multiply,
+                divide variables
+              </li>
               <li>Supports parentheses for complex operations</li>
-              <li>Can be used in question text, page text, or computed variables</li>
+              <li>
+                Can be used in question text, page text, or computed variables
+              </li>
             </ul>
           </div>
 
@@ -624,7 +737,9 @@ Your monthly expenses:
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Computed Variables</h2>
-            <p className="text-muted-foreground mt-2">Create calculated variables based on other answers.</p>
+            <p className="text-muted-foreground mt-2">
+              Create calculated variables based on other answers.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -676,7 +791,9 @@ Your total monthly expenses: **{total}**`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">List Formatting</h2>
-            <p className="text-muted-foreground mt-2">Format checkbox variables as bullet lists or inline text.</p>
+            <p className="text-muted-foreground mt-2">
+              Format checkbox variables as bullet lists or inline text.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -692,14 +809,23 @@ VARIABLE: interests
 Your interests: {interests AS LIST}
 You selected {interests AS INLINE_LIST}.`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li><code>{"{interests AS LIST}"}</code> - Formats checkbox variables as bullet lists
+              <li>
+                <code>{"{interests AS LIST}"}</code> - Formats checkbox
+                variables as bullet lists
                 <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>Without AS LIST, checkbox variables display as bullet lists by default</li>
+                  <li>
+                    Without AS LIST, checkbox variables display as bullet lists
+                    by default
+                  </li>
                 </ul>
               </li>
-              <li><code>{"{interests AS INLINE_LIST}"}</code> - Formats checkbox variables as comma-separated inline text
+              <li>
+                <code>{"{interests AS INLINE_LIST}"}</code> - Formats checkbox
+                variables as comma-separated inline text
                 <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>Automatically lowercases items for natural sentence flow</li>
+                  <li>
+                    Automatically lowercases items for natural sentence flow
+                  </li>
                   <li>Uses Oxford commas: "sports, music, and technology"</li>
                   <li>Perfect for inserting lists within question text</li>
                 </ul>
@@ -733,13 +859,19 @@ You selected {interests AS INLINE_LIST} as your interests.`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Conditionals</h2>
-            <p className="text-muted-foreground mt-2">Control what content appears based on user responses.</p>
+            <p className="text-muted-foreground mt-2">
+              Control what content appears based on user responses.
+            </p>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-3">
-              <h3 className="text-2xl font-semibold">Conditional Logic (SHOW_IF)</h3>
-              <p className="text-muted-foreground">Show or hide questions based on previous answers.</p>
+              <h3 className="text-2xl font-semibold">
+                Conditional Logic (SHOW_IF)
+              </h3>
+              <p className="text-muted-foreground">
+                Show or hide questions based on previous answers.
+              </p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
@@ -755,9 +887,18 @@ SHOW_IF: has_pets == Yes
 - Other`)}
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
                   <li>Hides/shows questions conditionally</li>
-                  <li>Should be placed below a question or below the question options to apply to the question</li>
-                  <li>Can also be placed after blocks, pages, or individual question options</li>
-                  <li>Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND, OR, NOT</li>
+                  <li>
+                    Should be placed below a question or below the question
+                    options to apply to the question
+                  </li>
+                  <li>
+                    Can also be placed after blocks, pages, or individual
+                    question options
+                  </li>
+                  <li>
+                    Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND,
+                    OR, NOT
+                  </li>
                 </ul>
               </div>
 
@@ -780,7 +921,9 @@ SHOW_IF: has_pets == Yes
 
             <div className="space-y-3">
               <h3 className="text-2xl font-semibold">Conditional Text</h3>
-              <p className="text-muted-foreground">Display dynamic text based on variables and conditions.</p>
+              <p className="text-muted-foreground">
+                Display dynamic text based on variables and conditions.
+              </p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
@@ -792,8 +935,13 @@ VARIABLE: student
 Q: {{IF student == Yes THEN What is your major? ELSE What is your occupation?}}
 TEXT`)}
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Inserts conditional text within question text or page text</li>
-                  <li>Can be used to dynamically change question wording based on previous responses</li>
+                  <li>
+                    Inserts conditional text within question text or page text
+                  </li>
+                  <li>
+                    Can be used to dynamically change question wording based on
+                    previous responses
+                  </li>
                   <li>ELSE part is optional</li>
                 </ul>
               </div>
@@ -813,7 +961,9 @@ TEXT`)}
 
             <div className="space-y-3">
               <h3 className="text-2xl font-semibold">STARTS_WITH Operator</h3>
-              <p className="text-muted-foreground">Test multiple variables with a common prefix at once.</p>
+              <p className="text-muted-foreground">
+                Test multiple variables with a common prefix at once.
+              </p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
@@ -834,9 +984,18 @@ Q: Provide details
 ESSAY`)}
                 <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
                   <li>Tests multiple variables with a common prefix at once</li>
-                  <li><code>STARTS_WITH fraud == Yes</code>: Any variable starting with "fraud" equals "Yes"</li>
-                  <li><code>STARTS_WITH fraud != No</code>: Any variable starting with "fraud" doesn't equal "No"</li>
-                  <li>Uses OR logic: true if ANY matching variable meets the condition</li>
+                  <li>
+                    <code>STARTS_WITH fraud == Yes</code>: Any variable starting
+                    with "fraud" equals "Yes"
+                  </li>
+                  <li>
+                    <code>STARTS_WITH fraud != No</code>: Any variable starting
+                    with "fraud" doesn't equal "No"
+                  </li>
+                  <li>
+                    Uses OR logic: true if ANY matching variable meets the
+                    condition
+                  </li>
                   <li>Useful for grouped questions with common prefixes</li>
                 </ul>
               </div>
@@ -870,7 +1029,9 @@ ESSAY`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Hints</h2>
-            <p className="text-muted-foreground mt-2">Add helpful subtext to questions for additional context.</p>
+            <p className="text-muted-foreground mt-2">
+              Add helpful subtext to questions for additional context.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -879,8 +1040,13 @@ ESSAY`)}
 HINT: We'll never share your email
 TEXT`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Adds muted text below question for additional instructions</li>
-              <li>Place immediately after the question line; before question options</li>
+              <li>
+                Adds muted text below question for additional instructions
+              </li>
+              <li>
+                Place immediately after the question line; before question
+                options
+              </li>
               <li>Content on following lines gets appended to the hint text</li>
               <li>Supports Markdown formatting</li>
             </ul>
@@ -908,7 +1074,9 @@ CHECKBOX`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Tooltips</h2>
-            <p className="text-muted-foreground mt-2">Add collapsible information icons next to questions.</p>
+            <p className="text-muted-foreground mt-2">
+              Add collapsible information icons next to questions.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -922,9 +1090,14 @@ NUMBER`)}
               <li>Adds collapsible information icon next to question text</li>
               <li>Tooltip content is hidden by default and shown on click</li>
               <li>Place after HINT (if present); before question options</li>
-              <li>Content on following lines gets appended to the tooltip text</li>
+              <li>
+                Content on following lines gets appended to the tooltip text
+              </li>
               <li>Supports Markdown formatting (bold, italic, links, etc.)</li>
-              <li><strong>Note:</strong> Use <code>*</code> or numbered lists for bullets, not <code>-</code> (which starts options)</li>
+              <li>
+                <strong>Note:</strong> Use <code>*</code> or numbered lists for
+                bullets, not <code>-</code> (which starts options)
+              </li>
             </ul>
           </div>
 
@@ -947,7 +1120,9 @@ NUMBER`)}
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Text Inputs on Options</h2>
-            <p className="text-muted-foreground mt-2">Add text input to specific options.</p>
+            <p className="text-muted-foreground mt-2">
+              Add text input to specific options.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -960,8 +1135,13 @@ NUMBER`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Adds text input to a question option</li>
               <li>Shows up when the question option is selected</li>
-              <li>Useful to allow respondents to elaborate on a question option</li>
-              <li>Should be placed directly under the option with two indented spaces</li>
+              <li>
+                Useful to allow respondents to elaborate on a question option
+              </li>
+              <li>
+                Should be placed directly under the option with two indented
+                spaces
+              </li>
             </ul>
           </div>
 
@@ -983,7 +1163,9 @@ Q: What is your favorite hobby?
         <div className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold">Markdown Formatting</h2>
-            <p className="text-muted-foreground mt-2">All text supports Markdown formatting.</p>
+            <p className="text-muted-foreground mt-2">
+              All text supports Markdown formatting.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -996,8 +1178,12 @@ Q: Do you agree with the **terms**?
 - No`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>All text supports Markdown formatting</li>
-              <li><code>**bold text**</code> for emphasis</li>
-              <li><code>*italic text*</code> for subtle emphasis</li>
+              <li>
+                <code>**bold text**</code> for emphasis
+              </li>
+              <li>
+                <code>*italic text*</code> for subtle emphasis
+              </li>
               <li>Bullet points and other formatting</li>
             </ul>
           </div>

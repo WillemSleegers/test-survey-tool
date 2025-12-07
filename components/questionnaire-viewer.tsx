@@ -24,12 +24,14 @@ interface QuestionnaireViewerProps {
   questionnaire: Block[]
   navItems: NavItem[]
   onResetToUpload: () => void
+  hidePageNavigator?: boolean
 }
 
 export function QuestionnaireViewer({
   questionnaire,
   navItems,
   onResetToUpload,
+  hidePageNavigator = false,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
@@ -216,17 +218,19 @@ export function QuestionnaireViewer({
       </div>
 
       {/* Page Navigator - Developer/researcher tool with page-level detail */}
-      <PageNavigator
-        questionnaire={questionnaire}
-        allPages={allPages}
-        visiblePages={visiblePages}
-        currentVisiblePageIndex={currentVisiblePageIndex}
-        variables={variables}
-        currentBlockComputedVars={currentBlockComputedVars}
-        currentPageComputedVars={currentPageComputedVars}
-        onJumpToPage={jumpToPage}
-        onResetToUpload={onResetToUpload}
-      />
+      {!hidePageNavigator && (
+        <PageNavigator
+          questionnaire={questionnaire}
+          allPages={allPages}
+          visiblePages={visiblePages}
+          currentVisiblePageIndex={currentVisiblePageIndex}
+          variables={variables}
+          currentBlockComputedVars={currentBlockComputedVars}
+          currentPageComputedVars={currentPageComputedVars}
+          onJumpToPage={jumpToPage}
+          onResetToUpload={onResetToUpload}
+        />
+      )}
 
       <CompletionDialog
         isOpen={showCompletionDialog}

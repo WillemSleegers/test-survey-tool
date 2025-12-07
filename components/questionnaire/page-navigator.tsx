@@ -51,6 +51,12 @@ export function PageNavigator({
 }: PageNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set())
+  const [isMac, setIsMac] = useState(false)
+
+  // Detect if user is on Mac for keyboard shortcuts
+  useEffect(() => {
+    setIsMac(navigator.userAgent?.includes("Mac") ?? false)
+  }, [])
 
   // Auto-expand only the current block, collapse others
   useEffect(() => {
@@ -143,12 +149,7 @@ export function PageNavigator({
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 right-4 z-40 w-8 h-8 p-0 opacity-20 hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
-        title={`Page Navigator (${
-          typeof navigator !== "undefined" &&
-          navigator.userAgent?.includes("Mac")
-            ? "Cmd"
-            : "Ctrl"
-        }+/)`}
+        title={`Page Navigator (${isMac ? "Cmd" : "Ctrl"}+/)`}
       >
         <Menu className="w-4 h-4" />
       </Button>
@@ -342,11 +343,7 @@ export function PageNavigator({
               <div className="text-sm text-muted-foreground space-y-1">
                 <div>
                   <kbd className="px-1 py-0.5 bg-muted rounded">
-                    {typeof navigator !== "undefined" &&
-                    navigator.userAgent?.includes("Mac")
-                      ? "Cmd"
-                      : "Ctrl"}{" "}
-                    + /
+                    {isMac ? "Cmd" : "Ctrl"} + /
                   </kbd>
                   : Toggle navigator
                 </div>
