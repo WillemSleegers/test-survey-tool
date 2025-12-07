@@ -3,10 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
+import { parseQuestionnaire } from "@/lib/parser"
+import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 
 export type Section =
   | "overview"
@@ -31,15 +33,15 @@ export type Section =
   | "option-text"
   | "markdown"
 
-export default function DocsPage() {
-  const [activeSection, setActiveSection] = useState<Section>("overview")
+function DocsPageContent({ activeSection, setActiveSection }: { activeSection: Section, setActiveSection: (section: Section) => void }) {
+  const { isMobile } = useSidebar()
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <>
       <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
+          {isMobile && <SidebarTrigger className="-ml-1" />}
           <Link href="/">
             <Button variant="ghost" size="sm">
               Back
@@ -53,6 +55,16 @@ export default function DocsPage() {
           </div>
         </div>
       </SidebarInset>
+    </>
+  )
+}
+
+export default function DocsPage() {
+  const [activeSection, setActiveSection] = useState<Section>("overview")
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <DocsPageContent activeSection={activeSection} setActiveSection={setActiveSection} />
     </SidebarProvider>
   )
 }
@@ -63,6 +75,24 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
       <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
     </div>
   )
+
+  const renderExample = (code: string) => {
+    try {
+      const parsed = parseQuestionnaire(code)
+      return (
+        <div className="border border-border rounded-lg p-4 bg-background">
+          <div className="text-xs font-semibold text-muted-foreground mb-3">PREVIEW</div>
+          <QuestionnaireViewer
+            questionnaire={parsed.blocks}
+            navItems={parsed.navItems}
+            onResetToUpload={() => {}}
+          />
+        </div>
+      )
+    } catch (err) {
+      return null
+    }
+  }
 
   switch (activeSection) {
     case "overview":
@@ -176,6 +206,12 @@ TEXT
 
 Q: Tell us about yourself
 ESSAY`)}
+          {renderExample(`#
+Q: What is your name?
+TEXT
+
+Q: Tell us about yourself
+ESSAY`)}
         </div>
       )
 
@@ -185,6 +221,9 @@ ESSAY`)}
           <h2 className="text-3xl font-bold">Number Input</h2>
           <p>Numeric input with validation.</p>
           {renderCodeBlock(`Q: How old are you?
+NUMBER`)}
+          {renderExample(`#
+Q: How old are you?
 NUMBER`)}
         </div>
       )
@@ -198,6 +237,11 @@ NUMBER`)}
 - Red
 - Blue
 - Green`)}
+          {renderExample(`#
+Q: What is your favorite color?
+- Red
+- Blue
+- Green`)}
         </div>
       )
 
@@ -207,10 +251,16 @@ NUMBER`)}
           <h2 className="text-3xl font-bold">Checkbox</h2>
           <p>Multiple selection - choose multiple options.</p>
           {renderCodeBlock(`Q: Which languages do you speak?
-CHECKBOX
 - English
 - Spanish
-- French`)}
+- French
+CHECKBOX`)}
+          {renderExample(`#
+Q: Which languages do you speak?
+- English
+- Spanish
+- French
+CHECKBOX`)}
         </div>
       )
 
@@ -220,10 +270,16 @@ CHECKBOX
           <h2 className="text-3xl font-bold">Breakdown</h2>
           <p>Display options in a table with number inputs for each row.</p>
           {renderCodeBlock(`Q: Rate these features (1-10)
-BREAKDOWN
 - Feature A
 - Feature B
-- Feature C`)}
+- Feature C
+BREAKDOWN`)}
+          {renderExample(`#
+Q: Rate these features (1-10)
+- Feature A
+- Feature B
+- Feature C
+BREAKDOWN`)}
         </div>
       )
 
@@ -233,6 +289,14 @@ BREAKDOWN
           <h2 className="text-3xl font-bold">Matrix</h2>
           <p>Table layout with rows and columns where each cell is a radio button.</p>
           {renderCodeBlock(`Q: Rate the following
+- Q: Product quality
+- Q: Customer service
+- Poor
+- Fair
+- Good
+- Excellent`)}
+          {renderExample(`#
+Q: Rate the following
 - Q: Product quality
 - Q: Customer service
 - Poor
@@ -398,6 +462,12 @@ NUMBER`)}
           <h2 className="text-3xl font-bold">Text Inputs on Options</h2>
           <p>Add text input to specific options.</p>
           {renderCodeBlock(`Q: What is your favorite hobby?
+- Sports
+- Reading
+- Other
+  - TEXT`)}
+          {renderExample(`#
+Q: What is your favorite hobby?
 - Sports
 - Reading
 - Other
