@@ -40,7 +40,7 @@ export function SectionRenderer({
           : null
 
         return (
-          <div className="whitespace-pre-wrap space-y-2 pt-6">
+          <div className="whitespace-pre-wrap space-y-2">
             <div className="relative">
               {processedTooltip && (
                 <button

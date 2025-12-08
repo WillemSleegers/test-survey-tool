@@ -204,8 +204,8 @@ export function BreakdownQuestion({
     // If this is a separator row, render a blank row
     if (option.separator) {
       return (
-        <TableRow key={option.value} className="hover:bg-transparent border-none">
-          <TableCell className="h-12 pl-0 border-none" colSpan={2}>
+        <TableRow key={option.value} className="hover:bg-transparent border-b-0!">
+          <TableCell className="h-12 pl-0" colSpan={2}>
             {/* Blank row for spacing */}
           </TableCell>
         </TableRow>
@@ -369,8 +369,8 @@ export function BreakdownQuestion({
               // If this is a separator row, render a blank row
               if (option.separator) {
                 return (
-                  <TableRow key={option.value} className="hover:bg-transparent border-none">
-                    <TableCell className="h-12 pl-0 border-none" colSpan={numColumns + 1}>
+                  <TableRow key={option.value} className="hover:bg-transparent border-b-0!">
+                    <TableCell className="h-12 pl-0" colSpan={numColumns + 1}>
                       {/* Blank row for spacing */}
                     </TableCell>
                   </TableRow>

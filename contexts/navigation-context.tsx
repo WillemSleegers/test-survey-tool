@@ -14,7 +14,7 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
 
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
-  const [isVisible, setIsVisibleState] = useState<boolean>(false)
+  const [isVisible, setIsVisibleState] = useState<boolean>(true)
   const [position, setPositionState] = useState<NavigationPosition>('left')
 
   // Load navigation preferences from localStorage on mount

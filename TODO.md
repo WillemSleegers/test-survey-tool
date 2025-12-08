@@ -75,6 +75,13 @@
 
 ## Ideas to Explore
 
+- [ ] Add page-level HINT support
+  - Currently only TOOLTIP is supported at page level (requires clicking info icon)
+  - HINT is supported for questions, options, and subquestions (always visible below element)
+  - Consider adding page-level HINT that displays always-visible text below page title
+  - Would provide consistent pattern: TOOLTIP = collapsible, HINT = always visible
+  - Use case: Important instructions that should always be visible (e.g., "Round all amounts to thousands")
+  - Would require parser changes and PageHeader component updates
 - [x] Refactor Question type to use discriminated unions
   - ✅ Implemented discriminated union types for all 7 question types
   - ✅ Each question type (MultipleChoiceQuestion, CheckboxQuestion, TextQuestion, EssayQuestion, NumberQuestion, MatrixQuestion, BreakdownQuestion) has only relevant fields

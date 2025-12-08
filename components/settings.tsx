@@ -39,14 +39,14 @@ export function Settings() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label className="text-sm font-medium">Show Navigation</Label>
+            <Label className="text-sm font-medium">Hide Navigation</Label>
             <p className="text-sm text-muted-foreground">
-              Display navigation sidebar during surveys
+              Hide navigation sidebar during surveys
             </p>
           </div>
           <Switch
-            checked={isVisible}
-            onCheckedChange={setIsVisible}
+            checked={!isVisible}
+            onCheckedChange={(checked) => setIsVisible(!checked)}
           />
         </div>
       </div>
