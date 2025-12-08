@@ -71,7 +71,7 @@ export function AppSidebar({
   onSectionChange: (section: Section) => void
 }) {
   return (
-    <Sidebar className="border-none">
+    <Sidebar className="border-r">
       <SidebarHeader className="border-none">
         <div className="px-2 py-1">
           <h2 className="text-lg font-semibold">Documentation</h2>

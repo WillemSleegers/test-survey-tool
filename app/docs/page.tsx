@@ -10,7 +10,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
-import { Button } from "@/components/ui/button"
 import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
 import { parseQuestionnaire } from "@/lib/parser"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
@@ -54,17 +53,25 @@ function DocsPageContent({
         onSectionChange={setActiveSection}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-          {isMobile && <SidebarTrigger className="-ml-1" />}
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              Back
-            </Button>
-          </Link>
+        <header>
+          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between border-b border-border">
+            {isMobile && <SidebarTrigger className="-ml-1 mr-2" />}
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <span className="text-xl font-bold">TST</span>
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Link href="/docs" className="text-sm hover:underline">
+                Documentation
+              </Link>
+              <Link href="/releases" className="text-sm hover:underline">
+                Releases
+              </Link>
+            </nav>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto w-full p-4 pb-24">
+          <div className="max-w-4xl mx-auto w-full p-4 pt-8 pb-24">
             <DocumentationContent activeSection={activeSection} />
           </div>
         </div>

@@ -9,6 +9,7 @@ import { TextEditor } from "@/components/text-editor"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 import { Settings } from "@/components/settings"
+import { Navbar } from "@/components/navbar"
 
 import { parseQuestionnaire } from "@/lib/parser"
 
@@ -79,15 +80,17 @@ const QuestionnaireApp = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8 mb-8">
-      {/* Header */}
-      <div className="my-8 text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">TST</h1>
-        <p className="text-lg text-muted-foreground">Test Survey Tool</p>
-      </div>
+    <div>
+      <Navbar />
+      <div className="max-w-4xl mx-auto p-6 space-y-8 mb-8">
+        {/* Header */}
+        <div className="my-8 text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">TST</h1>
+          <p className="text-lg text-muted-foreground">Test Survey Tool</p>
+        </div>
 
-      {/* Main Content */}
-      <div className="space-y-8">
+        {/* Main Content */}
+        <div className="space-y-8">
         {showTextEditor ? (
           <TextEditor
             onLoadContent={handleTextEditorLoad}
@@ -127,10 +130,16 @@ const QuestionnaireApp = () => {
         <div className="border-t border-border pt-6">
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Help</h3>
-            <Link href="/docs" className="text-primary hover:underline">
-              Documentation
-            </Link>
+            <div className="flex flex-col gap-2">
+              <Link href="/docs" className="text-primary hover:underline">
+                Documentation
+              </Link>
+              <Link href="/releases" className="text-primary hover:underline">
+                Release Notes
+              </Link>
+            </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
