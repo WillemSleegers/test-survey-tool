@@ -59,6 +59,9 @@ export function BreakdownQuestion({
     ? responseValue as Record<string, string>
     : {}
 
+  // Create a local variables object that includes subtotal variables calculated during render
+  const localVariables: Variables = { ...variables }
+
   // Convert option index to a string key for storage
   const optionToKey = (index: number): string => {
     return `option_${index}`
@@ -222,7 +225,7 @@ export function BreakdownQuestion({
 
       // If custom calculation is provided, use it; otherwise auto-calculate
       if (option.custom) {
-        const customValue = replacePlaceholders(option.custom, variables, computedVariables)
+        const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
         subtotal = parseFloat(customValue) || 0
       } else {
         // Calculate subtotal from the last subtotal/header (or start) to current position
@@ -239,6 +242,11 @@ export function BreakdownQuestion({
 
         const optionsToSum = question.options.slice(startIndex, optionIndex)
         subtotal = calculateSubtotal(optionsToSum)
+      }
+
+      // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
+      if (option.variable) {
+        localVariables[option.variable] = subtotal
       }
 
       const isTooltipVisible = visibleTooltips.has(option.value)
@@ -391,7 +399,7 @@ export function BreakdownQuestion({
 
                 // If custom calculation is provided, use it; otherwise auto-calculate
                 if (option.custom) {
-                  const customValue = replacePlaceholders(option.custom, variables, computedVariables)
+                  const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
                   subtotal = parseFloat(customValue) || 0
                 } else {
                   // Calculate subtotal from the last subtotal/header (or start) to current position
@@ -405,6 +413,11 @@ export function BreakdownQuestion({
 
                   const optionsToSum = question.options.slice(startIndex, index)
                   subtotal = calculateSubtotal(optionsToSum)
+                }
+
+                // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
+                if (option.variable) {
+                  localVariables[option.variable] = subtotal
                 }
 
                 // Determine which column to show the subtotal in - use option.column if specified, otherwise last column

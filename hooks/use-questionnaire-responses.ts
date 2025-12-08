@@ -82,7 +82,15 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
       }
 
       const key = `option_${index}`
-      const numValue = parseFloat(responseValue[key] || "")
+
+      // Get value - either from user input or from calculated prefillValue
+      let valueStr = responseValue[key] || ""
+      if (!valueStr && option.prefillValue) {
+        // For read-only options with VALUE, calculate the value
+        valueStr = replacePlaceholders(option.prefillValue, variables, {})
+      }
+
+      const numValue = parseFloat(valueStr)
       if (!isNaN(numValue)) {
         if (option.subtract) {
           total -= numValue
@@ -121,11 +129,17 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
         if (option.variable && !option.subtotalLabel) {
           // For regular options with variables (not subtotals)
           const key = `option_${index}`
-          const value = breakdownResponse[key]
+
+          // Get value - either from user input or from calculated prefillValue
+          let valueStr = breakdownResponse[key] || ""
+          if (!valueStr && option.prefillValue) {
+            // For read-only options with VALUE, calculate the value
+            valueStr = replacePlaceholders(option.prefillValue, variables, {})
+          }
 
           // Store the numeric value if it exists and is valid
-          if (value !== undefined && value !== "") {
-            const numValue = parseFloat(value)
+          if (valueStr !== undefined && valueStr !== "") {
+            const numValue = parseFloat(valueStr)
             if (!isNaN(numValue)) {
               variables[option.variable] = numValue
             }
@@ -189,6 +203,7 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
             }
           }
 
+          // Store the subtotal variable immediately so it's available for subsequent CUSTOM calculations
           variables[option.variable] = subtotal
         }
       })
