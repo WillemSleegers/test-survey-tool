@@ -59,14 +59,14 @@ export function BreakdownQuestion({
     ? responseValue as Record<string, string>
     : {}
 
-  // Convert option label to a slug for use as a key
-  const optionToKey = (optionValue: string): string => {
-    return optionValue.toLowerCase().replace(/[^a-z0-9]/g, '_')
+  // Convert option index to a string key for storage
+  const optionToKey = (index: number): string => {
+    return `option_${index}`
   }
 
   // Handle input change for a specific row
-  const handleRowChange = (optionValue: string, value: string) => {
-    const key = optionToKey(optionValue)
+  const handleRowChange = (index: number, value: string) => {
+    const key = optionToKey(index)
     const newValues = { ...currentValues }
 
     if (value === "") {
@@ -87,7 +87,9 @@ export function BreakdownQuestion({
         continue
       }
 
-      const key = optionToKey(option.value)
+      // Find the index of this option in the original question.options array
+      const index = question.options.indexOf(option)
+      const key = optionToKey(index)
 
       // Get value - either from user input or from calculated prefillValue
       let valueStr = currentValues[key] || ""
@@ -117,7 +119,9 @@ export function BreakdownQuestion({
     const targetColumn = question.totalColumn
 
     // Only sum values from main options
-    for (const option of question.options) {
+    for (let index = 0; index < question.options.length; index++) {
+      const option = question.options[index]
+
       // Skip excluded options
       if (option.exclude) {
         continue
@@ -128,7 +132,7 @@ export function BreakdownQuestion({
         continue
       }
 
-      const key = optionToKey(option.value)
+      const key = optionToKey(index)
 
       // Get value - either from user input or from calculated prefillValue
       let valueStr = currentValues[key] || ""
@@ -188,13 +192,13 @@ export function BreakdownQuestion({
 
   // Render a single option as a table row
   const renderOptionRows = (option: typeof question.options[0], index: number) => {
-    const key = optionToKey(option.value)
+    const key = optionToKey(index)
 
     // If this is a header row, render it without an input field
     if (option.header) {
       return (
-        <TableRow key={option.value} className="font-bold hover:bg-transparent">
-          <TableCell className="text-base pl-0" colSpan={2}>
+        <TableRow key={index} className="font-bold hover:bg-transparent">
+          <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
             <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
         </TableRow>
@@ -204,7 +208,7 @@ export function BreakdownQuestion({
     // If this is a separator row, render a blank row
     if (option.separator) {
       return (
-        <TableRow key={option.value} className="hover:bg-transparent border-b-0!">
+        <TableRow key={index} className="hover:bg-transparent border-b-0!">
           <TableCell className="h-12 pl-0" colSpan={2}>
             {/* Blank row for spacing */}
           </TableCell>
@@ -242,7 +246,7 @@ export function BreakdownQuestion({
       const suffix = option.suffix ?? questionSuffix
 
       return (
-        <TableRow key={option.value} className="font-bold hover:bg-transparent">
+        <TableRow key={index} className="font-bold hover:bg-transparent">
           <TableCell className="align-middle whitespace-normal text-base pl-0">
             <div className="relative">
               {option.tooltip && (
@@ -293,7 +297,7 @@ export function BreakdownQuestion({
     const suffix = option.suffix ?? questionSuffix
 
     return (
-      <TableRow key={option.value} className="hover:bg-transparent">
+      <TableRow key={index} className="hover:bg-transparent">
         <TableCell className="align-middle whitespace-normal pl-0">
           <div className="relative">
             {option.tooltip && (
@@ -335,7 +339,7 @@ export function BreakdownQuestion({
                 id={`${question.id}-${key}`}
                 type="number"
                 value={value}
-                onChange={(e) => handleRowChange(option.value, e.target.value)}
+                onChange={(e) => handleRowChange(index, e.target.value)}
                 className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
                 tabIndex={startTabIndex + index}
               />
@@ -362,8 +366,8 @@ export function BreakdownQuestion({
               // If this is a header row, render it without input fields
               if (option.header) {
                 return (
-                  <TableRow key={option.value} className="font-bold hover:bg-transparent">
-                    <TableCell className="text-base pl-0" colSpan={numColumns + 1}>
+                  <TableRow key={index} className="font-bold hover:bg-transparent">
+                    <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
                       <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                     </TableCell>
                   </TableRow>
@@ -373,7 +377,7 @@ export function BreakdownQuestion({
               // If this is a separator row, render a blank row
               if (option.separator) {
                 return (
-                  <TableRow key={option.value} className="hover:bg-transparent border-b-0!">
+                  <TableRow key={index} className="hover:bg-transparent border-b-0!">
                     <TableCell className="h-12 pl-0" colSpan={numColumns + 1}>
                       {/* Blank row for spacing */}
                     </TableCell>
@@ -410,7 +414,7 @@ export function BreakdownQuestion({
                 const suffix = option.suffix ?? questionSuffix
 
                 return (
-                  <TableRow key={option.value} className="font-bold hover:bg-transparent">
+                  <TableRow key={index} className="font-bold hover:bg-transparent">
                     <TableCell className="align-middle whitespace-normal text-base pl-0">
                       <div className="relative">
                         {option.tooltip && (
@@ -449,7 +453,7 @@ export function BreakdownQuestion({
                 )
               }
 
-              const key = optionToKey(option.value)
+              const key = optionToKey(index)
               const isReadOnly = !!option.prefillValue
               let value = currentValues[key] || ""
               if (isReadOnly) {
@@ -461,7 +465,7 @@ export function BreakdownQuestion({
               const suffix = option.suffix ?? questionSuffix
 
               return (
-                <TableRow key={option.value} className="hover:bg-transparent">
+                <TableRow key={index} className="hover:bg-transparent">
                   {/* Label column (always shown) */}
                   <TableCell className="align-middle whitespace-normal pl-0">
                     <div className="relative">
@@ -508,7 +512,7 @@ export function BreakdownQuestion({
                               id={`${question.id}-${key}`}
                               type="number"
                               value={value}
-                              onChange={(e) => handleRowChange(option.value, e.target.value)}
+                              onChange={(e) => handleRowChange(index, e.target.value)}
                               className={`w-24 ${suffix ? 'text-right' : 'text-left'} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]`}
                               tabIndex={startTabIndex + index}
                             />
@@ -525,7 +529,7 @@ export function BreakdownQuestion({
             {/* Total row */}
             {totalLabel && (
               <TableRow className="font-bold border-t border-border">
-                <TableCell className="text-base pt-4 pl-0">
+                <TableCell className="text-base pt-4 pl-0 whitespace-normal">
                   {replacePlaceholders(totalLabel, variables, computedVariables)}
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
@@ -557,7 +561,7 @@ export function BreakdownQuestion({
               {/* Total row */}
               {totalLabel && (
                 <TableRow className="font-semibold border-t border-border">
-                  <TableCell className="text-base pt-4 pl-0">
+                  <TableCell className="text-base pt-4 pl-0 whitespace-normal">
                     {replacePlaceholders(totalLabel, variables, computedVariables)}
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">

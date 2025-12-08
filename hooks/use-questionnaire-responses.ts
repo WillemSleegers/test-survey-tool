@@ -68,7 +68,9 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
     const targetColumn = question.totalColumn
 
     // Sum values from main options
-    for (const option of question.options) {
+    for (let index = 0; index < question.options.length; index++) {
+      const option = question.options[index]
+
       // Skip excluded options
       if (option.exclude) {
         continue
@@ -79,7 +81,7 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
         continue
       }
 
-      const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
+      const key = `option_${index}`
       const numValue = parseFloat(responseValue[key] || "")
       if (!isNaN(numValue)) {
         if (option.subtract) {
@@ -115,10 +117,10 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
     if (question?.type === "breakdown" && typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue)) {
       const breakdownResponse = responseValue as Record<string, string>
 
-      question.options.forEach((option) => {
+      question.options.forEach((option, index) => {
         if (option.variable && !option.subtotalLabel) {
           // For regular options with variables (not subtotals)
-          const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
+          const key = `option_${index}`
           const value = breakdownResponse[key]
 
           // Store the numeric value if it exists and is valid
@@ -162,10 +164,13 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
             const optionsToSum = question.options.slice(startIndex, optionIndex)
             subtotal = 0
 
-            for (const opt of optionsToSum) {
+            for (let i = 0; i < optionsToSum.length; i++) {
+              const opt = optionsToSum[i]
               if (opt.exclude) continue
 
-              const key = opt.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
+              // Find the actual index of this option in the full question.options array
+              const actualIndex = startIndex + i
+              const key = `option_${actualIndex}`
 
               // Get value - either from user input or from calculated prefillValue
               let valueStr = breakdownResponse[key] || ""

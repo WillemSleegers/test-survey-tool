@@ -2,6 +2,13 @@
 
 ## High Priority
 
+- [ ] Fix React key uniqueness issue with duplicate option values
+  - **Problem**: BREAKDOWN questions using `option.value` as React key causes "duplicate key" errors when options have identical labels (e.g., "Woongebouwen: Omzet als hoofd-/nevenaannemer" appears twice under different headers)
+  - **Root cause**: Option values/labels are not guaranteed to be unique, but React keys must be unique
+  - **Solution**: Use array index as key instead of option.value for all TableRow elements
+  - **Status**: Fixed in breakdown-question.tsx (8 locations updated to use `key={index}`)
+  - **Action needed**: Audit other question components (matrix-question.tsx, checkbox-question.tsx, multiple-choice-question.tsx) for similar issues
+  - **Why index is safe**: Options array is stable (not reordered), index uniquely identifies each option's position
 - [x] Implement delimiter-based multi-line parsing for tooltips/hints
   - ✅ Added support for `---` delimiters to mark complex tooltip/hint content
   - ✅ Delimiter must be on the same line as keyword (e.g., `TOOLTIP: ---`) to avoid lookahead issues
