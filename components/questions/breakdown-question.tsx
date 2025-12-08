@@ -153,8 +153,8 @@ export function BreakdownQuestion({
 
   const total = calculateTotal()
   const totalLabel = question.totalLabel
-  const prefix = question.prefix || ""
-  const suffix = question.suffix || ""
+  const questionPrefix = question.prefix || ""
+  const questionSuffix = question.suffix || ""
 
   // Check if we're using columns
   const hasColumns = question.options.some(opt => opt.column !== undefined)
@@ -238,6 +238,8 @@ export function BreakdownQuestion({
       }
 
       const isTooltipVisible = visibleTooltips.has(option.value)
+      const prefix = option.prefix ?? questionPrefix
+      const suffix = option.suffix ?? questionSuffix
 
       return (
         <TableRow key={option.value} className="font-bold hover:bg-transparent">
@@ -287,6 +289,8 @@ export function BreakdownQuestion({
     }
 
     const isTooltipVisible = visibleTooltips.has(option.value)
+    const prefix = option.prefix ?? questionPrefix
+    const suffix = option.suffix ?? questionSuffix
 
     return (
       <TableRow key={option.value} className="hover:bg-transparent">
@@ -402,6 +406,8 @@ export function BreakdownQuestion({
                 // Determine which column to show the subtotal in - use option.column if specified, otherwise last column
                 const subtotalCol = option.column ?? columnNumbers[columnNumbers.length - 1]
                 const isTooltipVisible = visibleTooltips.has(option.value)
+                const prefix = option.prefix ?? questionPrefix
+                const suffix = option.suffix ?? questionSuffix
 
                 return (
                   <TableRow key={option.value} className="font-bold hover:bg-transparent">
@@ -451,6 +457,8 @@ export function BreakdownQuestion({
               }
               const isTooltipVisible = visibleTooltips.has(option.value)
               const optionColumn = option.column ?? 1
+              const prefix = option.prefix ?? questionPrefix
+              const suffix = option.suffix ?? questionSuffix
 
               return (
                 <TableRow key={option.value} className="hover:bg-transparent">
@@ -524,7 +532,7 @@ export function BreakdownQuestion({
                   <TableCell key={colNum} className="text-right pt-4 py-2">
                     {/* Only show total in the last column or the totalColumn if specified */}
                     {(question.totalColumn === colNum || (!question.totalColumn && idx === columnNumbers.length - 1)) ? (
-                      <>{prefix}{total}{suffix}</>
+                      <>{questionPrefix}{total}{questionSuffix}</>
                     ) : null}
                   </TableCell>
                 ))}
@@ -553,7 +561,7 @@ export function BreakdownQuestion({
                     {replacePlaceholders(totalLabel, variables, computedVariables)}
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
-                    {prefix}{total}{suffix}
+                    {questionPrefix}{total}{questionSuffix}
                   </TableCell>
                 </TableRow>
               )}

@@ -136,6 +136,8 @@ export type Option = {
   subtotalLabel?: string
   separator?: boolean
   custom?: string
+  prefix?: string
+  suffix?: string
 }
 
 export type Variables = {
@@ -223,6 +225,8 @@ export type ParsedLine =
   | { type: "option_separator"; raw: string; data: OptionSeparatorData }
   | { type: "option_subtotal"; raw: string; data: SubtotalLabelData }
   | { type: "option_custom"; raw: string; data: CustomData }
+  | { type: "option_prefix"; raw: string; data: PrefixData }
+  | { type: "option_suffix"; raw: string; data: SuffixData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }

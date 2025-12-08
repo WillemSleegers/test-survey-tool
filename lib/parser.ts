@@ -206,6 +206,16 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_subtotal"
       return "content"
     }
+    // Check if this is an option prefix (- PREFIX: ...)
+    if (trimmed.match(/^-\s*PREFIX:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_prefix"
+      return "content"
+    }
+    // Check if this is an option suffix (- SUFFIX: ...)
+    if (trimmed.match(/^-\s*SUFFIX:/)) {
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_suffix"
+      return "content"
+    }
     // Check if this is a conditional option modifier
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
       return state.currentQuestion ? "option_show_if" : "content"
@@ -414,6 +424,18 @@ const parseOptionSubtotal = (line: string): SubtotalLabelData => {
   return { subtotalLabel: match ? match[1] : "" }
 }
 
+const parseOptionPrefix = (line: string): PrefixData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*PREFIX:\s*(.*)/)
+  return { prefix: match ? match[1] : "" }
+}
+
+const parseOptionSuffix = (line: string): SuffixData => {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^-\s*SUFFIX:\s*(.*)/)
+  return { suffix: match ? match[1] : "" }
+}
+
 const parseOptionHint = (line: string): SubtextData => {
   const trimmed = line.trim()
   const match = trimmed.match(/^-\s*HINT:\s*(.*)/)
@@ -540,6 +562,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseOptionSeparator() }
     case "option_subtotal":
       return { type, raw: line, data: parseOptionSubtotal(line) }
+    case "option_prefix":
+      return { type, raw: line, data: parseOptionPrefix(line) }
+    case "option_suffix":
+      return { type, raw: line, data: parseOptionSuffix(line) }
     case "subquestion_hint":
       return { type, raw: line, data: parseSubquestionHint(line) }
     case "subquestion_tooltip":
@@ -1576,6 +1602,46 @@ const handleSuffix = (state: ParserState, data: SuffixData): ParserState => {
   }
 }
 
+const handleOptionPrefix = (state: ParserState, data: PrefixData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the prefix to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    prefix: data.prefix
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
+const handleOptionSuffix = (state: ParserState, data: SuffixData): ParserState => {
+  if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
+
+  // Apply the suffix to the last option
+  const lastOptionIndex = state.currentQuestion.options.length - 1
+  const updatedOptions = [...state.currentQuestion.options]
+  updatedOptions[lastOptionIndex] = {
+    ...updatedOptions[lastOptionIndex],
+    suffix: data.suffix
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: updatedOptions,
+    },
+  }
+}
+
 const handleContent = (
   state: ParserState,
   _data: ContentData,
@@ -2052,6 +2118,10 @@ const reduceParsedLine = (
       return handleOptionSeparator(state, parsedLine.data)
     case "option_subtotal":
       return handleSubtotalLabel(state, parsedLine.data)
+    case "option_prefix":
+      return handleOptionPrefix(state, parsedLine.data)
+    case "option_suffix":
+      return handleOptionSuffix(state, parsedLine.data)
     case "subquestion_hint":
       return handleSubquestionHint(state, parsedLine.data)
     case "subquestion_tooltip":
