@@ -271,19 +271,3 @@ function isValidVariableName(str: string): boolean {
   // Variable names should match the pattern: letters/underscore, followed by letters/numbers/underscores
   return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)
 }
-
-/**
- * Validates that navigation settings are compatible with the parsed questionnaire
- * Throws an error if navigation is enabled but no NAV items are defined
- *
- * @param navItems - The parsed navigation items
- * @param isNavVisible - Whether navigation is enabled in settings
- */
-export function validateNavigationSettings(navItems: NavItem[], isNavVisible: boolean): void {
-  if (isNavVisible && navItems.length === 0) {
-    throw new Error(
-      'Navigation is enabled but no NAV items are defined in your survey. ' +
-      'Add NAV declarations or disable navigation in settings.'
-    )
-  }
-}

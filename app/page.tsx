@@ -9,10 +9,8 @@ import { TextEditor } from "@/components/text-editor"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 import { Settings } from "@/components/settings"
-import { useNavigation } from "@/contexts/navigation-context"
 
 import { parseQuestionnaire } from "@/lib/parser"
-import { validateNavigationSettings } from "@/lib/validation"
 
 import { Block, NavItem } from "@/lib/types"
 
@@ -28,13 +26,11 @@ const QuestionnaireApp = () => {
   const [error, setError] = useState<string>("")
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
   const [showTextEditor, setShowTextEditor] = useState<boolean>(false)
-  const { isVisible: isNavVisible } = useNavigation()
 
   const handleFileLoaded = (content: string) => {
     try {
       const parsed = parseQuestionnaire(content)
       console.log(parsed)
-      validateNavigationSettings(parsed.navItems, isNavVisible)
       setQuestionnaire(parsed)
       setError("")
       setIsPreviewMode(true)
@@ -47,7 +43,6 @@ const QuestionnaireApp = () => {
     try {
       const parsed = parseQuestionnaire(ADVANCED_SAMPLE_TEXT)
       console.log(parsed)
-      validateNavigationSettings(parsed.navItems, isNavVisible)
       setQuestionnaire(parsed)
       setError("")
       setIsPreviewMode(true)
