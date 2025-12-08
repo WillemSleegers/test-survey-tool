@@ -5,7 +5,7 @@ import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
 import { NumberQuestion } from "./number-question"
 import { MatrixQuestion } from "./matrix-question"
-import { NumericMatrixQuestion } from "./numeric-matrix-question"
+import { BreakdownQuestion } from "./breakdown-question"
 
 interface QuestionRendererProps {
   /** The question to render */
@@ -15,7 +15,7 @@ interface QuestionRendererProps {
   /** All user variables */
   variables: Variables
   /** Callback when user provides a response */
-  onResponse: (questionId: string, value: string | string[] | number | boolean) => void
+  onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -103,20 +103,6 @@ export function QuestionRenderer({
       )
 
     case "matrix":
-      // Check if this is a numeric matrix
-      if (question.inputType === "number") {
-        return (
-          <NumericMatrixQuestion
-            question={question}
-            responses={responses}
-            variables={variables}
-            onResponse={(questionId, value) => onResponse(questionId, value)}
-            startTabIndex={startTabIndex}
-            computedVariables={computedVariables}
-          />
-        )
-      }
-
       return (
         <MatrixQuestion
           question={question}
@@ -128,10 +114,22 @@ export function QuestionRenderer({
         />
       )
 
+    case "breakdown":
+      return (
+        <BreakdownQuestion
+          question={question}
+          responses={responses}
+          variables={variables}
+          onResponse={(questionId, value) => onResponse(questionId, value)}
+          startTabIndex={startTabIndex}
+          computedVariables={computedVariables}
+        />
+      )
+
     default:
       // Exhaustive check - TypeScript will error if we miss a case
-      const _exhaustive: never = question.type
-      console.warn(`Unknown question type: ${_exhaustive}`)
+      const _exhaustive: never = question
+      console.warn(`Unknown question type: ${(_exhaustive as Question).type}`)
       return null
   }
 }

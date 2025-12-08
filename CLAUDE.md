@@ -163,6 +163,51 @@ Strong TypeScript usage throughout:
 - Test core functionality after parser or component changes
 - Commit frequently with descriptive messages explaining the "why" not just the "what"
 
+### Data Format Changes Require System-Wide Updates
+
+**CRITICAL**: When changing how data is stored or keyed (e.g., response keys, variable names, option identifiers), you MUST update ALL locations that read or write that data.
+
+**Common patterns that require coordinated updates:**
+
+1. **Question response storage format changes**:
+   - Component that renders the question (e.g., `breakdown-question.tsx`)
+   - Hook that extracts variables from responses (e.g., `use-questionnaire-responses.ts`)
+   - Any utility functions that calculate values (e.g., `calculateBreakdownTotal`)
+
+2. **Option/subquestion identifier changes**:
+   - Where data is written (onChange handlers)
+   - Where data is read (display calculations, totals, subtotals)
+   - Where variables are extracted (variable derivation logic)
+   - Where data is accessed for conditional logic
+
+**Before changing a data format:**
+
+1. **Search** for all locations that reference the old format
+2. **Document** what needs to change in each location
+3. **Update** all locations together in a single logical change
+4. **Test** that variables and calculations still work correctly
+
+**Example**: Changing breakdown question storage from slugified keys (`option_label_text`) to index keys (`option_0`):
+
+- ✅ Update component: `optionToKey`, `handleRowChange`, `calculateTotal`, `calculateSubtotal`
+- ✅ Update hooks: `calculateBreakdownTotal`, option variable extraction, subtotal variable calculation
+- ✅ Test that question-level variables, option-level variables, and subtotal variables all work
+- ❌ Don't update just the component and forget the hooks
+
+**Red flags:**
+
+- "I updated the component but forgot the hook"
+- "Variables stopped working after my change"
+- "The calculation logic uses a different key format than the storage"
+
+### Communication Guidelines:
+
+- **Never agree with or validate user statements before verifying them**
+- If a user claims something exists in the codebase, search for it first before responding
+- Don't say "You're right!" or similar affirmations until you've confirmed the facts
+- Be honest about uncertainty: "Let me check..." is better than premature agreement
+- Verify first, respond second
+
 ## Quality Assurance Guidelines
 
 ### Use a Systematic Approach, Not Reactive Responses

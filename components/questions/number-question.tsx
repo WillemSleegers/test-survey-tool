@@ -2,11 +2,11 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { NumberQuestion as NumberQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
 
 interface NumberQuestionProps {
   /** The question configuration */
-  question: Question
+  question: NumberQuestionType
   /** User responses */
   responses: Responses
   /** User variables */

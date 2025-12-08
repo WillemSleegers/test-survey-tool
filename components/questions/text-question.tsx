@@ -3,11 +3,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { TextQuestion as TextQuestionType, EssayQuestion, Responses, Variables, ComputedVariables } from "@/lib/types"
 
 interface TextQuestionProps {
   /** The question configuration */
-  question: Question
+  question: TextQuestionType | EssayQuestion
   /** User responses */
   responses: Responses
   /** User variables */

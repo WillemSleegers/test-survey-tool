@@ -171,9 +171,9 @@ export function processConditionalPlaceholders(
       result =
         result.slice(0, startIndex) + replacement + result.slice(endIndex + 1)
     } else {
-      // Invalid format, remove braces to prevent infinite loop
+      // Not a conditional - convert double braces to single for variable replacement
       result =
-        result.slice(0, startIndex) + content + result.slice(endIndex + 1)
+        result.slice(0, startIndex) + "{" + content + "}" + result.slice(endIndex + 1)
     }
   }
 

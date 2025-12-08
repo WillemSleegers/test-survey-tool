@@ -24,12 +24,14 @@ interface QuestionnaireViewerProps {
   questionnaire: Block[]
   navItems: NavItem[]
   onResetToUpload: () => void
+  hidePageNavigator?: boolean
 }
 
 export function QuestionnaireViewer({
   questionnaire,
   navItems,
   onResetToUpload,
+  hidePageNavigator = false,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
@@ -167,7 +169,7 @@ export function QuestionnaireViewer({
       <div className="flex justify-center px-6 py-6">
         <div className="flex gap-16 items-start w-full justify-center">
           {/* Respondent Navigator - NAV-based navigation for survey takers */}
-          {isNavVisible && navPosition === 'left' && (
+          {isNavVisible && navPosition === 'left' && navItems.length > 0 && (
             <RespondentNavigator
               navItems={navItems}
               visiblePages={visiblePages}
@@ -177,7 +179,7 @@ export function QuestionnaireViewer({
           )}
 
           {/* Main content */}
-          <div className="w-full max-w-4xl space-y-6">
+          <div className="w-full max-w-4xl space-y-6 pl-8">
             <PageHeader
               page={currentPage}
               variables={variables}
@@ -204,7 +206,7 @@ export function QuestionnaireViewer({
           </div>
 
           {/* Right side navigator */}
-          {isNavVisible && navPosition === 'right' && (
+          {isNavVisible && navPosition === 'right' && navItems.length > 0 && (
             <RespondentNavigator
               navItems={navItems}
               visiblePages={visiblePages}
@@ -216,17 +218,19 @@ export function QuestionnaireViewer({
       </div>
 
       {/* Page Navigator - Developer/researcher tool with page-level detail */}
-      <PageNavigator
-        questionnaire={questionnaire}
-        allPages={allPages}
-        visiblePages={visiblePages}
-        currentVisiblePageIndex={currentVisiblePageIndex}
-        variables={variables}
-        currentBlockComputedVars={currentBlockComputedVars}
-        currentPageComputedVars={currentPageComputedVars}
-        onJumpToPage={jumpToPage}
-        onResetToUpload={onResetToUpload}
-      />
+      {!hidePageNavigator && (
+        <PageNavigator
+          questionnaire={questionnaire}
+          allPages={allPages}
+          visiblePages={visiblePages}
+          currentVisiblePageIndex={currentVisiblePageIndex}
+          variables={variables}
+          currentBlockComputedVars={currentBlockComputedVars}
+          currentPageComputedVars={currentPageComputedVars}
+          onJumpToPage={jumpToPage}
+          onResetToUpload={onResetToUpload}
+        />
+      )}
 
       <CompletionDialog
         isOpen={showCompletionDialog}

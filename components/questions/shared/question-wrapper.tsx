@@ -27,14 +27,20 @@ interface QuestionWrapperProps {
  * </QuestionWrapper>
  */
 export function QuestionWrapper({ question, variables, children, computedVariables }: QuestionWrapperProps) {
+  // Check if there's any header content to display
+  const hasHeaderContent = question.text.trim() || question.subtext || question.tooltip
+
   return (
     <div className="space-y-3">
-      <QuestionHeader
-        text={question.text}
-        subtext={question.subtext}
-        variables={variables}
-        computedVariables={computedVariables}
-      />
+      {hasHeaderContent && (
+        <QuestionHeader
+          text={question.text}
+          subtext={question.subtext}
+          tooltip={question.tooltip}
+          variables={variables}
+          computedVariables={computedVariables}
+        />
+      )}
       {children}
     </div>
   )
