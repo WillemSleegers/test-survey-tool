@@ -1338,7 +1338,7 @@ const handleSubquestion = (state: ParserState, data: SubquestionData): ParserSta
 
   // Matrix: attach to question-level subquestions
   // Set question type to matrix when we encounter the first matrix row
-  const updatedType = state.currentQuestion.subquestions?.length === 0 ? "matrix" : state.currentQuestion.type
+  const updatedType = (!state.currentQuestion.subquestions || state.currentQuestion.subquestions.length === 0) ? "matrix" : state.currentQuestion.type
 
   return {
     ...state,

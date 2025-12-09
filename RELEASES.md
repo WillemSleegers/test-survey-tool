@@ -7,6 +7,7 @@ Released December 2025
 ### Bug Fixes
 
 - Fixed React key uniqueness warnings by using array indices instead of option values as keys across all question types
+- Fixed matrix question parsing bug where questions with subquestions were incorrectly classified as multiple_choice instead of matrix
 
 ### Improvements
 
