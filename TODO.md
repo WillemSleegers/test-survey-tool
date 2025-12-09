@@ -74,10 +74,12 @@
   - ✅ Simplified parser logic by removing unused legacy pattern
 - [x] Remove debugging code
   - ✅ Removed `computedCache` exposure from `useLazyComputedVariables`
+- [ ] Prevent mouse/trackpad scrolling affecting number inputs in Chrome
 
 ## Ideas to Explore
 
 - [ ] Add SUFFIX support for BREAKDOWN questions to handle thousands formatting
+
   - **Use case**: Allow writing "1" to display as "1,000" when values represent thousands
   - **Problem**: When totaling many values like "1000", the sum displays as "1000,000" instead of "1,000,000"
   - **Challenge**: The suffix separator (e.g., ",000") doesn't automatically apply to calculated totals
@@ -86,9 +88,9 @@
 
     ```text
     Q1: BREAKDOWN
-    SUFFIX: ,000
     - Option 1: NUMBER
     - Option 2: NUMBER
+    SUFFIX: ,000
     ```
 
   - **Implementation considerations**:
@@ -97,6 +99,7 @@
     - Should work with single-column and multi-column breakdowns
     - Consider interaction with VALUE (computed values) and EXCLUDE options
   - **Priority**: Low - Nice-to-have for user convenience, but users can manually add thousands separators if needed
+
 - [ ] Add page-level HINT support
   - Currently only TOOLTIP is supported at page level (requires clicking info icon)
   - HINT is supported for questions, options, and subquestions (always visible below element)
