@@ -4,6 +4,15 @@
 
 Released December 2025
 
+### New Features
+
+- Added SHOW_IF support for matrix subquestions - rows can now be conditionally shown/hidden based on responses
+
+### Breaking Changes
+
+- **Subquestion VARIABLE syntax changed**: Use `- VARIABLE:` (with dash) instead of `VARIABLE:` (without dash)
+- This makes all subquestion modifiers consistent with dash prefix: `- HINT:`, `- TOOLTIP:`, `- VARIABLE:`, `- SHOW_IF:`
+
 ### Bug Fixes
 
 - Fixed matrix question parser bug where questions with subquestions were incorrectly classified as `multiple_choice` instead of `matrix` type
@@ -11,7 +20,8 @@ Released December 2025
 ### Testing
 
 - Added Vitest testing framework
-- Added parser test suite with 12 tests covering all question types
+- Added comprehensive parser test suite with 13 tests covering all question types
+- Tests validate correct question type detection and conditional subquestion behavior
 
 ---
 
