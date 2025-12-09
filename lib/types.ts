@@ -74,7 +74,6 @@ export type BreakdownQuestion = QuestionBase & {
   type: "breakdown"
   options: BreakdownOption[]
   totalLabel?: string
-  totalColumn?: number
   prefix?: string
   suffix?: string
 }
@@ -102,7 +101,6 @@ export type ParsedQuestion = {
   variable?: string
   showIf?: string
   totalLabel?: string
-  totalColumn?: number
   prefix?: string
   suffix?: string
 }
@@ -196,7 +194,6 @@ export type SubquestionData = { id: string; text: string }
 export type SubquestionSubtractData = { subtract: true }
 export type SubquestionValueData = { value: string }
 export type TotalLabelData = { totalLabel: string }
-export type TotalColumnData = { totalColumn: number }
 export type SubtotalLabelData = { subtotalLabel: string }
 export type PrefixData = { prefix: string }
 export type SuffixData = { suffix: string }
@@ -236,7 +233,6 @@ export type ParsedLine =
   | { type: "variable"; raw: string; data: VariableData }
   | { type: "show_if"; raw: string; data: ShowIfData }
   | { type: "total_label"; raw: string; data: TotalLabelData }
-  | { type: "total_column"; raw: string; data: TotalColumnData }
   | { type: "subtotal_label"; raw: string; data: SubtotalLabelData }
   | { type: "prefix"; raw: string; data: PrefixData }
   | { type: "suffix"; raw: string; data: SuffixData }

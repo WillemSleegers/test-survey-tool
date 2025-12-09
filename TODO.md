@@ -2,13 +2,10 @@
 
 ## High Priority
 
-- [ ] Fix React key uniqueness issue with duplicate option values
-  - **Problem**: BREAKDOWN questions using `option.value` as React key causes "duplicate key" errors when options have identical labels (e.g., "Woongebouwen: Omzet als hoofd-/nevenaannemer" appears twice under different headers)
-  - **Root cause**: Option values/labels are not guaranteed to be unique, but React keys must be unique
-  - **Solution**: Use array index as key instead of option.value for all TableRow elements
-  - **Status**: Fixed in breakdown-question.tsx (8 locations updated to use `key={index}`)
-  - **Action needed**: Audit other question components (matrix-question.tsx, checkbox-question.tsx, multiple-choice-question.tsx) for similar issues
-  - **Why index is safe**: Options array is stable (not reordered), index uniquely identifies each option's position
+- [x] Fix React key uniqueness issue with duplicate option values
+  - ✅ Fixed in all question components (matrix, checkbox, radio, breakdown)
+  - ✅ Changed from `option.value` to array index for stable, unique keys
+  - ✅ Array indices are safe because options are never reordered
 - [x] Implement delimiter-based multi-line parsing for tooltips/hints
   - ✅ Added support for `---` delimiters to mark complex tooltip/hint content
   - ✅ Delimiter must be on the same line as keyword (e.g., `TOOLTIP: ---`) to avoid lookahead issues
@@ -18,24 +15,22 @@
   - ✅ Backward compatible with single-line tooltips/hints
 - [x] Implement COLUMN/EXCLUDE keywords for breakdown questions
   - ✅ Added `COLUMN:` keyword to organize breakdown options into multiple value columns
-  - ✅ Added `TOTAL_COLUMN:` to specify which column values contribute to total
   - ✅ Added option-level `VARIABLE:` to store individual option values
   - ✅ Added `VALUE:` for calculated read-only option values
   - ✅ Added `EXCLUDE` keyword to display options without including in totals
   - ✅ All calculation functions respect exclude flag (calculateTotal, calculateSubtotal, calculateBreakdownTotal)
-- [ ] Add BREAKDOWN documentation to text-format-guide.tsx
-  - Currently missing from user-facing documentation
-  - Should document: BREAKDOWN, COLUMN, TOTAL_COLUMN, VALUE, VARIABLE (option-level), EXCLUDE, SUBTRACT
-  - Belongs in "Intermediate" section (requires understanding tables and variables)
-- [ ] Remove hardcoded bold styling from SUBTOTAL rows
-  - Currently SUBTOTAL rows have `className="font-bold"` hardcoded in the component
-  - This prevents users from controlling text styling via Markdown in the SUBTOTAL label
-  - Should remove `font-bold` class and let users add `**bold**` in Markdown if desired
-  - Applies to both single-column (line 266) and multi-column (line 466) layouts
-  - Gives users full control over formatting (bold, italic, etc.) via Markdown
-- [ ] Fix forward slashes in question options causing variable comparison issues
-  - Forward slashes in option text break conditional logic when comparing variables to option values
-  - Need to investigate escaping or normalization in condition evaluation
+  - ✅ Removed `TOTAL_COLUMN:` - totals now always show in last column, use EXCLUDE instead
+- [x] Add BREAKDOWN documentation to text-format-guide.tsx
+  - ✅ Added comprehensive documentation covering all BREAKDOWN features
+  - ✅ Documented: BREAKDOWN, COLUMN, VALUE, VARIABLE, EXCLUDE, SUBTRACT, SUBTOTAL
+  - ✅ Added examples and clear explanations for each feature
+- [x] Remove hardcoded bold styling from SUBTOTAL rows
+  - ✅ Removed `font-bold` from both single-column and multi-column layouts
+  - ✅ Users can now control formatting via Markdown (e.g., `**bold**`)
+- [x] Fix forward slashes in question options causing variable comparison issues
+  - ✅ Investigated condition evaluation logic
+  - ✅ No actual bug found - string comparisons work correctly with forward slashes
+  - ✅ Users can quote values if needed (e.g., `Q1 == "yes/no"`)
 - [x] Remove React optimization hooks to comply with React 19 Compiler
   - ✅ Remove `useMemo()` from `components/questions/checkbox-question.tsx:61`
   - ✅ Remove `useMemo()` and `useCallback()` from `hooks/use-questionnaire-responses.ts`
@@ -79,8 +74,31 @@
   - ✅ Simplified parser logic by removing unused legacy pattern
 - [x] Remove debugging code
   - ✅ Removed `computedCache` exposure from `useLazyComputedVariables`
+- [ ] Prevent mouse/trackpad scrolling affecting number inputs in Chrome
 
 ## Ideas to Explore
+
+- [ ] Add SUFFIX support for BREAKDOWN questions to handle thousands formatting
+
+  - **Use case**: Allow writing "1" to display as "1,000" when values represent thousands
+  - **Problem**: When totaling many values like "1000", the sum displays as "1000,000" instead of "1,000,000"
+  - **Challenge**: The suffix separator (e.g., ",000") doesn't automatically apply to calculated totals
+  - **Potential solution**: SUFFIX keyword that applies formatting to individual inputs but converts to actual numbers for calculations, then reformats the total
+  - **Example syntax**:
+
+    ```text
+    Q1: BREAKDOWN
+    - Option 1: NUMBER
+    - Option 2: NUMBER
+    SUFFIX: ,000
+    ```
+
+  - **Implementation considerations**:
+    - Need to strip suffix when storing/calculating values
+    - Need to reapply suffix formatting to totals and subtotals
+    - Should work with single-column and multi-column breakdowns
+    - Consider interaction with VALUE (computed values) and EXCLUDE options
+  - **Priority**: Low - Nice-to-have for user convenience, but users can manually add thousands separators if needed
 
 - [ ] Add page-level HINT support
   - Currently only TOOLTIP is supported at page level (requires clicking info icon)

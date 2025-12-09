@@ -64,20 +64,12 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
   ): number => {
     let total = 0
 
-    // If totalColumn is specified, only sum values from that column
-    const targetColumn = question.totalColumn
-
     // Sum values from main options
     for (let index = 0; index < question.options.length; index++) {
       const option = question.options[index]
 
       // Skip excluded options
       if (option.exclude) {
-        continue
-      }
-
-      // Skip options not in the target column (if specified)
-      if (targetColumn !== undefined && option.column !== targetColumn) {
         continue
       }
 

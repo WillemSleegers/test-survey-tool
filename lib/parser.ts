@@ -21,7 +21,6 @@ import {
   VariableData,
   ShowIfData,
   TotalLabelData,
-  TotalColumnData,
   SubtotalLabelData,
   PrefixData,
   SuffixData,
@@ -132,7 +131,6 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("VARIABLE:")) return "variable"
   if (trimmed.startsWith("SHOW_IF:")) return "show_if"
   if (trimmed.startsWith("TOTAL:")) return "total_label"
-  if (trimmed.startsWith("TOTAL_COLUMN:")) return "total_column"
   if (trimmed.startsWith("SUBTOTAL:")) return "subtotal_label"
   if (trimmed.startsWith("CUSTOM:")) return "content"  // CUSTOM is only valid under options
   if (trimmed.startsWith("PREFIX:")) return "prefix"
@@ -351,18 +349,6 @@ const parseTotalLabel = (line: string): TotalLabelData => {
   const trimmed = line.trim()
   const totalLabel = trimmed.substring(6).trim() // Remove "TOTAL:" prefix
   return { totalLabel }
-}
-
-const parseTotalColumn = (line: string): TotalColumnData => {
-  const trimmed = line.trim()
-  const columnStr = trimmed.substring(13).trim() // Remove "TOTAL_COLUMN:" prefix
-  const totalColumn = parseInt(columnStr, 10)
-
-  if (isNaN(totalColumn) || totalColumn < 1) {
-    throw new Error(`Invalid TOTAL_COLUMN syntax: ${line}. Expected a positive number (1, 2, etc.)`)
-  }
-
-  return { totalColumn }
 }
 
 const parseSubtotalLabel = (line: string): SubtotalLabelData => {
@@ -584,8 +570,6 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseShowIf(line) }
     case "total_label":
       return { type, raw: line, data: parseTotalLabel(line) }
-    case "total_column":
-      return { type, raw: line, data: parseTotalColumn(line) }
     case "subtotal_label":
       return { type, raw: line, data: parseSubtotalLabel(line) }
     case "prefix":
@@ -1354,7 +1338,7 @@ const handleSubquestion = (state: ParserState, data: SubquestionData): ParserSta
 
   // Matrix: attach to question-level subquestions
   // Set question type to matrix when we encounter the first matrix row
-  const updatedType = state.currentQuestion.subquestions?.length === 0 ? "matrix" : state.currentQuestion.type
+  const updatedType = (!state.currentQuestion.subquestions || state.currentQuestion.subquestions.length === 0) ? "matrix" : state.currentQuestion.type
 
   return {
     ...state,
@@ -1518,18 +1502,6 @@ const handleTotalLabel = (state: ParserState, data: TotalLabelData): ParserState
     currentQuestion: {
       ...state.currentQuestion,
       totalLabel: data.totalLabel,
-    },
-  }
-}
-
-const handleTotalColumn = (state: ParserState, data: TotalColumnData): ParserState => {
-  if (!state.currentQuestion) return state
-
-  return {
-    ...state,
-    currentQuestion: {
-      ...state.currentQuestion,
-      totalColumn: data.totalColumn,
     },
   }
 }
@@ -2140,8 +2112,6 @@ const reduceParsedLine = (
       return handleShowIf(state, parsedLine.data)
     case "total_label":
       return handleTotalLabel(state, parsedLine.data)
-    case "total_column":
-      return handleTotalColumn(state, parsedLine.data)
     case "subtotal_label":
       return handleSubtotalLabel(state, parsedLine.data)
     case "prefix":

@@ -118,20 +118,12 @@ export function BreakdownQuestion({
   const calculateTotal = (): number => {
     let total = 0
 
-    // If totalColumn is specified, only sum values from that column
-    const targetColumn = question.totalColumn
-
     // Only sum values from main options
     for (let index = 0; index < question.options.length; index++) {
       const option = question.options[index]
 
       // Skip excluded options
       if (option.exclude) {
-        continue
-      }
-
-      // Skip options not in the target column (if specified)
-      if (targetColumn !== undefined && option.column !== targetColumn) {
         continue
       }
 
@@ -254,7 +246,7 @@ export function BreakdownQuestion({
       const suffix = option.suffix ?? questionSuffix
 
       return (
-        <TableRow key={index} className="font-bold hover:bg-transparent">
+        <TableRow key={index} className="hover:bg-transparent">
           <TableCell className="align-middle whitespace-normal text-base pl-0">
             <div className="relative">
               {option.tooltip && (
@@ -427,7 +419,7 @@ export function BreakdownQuestion({
                 const suffix = option.suffix ?? questionSuffix
 
                 return (
-                  <TableRow key={index} className="font-bold hover:bg-transparent">
+                  <TableRow key={index} className="hover:bg-transparent">
                     <TableCell className="align-middle whitespace-normal text-base pl-0">
                       <div className="relative">
                         {option.tooltip && (
@@ -547,8 +539,8 @@ export function BreakdownQuestion({
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
-                    {/* Only show total in the last column or the totalColumn if specified */}
-                    {(question.totalColumn === colNum || (!question.totalColumn && idx === columnNumbers.length - 1)) ? (
+                    {/* Only show total in the last column */}
+                    {idx === columnNumbers.length - 1 ? (
                       <>{questionPrefix}{total}{questionSuffix}</>
                     ) : null}
                   </TableCell>
