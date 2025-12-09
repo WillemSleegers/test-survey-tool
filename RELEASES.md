@@ -1,5 +1,15 @@
 # Release Notes
 
+## Version 0.2.2
+
+Released December 2025
+
+### Bug Fixes
+
+- (To be added)
+
+---
+
 ## Version 0.2.1
 
 Released December 2025
