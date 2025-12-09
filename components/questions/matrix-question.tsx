@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { Label } from "@/components/ui/label"
@@ -168,9 +168,9 @@ export function MatrixQuestion({
             <TableHeader>
               <TableRow>
                 <TableHead className="text-left font-medium"></TableHead>
-                {responseOptions.map((option) => (
+                {responseOptions.map((option, index) => (
                   <TableHead
-                    key={option.value}
+                    key={index}
                     className="text-center text-base font-normal min-w-20 max-w-[120px] whitespace-normal align-bottom px-3 py-2"
                   >
                     <Markdown>
@@ -254,7 +254,7 @@ export function MatrixQuestion({
                     ? // For checkboxes, render each option independently
                       responseOptions.map((option, optionIndex) => (
                         <TableCell
-                          key={option.value}
+                          key={optionIndex}
                           className="text-center align-middle"
                         >
                           <div className="flex justify-center">
@@ -279,9 +279,9 @@ export function MatrixQuestion({
                         </TableCell>
                       ))
                     : // For radio buttons, render each option with native radio styling but shadcn appearance
-                      responseOptions.map((option) => (
+                      responseOptions.map((option, optionIndex) => (
                         <TableCell
-                          key={option.value}
+                          key={optionIndex}
                           className="text-center align-middle"
                         >
                           <div className="flex justify-center">

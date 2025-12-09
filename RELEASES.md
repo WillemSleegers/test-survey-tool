@@ -1,5 +1,24 @@
 # Release Notes
 
+## Version 0.2.1
+
+Released December 2025
+
+### Bug Fixes
+
+- Fixed React key uniqueness warnings by using array indices instead of option values as keys across all question types
+
+### Improvements
+
+- Removed hardcoded bold styling from SUBTOTAL rows - users can now control formatting via Markdown
+- Added comprehensive BREAKDOWN documentation covering all features
+
+### Removed
+
+- Removed TOTAL_COLUMN feature - use EXCLUDE on individual rows instead for better flexibility
+
+---
+
 ## Version 0.2.0
 
 Released December 2025

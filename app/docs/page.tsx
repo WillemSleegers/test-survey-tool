@@ -538,29 +538,29 @@ CHECKBOX`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Breakdown</h2>
+            <h2 className="text-3xl font-bold">Breakdown Questions</h2>
             <p className="text-muted-foreground mt-2">
-              Display options in a table with number inputs for each row.
+              Display options in a table with number inputs for each row, automatically calculating totals.
             </p>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Rate these features (1-10)
-- Feature A
-- Feature B
-- Feature C
+            <h3 className="text-xl font-semibold">Basic Usage</h3>
+            {renderCodeBlock(`Q: Question text
+- Option 1
+- Option 2
+- Option 3
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>Creates a table with number inputs for each option</li>
-              <li>Each option becomes a row with its own number input field</li>
+              <li>Each option becomes a row with its own input field</li>
+              <li>Automatically displays a total at the bottom</li>
               <li>Useful for numeric grids, ratings, or budget allocations</li>
-              <li>Add BREAKDOWN after the last option</li>
             </ul>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold">Example</h3>
+            <h3 className="text-xl font-semibold">Basic Example</h3>
             {renderExample(`#
 Q: How many hours per week do you spend on each activity?
 - Work
@@ -568,6 +568,118 @@ Q: How many hours per week do you spend on each activity?
 - Hobbies
 - Sleep
 BREAKDOWN`)}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Multi-Column Layout</h3>
+            <p className="text-muted-foreground text-sm">
+              Use <code>COLUMN:</code> to organize breakdown options into multiple value columns:
+            </p>
+            {renderCodeBlock(`Q: Revenue breakdown (in thousands)
+COLUMN: 1
+COLUMN: 2
+- Residential
+- Commercial
+- Industrial
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li><code>COLUMN: N</code> creates column N (must come before options)</li>
+              <li>Each option gets an input field in each column</li>
+              <li>The total is displayed in the last column</li>
+              <li>Use <code>EXCLUDE</code> on specific rows to exclude them from the total</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Calculated Values</h3>
+            <p className="text-muted-foreground text-sm">
+              Use <code>VALUE:</code> to create read-only calculated rows:
+            </p>
+            {renderCodeBlock(`Q: Financial breakdown
+- Revenue
+- Costs
+- Profit
+  VALUE: revenue - costs
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Rows with <code>VALUE:</code> display calculated results (not editable)</li>
+              <li>Supports arithmetic expressions using other variables</li>
+              <li>Calculated values are included in totals by default</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Excluding from Totals</h3>
+            <p className="text-muted-foreground text-sm">
+              Use <code>EXCLUDE</code> to display a row without including it in the total:
+            </p>
+            {renderCodeBlock(`Q: Budget allocation
+- Department A
+- Department B
+- Total budget
+  EXCLUDE
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Options with <code>EXCLUDE</code> appear in the table but don't affect totals</li>
+              <li>Useful for reference values or context information</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Option-Level Variables</h3>
+            <p className="text-muted-foreground text-sm">
+              Assign variables to individual option values:
+            </p>
+            {renderCodeBlock(`Q: Project hours
+- Design
+  VARIABLE: design_hours
+- Development
+  VARIABLE: dev_hours
+- Testing
+  VARIABLE: test_hours
+VARIABLE: total_hours
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Option-level <code>VARIABLE:</code> stores the specific option's value</li>
+              <li>Question-level <code>VARIABLE:</code> stores the total</li>
+              <li>Use these variables in calculations and conditional logic</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Subtotals</h3>
+            <p className="text-muted-foreground text-sm">
+              Use <code>SUBTOTAL:</code> to display intermediate sums within the table:
+            </p>
+            {renderCodeBlock(`Q: Department expenses
+- Salaries
+- Benefits
+- SUBTOTAL: Personnel costs
+- Equipment
+- Supplies
+- SUBTOTAL: Materials
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Subtotal rows sum all previous options since the last subtotal</li>
+              <li>Subtotals are displayed but not included in the final total</li>
+              <li>Use Markdown for formatting (e.g., <code>**Bold text**</code>)</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Subtracting Values</h3>
+            <p className="text-muted-foreground text-sm">
+              Use <code>SUBTRACT</code> to subtract a value from the total instead of adding:
+            </p>
+            {renderCodeBlock(`Q: Cash flow
+- Income
+- Expenses
+  SUBTRACT
+BREAKDOWN`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Options with <code>SUBTRACT</code> are subtracted from the total</li>
+              <li>Useful for calculating net values or differences</li>
+            </ul>
           </div>
         </div>
       )

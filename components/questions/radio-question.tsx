@@ -136,18 +136,18 @@ export function RadioQuestion({
         onValueChange={handleRadioChange}
       >
         {visibleOptions.map((option, optionIndex) => {
-          const radioTabIndex = isAnswered 
+          const radioTabIndex = isAnswered
             ? (option.value === baseValue ? startTabIndex : -1)
             : startTabIndex + optionIndex
-          
+
           const textTabIndex = option.allowsOtherText
             ? (isAnswered && option.value === baseValue
                 ? startTabIndex + 1  // Text input immediately follows selected radio
                 : startTabIndex + optionIndex + 1)  // Sequential tab order for unselected
             : -1  // Not applicable if no other text allowed
-          
+
           return (
-            <div key={option.value} className="space-y-2">
+            <div key={optionIndex} className="space-y-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value={option.value}

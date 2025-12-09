@@ -181,12 +181,12 @@ export function CheckboxQuestion({
               slotsUsedBefore += 1
             }
           }
-          
+
           const checkboxTabIndex = startTabIndex + slotsUsedBefore
           const textTabIndex = checkboxTabIndex + 1
-          
+
           return (
-            <div key={option.value} className="space-y-2">
+            <div key={optionIndex} className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={`${question.id}-${optionIndex}`}
