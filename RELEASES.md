@@ -6,7 +6,13 @@ Released December 2025
 
 ### Bug Fixes
 
-- (To be added)
+- Fixed matrix question parser bug where questions with subquestions were incorrectly classified as `multiple_choice` instead of `matrix` type
+
+### Testing
+
+- Added Vitest testing framework
+- Added comprehensive parser test suite with 12 tests covering all question types
+- Tests validate correct question type detection (multiple choice, checkbox, text, essay, number, matrix, breakdown)
 
 ---
 
