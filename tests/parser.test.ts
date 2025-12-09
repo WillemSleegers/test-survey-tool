@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseQuestionnaire } from './parser'
+import { parseQuestionnaire } from '@/lib/parser'
 
 describe('Parser - Question Type Detection', () => {
   it('should parse multiple choice question', () => {
