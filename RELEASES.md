@@ -11,8 +11,7 @@ Released December 2025
 ### Testing
 
 - Added Vitest testing framework
-- Added comprehensive parser test suite with 12 tests covering all question types
-- Tests validate correct question type detection (multiple choice, checkbox, text, essay, number, matrix, breakdown)
+- Added parser test suite with 12 tests covering all question types
 
 ---
 

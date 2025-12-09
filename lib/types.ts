@@ -114,6 +114,7 @@ export type Subquestion = {
   subtract?: boolean
   subtotalLabel?: string
   value?: string
+  showIf?: string
 }
 
 
@@ -228,6 +229,8 @@ export type ParsedLine =
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }
   | { type: "subquestion_value"; raw: string; data: SubquestionValueData }
+  | { type: "subquestion_variable"; raw: string; data: VariableData }
+  | { type: "subquestion_show_if"; raw: string; data: ShowIfData }
   | { type: "matrix_row"; raw: string; data: SubquestionData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }

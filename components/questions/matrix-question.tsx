@@ -92,6 +92,12 @@ export function MatrixQuestion({
     return evaluateCondition(option.showIf, variables, computedVariables)
   })
 
+  // Filter subquestions based on conditions
+  const visibleSubquestions = question.subquestions.filter((subquestion) => {
+    if (!subquestion.showIf) return true
+    return evaluateCondition(subquestion.showIf, variables, computedVariables)
+  })
+
   // If no options, create a single default option for the response column
   const hasOptions = visibleOptions.length > 0
   const responseOptions = hasOptions
@@ -186,7 +192,7 @@ export function MatrixQuestion({
             </TableHeader>
           )}
           <TableBody>
-            {question.subquestions.map((subquestion) => {
+            {visibleSubquestions.map((subquestion) => {
               const currentRowResponse = getRowResponse(subquestion.id)
               const currentValue =
                 !isCheckboxMatrix && typeof currentRowResponse === "string"

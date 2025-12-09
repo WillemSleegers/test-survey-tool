@@ -169,8 +169,9 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_value"
       return "content"
     }
-    // Check if this is an option variable (- VARIABLE: ...)
+    // Check if this is a variable modifier (- VARIABLE: ...)
     if (trimmed.match(/^-\s*VARIABLE:/)) {
+      if (state.currentSubquestion) return "subquestion_variable"
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_variable"
       return "content"
     }
@@ -214,9 +215,11 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_suffix"
       return "content"
     }
-    // Check if this is a conditional option modifier
+    // Check if this is a conditional modifier (- SHOW_IF: ...)
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
-      return state.currentQuestion ? "option_show_if" : "content"
+      if (state.currentSubquestion) return "subquestion_show_if"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_show_if"
+      return "content"
     }
     // Check if this is an other text modifier (only if we have a current question)
     if (trimmed.match(/^-\s*TEXT\s*$/)) {
@@ -292,6 +295,24 @@ const parseSubquestionValue = (line: string): SubquestionValueData => {
   const match = trimmed.match(/^-\s*VALUE:\s*(.*)/)
   return {
     value: match ? match[1] : "",
+  }
+}
+
+const parseSubquestionVariable = (line: string): VariableData => {
+  const trimmed = line.trim()
+  // Remove "- VARIABLE:" prefix (with possible spaces)
+  const match = trimmed.match(/^-\s*VARIABLE:\s*(.*)/)
+  return {
+    variable: match ? match[1] : "",
+  }
+}
+
+const parseSubquestionShowIf = (line: string): ShowIfData => {
+  const trimmed = line.trim()
+  // Remove "- SHOW_IF:" prefix (with possible spaces)
+  const match = trimmed.match(/^-\s*SHOW_IF:\s*(.*)/)
+  return {
+    showIf: match ? match[1] : "",
   }
 }
 
@@ -560,6 +581,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseSubquestionSubtract() }
     case "subquestion_value":
       return { type, raw: line, data: parseSubquestionValue(line) }
+    case "subquestion_variable":
+      return { type, raw: line, data: parseSubquestionVariable(line) }
+    case "subquestion_show_if":
+      return { type, raw: line, data: parseSubquestionShowIf(line) }
     case "matrix_row":
       return { type, raw: line, data: parseSubquestion(line, state) }
     case "input_type":
@@ -1049,6 +1074,22 @@ const handleSubquestionValue = (state: ParserState, data: SubquestionValueData):
   }
 }
 
+const handleSubquestionShowIf = (state: ParserState, data: ShowIfData): ParserState => {
+  if (!state.currentQuestion || !state.currentSubquestion) return state
+
+  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+    row.id === state.currentSubquestion!.id
+      ? { ...row, showIf: data.showIf }
+      : row
+  ) || []
+
+  return {
+    ...state,
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, showIf: data.showIf },
+  }
+}
+
 const handleOption = (state: ParserState, data: OptionData): ParserState => {
   if (!state.currentQuestion) return state
 
@@ -1414,36 +1455,7 @@ const handleVariable = (
     return state
   }
 
-  // If we have a current matrix row, assign the variable to it
-  if (state.currentSubquestion) {
-    // Update the matrix row with the variable
-    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
-      row.id === state.currentSubquestion!.id
-        ? { ...row, variable: data.variable }
-        : row
-    ) || []
-
-    return {
-      ...state,
-      currentQuestion: {
-        ...state.currentQuestion,
-        subquestions: updatedSubquestions,
-      },
-      currentSubquestion: {
-        ...state.currentSubquestion,
-        variable: data.variable,
-      },
-      // Clear subtext and tooltip buffers when we encounter structured elements
-      subtextBuffer: null,
-      tooltipBuffer: null,
-      subquestionSubtextBuffer: null,
-      subquestionTooltipBuffer: null,
-    optionSubtextBuffer: null,
-    optionTooltipBuffer: null,
-    }
-  }
-
-  // Otherwise, assign to the question itself
+  // Assign to the question itself
   return {
     ...state,
     currentQuestion: {
@@ -1457,6 +1469,22 @@ const handleVariable = (
     subquestionTooltipBuffer: null,
     optionSubtextBuffer: null,
     optionTooltipBuffer: null,
+  }
+}
+
+const handleSubquestionVariable = (state: ParserState, data: VariableData): ParserState => {
+  if (!state.currentQuestion || !state.currentSubquestion) return state
+
+  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+    row.id === state.currentSubquestion!.id
+      ? { ...row, variable: data.variable }
+      : row
+  ) || []
+
+  return {
+    ...state,
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, variable: data.variable },
   }
 }
 
@@ -2102,6 +2130,10 @@ const reduceParsedLine = (
       return handleSubquestionSubtract(state, parsedLine.data)
     case "subquestion_value":
       return handleSubquestionValue(state, parsedLine.data)
+    case "subquestion_variable":
+      return handleSubquestionVariable(state, parsedLine.data)
+    case "subquestion_show_if":
+      return handleSubquestionShowIf(state, parsedLine.data)
     case "matrix_row":
       return handleSubquestion(state, parsedLine.data)
     case "input_type":

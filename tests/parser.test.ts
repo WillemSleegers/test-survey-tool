@@ -85,9 +85,9 @@ NUMBER`
     const text = `Q: How strongly do you agree or disagree with the following statements?
 
 - Q: Statement one
-  VARIABLE: statement_one
+  - VARIABLE: statement_one
 - Q: Statement two
-  VARIABLE: statement_two
+  - VARIABLE: statement_two
 
 - Strongly Agree
 - Agree
@@ -138,6 +138,30 @@ TOTAL: Total`
     expect(question.type).toBe('matrix')
     expect(question.subquestions).toHaveLength(2)
     expect(question.options).toHaveLength(2)
+  })
+
+  it('should parse matrix question with SHOW_IF on subquestions', () => {
+    const text = `Q: How satisfied are you with these aspects?
+
+- Q: Aspect one
+  - SHOW_IF: some_condition == "yes"
+- Q: Aspect two
+- Q: Aspect three
+  - SHOW_IF: another_condition == "true"
+
+- Very satisfied
+- Satisfied
+- Neutral`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('matrix')
+    expect(question.subquestions).toHaveLength(3)
+    expect(question.subquestions?.[0].showIf).toBe('some_condition == "yes"')
+    expect(question.subquestions?.[1].showIf).toBeUndefined()
+    expect(question.subquestions?.[2].showIf).toBe('another_condition == "true"')
+    expect(question.options).toHaveLength(3)
   })
 })
 
