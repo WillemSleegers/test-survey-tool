@@ -24,6 +24,7 @@ import {
   SubtotalLabelData,
   PrefixData,
   SuffixData,
+  RangeData,
   ColumnData,
   OptionExcludeData,
   OptionHeaderData,
@@ -139,6 +140,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("NAV:")) return "nav_item"
   if (trimmed.startsWith("LEVEL:")) return "nav_level"
   if (trimmed.startsWith("BLOCK:")) return "block"
+  if (trimmed.startsWith("RANGE:")) return "range"
 
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a matrix row (- Q: ...)
@@ -390,6 +392,25 @@ const parseSuffix = (line: string): SuffixData => {
   return { suffix }
 }
 
+const parseRange = (line: string): RangeData => {
+  const trimmed = line.trim()
+  const rangeStr = trimmed.substring(6).trim() // Remove "RANGE:" prefix
+  const match = rangeStr.match(/^(-?\d+)-(-?\d+)$/)
+
+  if (!match) {
+    throw new Error(`Invalid RANGE syntax: ${line}. Expected format: RANGE: start-end (e.g., RANGE: 1-10)`)
+  }
+
+  const start = parseInt(match[1], 10)
+  const end = parseInt(match[2], 10)
+
+  if (start > end) {
+    throw new Error(`Invalid RANGE: start (${start}) must be less than or equal to end (${end})`)
+  }
+
+  return { start, end }
+}
+
 const parseOptionShowIf = (line: string): OptionShowIfData => {
   const trimmed = line.trim()
   // Remove "- SHOW_IF:" prefix and any leading whitespace
@@ -601,6 +622,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parsePrefix(line) }
     case "suffix":
       return { type, raw: line, data: parseSuffix(line) }
+    case "range":
+      return { type, raw: line, data: parseRange(line) }
     case "content":
       return { type, raw: line, data: parseContent(line) }
     case "compute":
@@ -1602,6 +1625,35 @@ const handleSuffix = (state: ParserState, data: SuffixData): ParserState => {
   }
 }
 
+const handleRange = (state: ParserState, data: RangeData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Generate numeric options from start to end (inclusive)
+  const options: Option[] = []
+  for (let i = data.start; i <= data.end; i++) {
+    const numStr = i.toString()
+    options.push({
+      value: numStr,
+      label: numStr,
+    })
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: [...state.currentQuestion.options, ...options],
+    },
+    // Clear subtext and tooltip buffers when we encounter structured elements
+    subtextBuffer: null,
+    tooltipBuffer: null,
+    subquestionSubtextBuffer: null,
+    subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
+  }
+}
+
 const handleOptionPrefix = (state: ParserState, data: PrefixData): ParserState => {
   if (!state.currentQuestion || state.currentQuestion.options.length === 0) return state
 
@@ -2150,6 +2202,8 @@ const reduceParsedLine = (
       return handlePrefix(state, parsedLine.data)
     case "suffix":
       return handleSuffix(state, parsedLine.data)
+    case "range":
+      return handleRange(state, parsedLine.data)
     case "content":
       return handleContent(state, parsedLine.data, parsedLine.raw)
     case "compute":

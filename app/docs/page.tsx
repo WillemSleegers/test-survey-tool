@@ -3,12 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
 import { parseQuestionnaire } from "@/lib/parser"
@@ -27,6 +21,8 @@ export type Section =
   | "checkbox"
   | "matrix"
   | "breakdown"
+  | "option-text"
+  | "numeric-ranges"
   | "variables"
   | "arithmetic"
   | "computed"
@@ -34,66 +30,56 @@ export type Section =
   | "conditionals"
   | "hints"
   | "tooltips"
-  | "option-text"
   | "markdown"
-
-function DocsPageContent({
-  activeSection,
-  setActiveSection,
-}: {
-  activeSection: Section
-  setActiveSection: (section: Section) => void
-}) {
-  const { isMobile } = useSidebar()
-
-  return (
-    <>
-      <AppSidebar
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-      />
-      <SidebarInset>
-        <header>
-          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between border-b border-border">
-            {isMobile && <SidebarTrigger className="-ml-1 mr-2" />}
-            <Link href="/" className="hover:opacity-80 transition-opacity">
-              <span className="text-xl font-bold">TST</span>
-            </Link>
-            <nav className="flex items-center gap-4">
-              <Link href="/docs" className="text-sm hover:underline">
-                Documentation
-              </Link>
-              <Link href="/releases" className="text-sm hover:underline">
-                Releases
-              </Link>
-            </nav>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto w-full p-4 pt-8 pb-24">
-            <DocumentationContent activeSection={activeSection} />
-          </div>
-        </div>
-      </SidebarInset>
-    </>
-  )
-}
 
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState<Section>("overview")
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <DocsPageContent
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-      />
-    </SidebarProvider>
+    <div className="min-h-screen flex flex-col">
+      <header>
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between border-b border-border">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <span className="text-xl font-bold">TST</span>
+          </Link>
+          <nav className="flex items-center gap-4">
+            <Link href="/docs" className="text-sm hover:underline">
+              Documentation
+            </Link>
+            <Link href="/releases" className="text-sm hover:underline">
+              Releases
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex gap-8">
+            <AppSidebar
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+            />
+            <div className="flex-1 max-w-4xl">
+              <DocumentationContent
+                activeSection={activeSection}
+                onSectionChange={setActiveSection}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
-function DocumentationContent({ activeSection }: { activeSection: Section }) {
+function DocumentationContent({
+  activeSection,
+  onSectionChange,
+}: {
+  activeSection: Section
+  onSectionChange: (section: Section) => void
+}) {
   const renderCodeBlock = (code: string) => (
     <div className="bg-muted p-4 rounded-lg">
       <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
@@ -128,7 +114,7 @@ function DocumentationContent({ activeSection }: { activeSection: Section }) {
       return (
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold">Documentation</h1>
+            <h1 className="text-4xl font-bold">Overview</h1>
             <p className="text-lg text-muted-foreground mt-2">
               Learn how to create surveys using the TST text format.
             </p>
@@ -1273,6 +1259,100 @@ Q: What is your favorite hobby?
 - Gaming
 - Other
   - TEXT`)}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Conditional Options</h3>
+            <p className="text-sm text-muted-foreground">
+              Options can be conditionally shown using <code>- SHOW_IF:</code>.
+              See the{" "}
+              <button
+                onClick={() => onSectionChange("conditionals")}
+                className="text-primary hover:underline"
+              >
+                Conditionals section
+              </button>{" "}
+              for details.
+            </p>
+          </div>
+        </div>
+      )
+
+    case "numeric-ranges":
+      return (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-3xl font-bold">Numeric Ranges</h2>
+            <p className="text-muted-foreground mt-2">
+              Generate numeric options using shorthand syntax for rating scales.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Usage</h3>
+            {renderCodeBlock(`Q: Rate your satisfaction
+RANGE: 1-10`)}
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Generates numeric options from start to end (inclusive)</li>
+              <li>
+                Format: <code>RANGE: start-end</code> (e.g., <code>RANGE: 1-10</code>)
+              </li>
+              <li>Works with multiple choice, checkbox, and matrix questions</li>
+              <li>Supports negative numbers (e.g., <code>RANGE: -5-5</code>)</li>
+              <li>Can be mixed with manual options</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Example: Rating Scale</h3>
+            {renderExample(`#
+Q: How satisfied are you with our service?
+RANGE: 1-10
+VARIABLE: satisfaction`)}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Example: Matrix with Range</h3>
+            {renderExample(`#
+Q: Please rate the following aspects:
+- Q: Quality
+- Q: Service
+- Q: Value
+RANGE: 1-7`)}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Example: Net Promoter Score</h3>
+            {renderExample(`#
+Q: How likely are you to recommend us?
+RANGE: 0-10
+VARIABLE: nps_score`)}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Example: Mixed Options</h3>
+            {renderCodeBlock(`Q: Select an option
+- Low
+RANGE: 1-3
+- High`)}
+            <p className="text-sm text-muted-foreground">
+              This creates options: Low, 1, 2, 3, High
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Conditional Options</h3>
+            <p className="text-sm text-muted-foreground">
+              Options can be conditionally shown using <code>- SHOW_IF:</code>.
+              See the{" "}
+              <button
+                onClick={() => onSectionChange("conditionals")}
+                className="text-primary hover:underline"
+              >
+                Conditionals section
+              </button>{" "}
+              for details.
+            </p>
           </div>
         </div>
       )

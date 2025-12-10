@@ -203,6 +203,7 @@ export type OptionExcludeData = { exclude: true }
 export type OptionHeaderData = { label: string }
 export type OptionSeparatorData = { separator: true }
 export type CustomData = { custom: string }
+export type RangeData = { start: number; end: number }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
@@ -244,6 +245,7 @@ export type ParsedLine =
   | { type: "block"; raw: string; data: BlockData }
   | { type: "nav_item"; raw: string; data: NavItemData }
   | { type: "nav_level"; raw: string; data: NavLevelData }
+  | { type: "range"; raw: string; data: RangeData }
 
 export type ParserState = {
   blocks: Block[]

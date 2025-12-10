@@ -1,23 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { ChevronRight } from "lucide-react"
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { Card, CardContent } from "@/components/ui/card"
 import type { Section } from "@/app/docs/page"
 
 const navMain = [
@@ -40,7 +25,13 @@ const navMain = [
       { title: "Checkbox", section: "checkbox" as Section },
       { title: "Breakdown", section: "breakdown" as Section },
       { title: "Matrix", section: "matrix" as Section },
+    ],
+  },
+  {
+    title: "Question Options",
+    items: [
       { title: "Text on Options", section: "option-text" as Section },
+      { title: "Numeric Ranges", section: "numeric-ranges" as Section },
     ],
   },
   {
@@ -70,60 +61,75 @@ export function AppSidebar({
   activeSection: Section
   onSectionChange: (section: Section) => void
 }) {
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(navMain.map((g) => g.title))
+  )
+
+  const toggleGroup = (title: string) => {
+    const newExpanded = new Set(expandedGroups)
+    if (newExpanded.has(title)) {
+      newExpanded.delete(title)
+    } else {
+      newExpanded.add(title)
+    }
+    setExpandedGroups(newExpanded)
+  }
+
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="border-none">
-        <div className="px-2 py-1">
-          <h2 className="text-lg font-semibold">Documentation</h2>
-        </div>
-      </SidebarHeader>
-      <SidebarContent className="gap-0 overflow-x-hidden">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeSection === "overview"}
-                  onClick={() => onSectionChange("overview")}
-                >
-                  <span>Overview</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {navMain.map((group) => (
-          <Collapsible key={group.title} defaultOpen className="group/collapsible">
-            <SidebarGroup>
-              <SidebarGroupLabel
-                asChild
-                className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
-              >
-                <CollapsibleTrigger>
-                  {group.title}{" "}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.section}>
-                        <SidebarMenuButton
-                          isActive={activeSection === item.section}
+    <div className="w-64 shrink-0">
+      <div className="sticky top-6 space-y-3">
+        <div className="font-semibold">Documentation</div>
+        <Card className="py-3">
+          <CardContent className="px-4">
+            <div
+              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted ${
+                activeSection === "overview" ? "bg-muted font-semibold" : ""
+              }`}
+              onClick={() => onSectionChange("overview")}
+            >
+              Overview
+            </div>
+
+            {navMain.map((group) => {
+              const isExpanded = expandedGroups.has(group.title)
+
+              return (
+                <div key={group.title} className="space-y-0.5 mt-2">
+                  <div
+                    className="flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted font-medium"
+                    onClick={() => toggleGroup(group.title)}
+                  >
+                    <div className="flex-1">{group.title}</div>
+                    <ChevronRight
+                      className={`w-4 h-4 shrink-0 transition-transform ${
+                        isExpanded ? "rotate-90" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {isExpanded && (
+                    <div className="ml-4 space-y-0.5 border-l-2 border-muted pl-2">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.section}
+                          className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm cursor-pointer hover:bg-muted ${
+                            activeSection === item.section
+                              ? "bg-muted font-semibold"
+                              : ""
+                          }`}
                           onClick={() => onSectionChange(item.section)}
                         >
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
-      </SidebarContent>
-    </Sidebar>
+                          {item.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

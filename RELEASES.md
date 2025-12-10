@@ -7,6 +7,8 @@ Released December 2025
 ### New Features
 
 - Added SHOW_IF support for matrix subquestions - rows can now be conditionally shown/hidden based on responses
+- Added RANGE syntax for generating numeric options (e.g., `RANGE: 1-10` creates options 1, 2, 3, ..., 10)
+- Redesigned documentation navigation with survey-style card layout
 
 ### Breaking Changes
 
