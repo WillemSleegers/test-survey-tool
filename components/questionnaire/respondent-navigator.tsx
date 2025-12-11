@@ -156,8 +156,8 @@ export function RespondentNavigator({
     <div className="w-64 shrink-0">
       <div className="sticky top-6 space-y-3">
         <div className="font-semibold">{t("navigation.contents")}</div>
-        <Card className="py-3">
-          <CardContent className="px-4 ">
+        <Card className="py-3 shadow-xs">
+          <CardContent className="px-4 py-0">
             {topLevelItems.map(({ item, index }) => {
               const isCurrent = isNavItemCurrent(item)
               const isVisited = visitedNavItems.has(item)

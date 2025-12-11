@@ -9,6 +9,15 @@ Released December 2025
 - Added SHOW_IF support for matrix subquestions - rows can now be conditionally shown/hidden based on responses
 - Added RANGE syntax for generating numeric options (e.g., `RANGE: 1-10` creates options 1, 2, 3, ..., 10)
 - Redesigned documentation navigation with survey-style card layout
+- Added dedicated `/survey` route for better browser back button behavior
+
+### Improvements
+
+- Survey data now uses React Context instead of sessionStorage for cleaner state management
+- Browser back button now properly returns to home page from surveys
+- Reduced shadow on navigation sidebars from `shadow-sm` to `shadow-xs` for more subtle styling
+- Navigation shadows now match input element styling for consistency
+- Documentation sidebar and survey navigator now have consistent styling
 
 ### Breaking Changes
 

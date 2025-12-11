@@ -79,8 +79,8 @@ export function AppSidebar({
     <div className="w-64 shrink-0">
       <div className="sticky top-6 space-y-3">
         <div className="font-semibold">Documentation</div>
-        <Card className="py-3">
-          <CardContent className="px-4">
+        <Card className="py-3 shadow-xs">
+          <CardContent className="px-4 py-0">
             <div
               className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted ${
                 activeSection === "overview" ? "bg-muted font-semibold" : ""
@@ -108,7 +108,7 @@ export function AppSidebar({
                   </div>
 
                   {isExpanded && (
-                    <div className="ml-4 space-y-0.5 border-l-2 border-muted pl-2">
+                    <div className="ml-4 space-y-0.5 pl-2">
                       {group.items.map((item) => (
                         <div
                           key={item.section}
