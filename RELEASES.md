@@ -13,16 +13,14 @@ Released December 2025
 
 ### Improvements
 
-- Survey data now uses React Context instead of sessionStorage for cleaner state management
 - Browser back button now properly returns to home page from surveys
 - Reduced shadow on navigation sidebars from `shadow-sm` to `shadow-xs` for more subtle styling
-- Navigation shadows now match input element styling for consistency
-- Documentation sidebar and survey navigator now have consistent styling
+  - Navigation shadows now match input element styling for consistency
 
 ### Breaking Changes
 
 - **Subquestion VARIABLE syntax changed**: Use `- VARIABLE:` (with dash) instead of `VARIABLE:` (without dash)
-- This makes all subquestion modifiers consistent with dash prefix: `- HINT:`, `- TOOLTIP:`, `- VARIABLE:`, `- SHOW_IF:`
+  - This makes all subquestion modifiers consistent with dash prefix: `- HINT:`, `- TOOLTIP:`, `- VARIABLE:`, `- SHOW_IF:`
 
 ### Bug Fixes
 
