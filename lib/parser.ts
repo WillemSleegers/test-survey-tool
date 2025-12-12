@@ -24,6 +24,7 @@ import {
   SubtotalLabelData,
   PrefixData,
   SuffixData,
+  RangeData,
   ColumnData,
   OptionExcludeData,
   OptionHeaderData,
@@ -139,6 +140,7 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
   if (trimmed.startsWith("NAV:")) return "nav_item"
   if (trimmed.startsWith("LEVEL:")) return "nav_level"
   if (trimmed.startsWith("BLOCK:")) return "block"
+  if (trimmed.startsWith("RANGE:")) return "range"
 
   if (trimmed.match(/^-\s*([A-Z]\))?(.+)/) || trimmed.match(/^-\s+(.+)/)) {
     // Check if this is a matrix row (- Q: ...)
@@ -169,8 +171,9 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_value"
       return "content"
     }
-    // Check if this is an option variable (- VARIABLE: ...)
+    // Check if this is a variable modifier (- VARIABLE: ...)
     if (trimmed.match(/^-\s*VARIABLE:/)) {
+      if (state.currentSubquestion) return "subquestion_variable"
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_variable"
       return "content"
     }
@@ -214,9 +217,11 @@ const classifyLine = (line: string, state: ParserState): ParsedLine["type"] => {
       if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_suffix"
       return "content"
     }
-    // Check if this is a conditional option modifier
+    // Check if this is a conditional modifier (- SHOW_IF: ...)
     if (trimmed.match(/^-\s*SHOW_IF:/)) {
-      return state.currentQuestion ? "option_show_if" : "content"
+      if (state.currentSubquestion) return "subquestion_show_if"
+      if (state.currentQuestion && state.currentQuestion.options.length > 0) return "option_show_if"
+      return "content"
     }
     // Check if this is an other text modifier (only if we have a current question)
     if (trimmed.match(/^-\s*TEXT\s*$/)) {
@@ -295,6 +300,24 @@ const parseSubquestionValue = (line: string): SubquestionValueData => {
   }
 }
 
+const parseSubquestionVariable = (line: string): VariableData => {
+  const trimmed = line.trim()
+  // Remove "- VARIABLE:" prefix (with possible spaces)
+  const match = trimmed.match(/^-\s*VARIABLE:\s*(.*)/)
+  return {
+    variable: match ? match[1] : "",
+  }
+}
+
+const parseSubquestionShowIf = (line: string): ShowIfData => {
+  const trimmed = line.trim()
+  // Remove "- SHOW_IF:" prefix (with possible spaces)
+  const match = trimmed.match(/^-\s*SHOW_IF:\s*(.*)/)
+  return {
+    showIf: match ? match[1] : "",
+  }
+}
+
 const parseOption = (line: string): OptionData => {
   const trimmed = line.trim()
   const optionText = trimmed.substring(1).trim()
@@ -367,6 +390,25 @@ const parseSuffix = (line: string): SuffixData => {
   const trimmed = line.trim()
   const suffix = trimmed.substring(7).trim() // Remove "SUFFIX:" prefix
   return { suffix }
+}
+
+const parseRange = (line: string): RangeData => {
+  const trimmed = line.trim()
+  const rangeStr = trimmed.substring(6).trim() // Remove "RANGE:" prefix
+  const match = rangeStr.match(/^(-?\d+)-(-?\d+)$/)
+
+  if (!match) {
+    throw new Error(`Invalid RANGE syntax: ${line}. Expected format: RANGE: start-end (e.g., RANGE: 1-10)`)
+  }
+
+  const start = parseInt(match[1], 10)
+  const end = parseInt(match[2], 10)
+
+  if (start > end) {
+    throw new Error(`Invalid RANGE: start (${start}) must be less than or equal to end (${end})`)
+  }
+
+  return { start, end }
 }
 
 const parseOptionShowIf = (line: string): OptionShowIfData => {
@@ -560,6 +602,10 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parseSubquestionSubtract() }
     case "subquestion_value":
       return { type, raw: line, data: parseSubquestionValue(line) }
+    case "subquestion_variable":
+      return { type, raw: line, data: parseSubquestionVariable(line) }
+    case "subquestion_show_if":
+      return { type, raw: line, data: parseSubquestionShowIf(line) }
     case "matrix_row":
       return { type, raw: line, data: parseSubquestion(line, state) }
     case "input_type":
@@ -576,6 +622,8 @@ const parseLine = (line: string, state: ParserState): ParsedLine => {
       return { type, raw: line, data: parsePrefix(line) }
     case "suffix":
       return { type, raw: line, data: parseSuffix(line) }
+    case "range":
+      return { type, raw: line, data: parseRange(line) }
     case "content":
       return { type, raw: line, data: parseContent(line) }
     case "compute":
@@ -1049,6 +1097,22 @@ const handleSubquestionValue = (state: ParserState, data: SubquestionValueData):
   }
 }
 
+const handleSubquestionShowIf = (state: ParserState, data: ShowIfData): ParserState => {
+  if (!state.currentQuestion || !state.currentSubquestion) return state
+
+  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+    row.id === state.currentSubquestion!.id
+      ? { ...row, showIf: data.showIf }
+      : row
+  ) || []
+
+  return {
+    ...state,
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, showIf: data.showIf },
+  }
+}
+
 const handleOption = (state: ParserState, data: OptionData): ParserState => {
   if (!state.currentQuestion) return state
 
@@ -1414,36 +1478,7 @@ const handleVariable = (
     return state
   }
 
-  // If we have a current matrix row, assign the variable to it
-  if (state.currentSubquestion) {
-    // Update the matrix row with the variable
-    const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
-      row.id === state.currentSubquestion!.id
-        ? { ...row, variable: data.variable }
-        : row
-    ) || []
-
-    return {
-      ...state,
-      currentQuestion: {
-        ...state.currentQuestion,
-        subquestions: updatedSubquestions,
-      },
-      currentSubquestion: {
-        ...state.currentSubquestion,
-        variable: data.variable,
-      },
-      // Clear subtext and tooltip buffers when we encounter structured elements
-      subtextBuffer: null,
-      tooltipBuffer: null,
-      subquestionSubtextBuffer: null,
-      subquestionTooltipBuffer: null,
-    optionSubtextBuffer: null,
-    optionTooltipBuffer: null,
-    }
-  }
-
-  // Otherwise, assign to the question itself
+  // Assign to the question itself
   return {
     ...state,
     currentQuestion: {
@@ -1457,6 +1492,22 @@ const handleVariable = (
     subquestionTooltipBuffer: null,
     optionSubtextBuffer: null,
     optionTooltipBuffer: null,
+  }
+}
+
+const handleSubquestionVariable = (state: ParserState, data: VariableData): ParserState => {
+  if (!state.currentQuestion || !state.currentSubquestion) return state
+
+  const updatedSubquestions = state.currentQuestion.subquestions?.map(row =>
+    row.id === state.currentSubquestion!.id
+      ? { ...row, variable: data.variable }
+      : row
+  ) || []
+
+  return {
+    ...state,
+    currentQuestion: { ...state.currentQuestion, subquestions: updatedSubquestions },
+    currentSubquestion: { ...state.currentSubquestion, variable: data.variable },
   }
 }
 
@@ -1571,6 +1622,35 @@ const handleSuffix = (state: ParserState, data: SuffixData): ParserState => {
       ...state.currentQuestion,
       suffix: data.suffix,
     },
+  }
+}
+
+const handleRange = (state: ParserState, data: RangeData): ParserState => {
+  if (!state.currentQuestion) return state
+
+  // Generate numeric options from start to end (inclusive)
+  const options: Option[] = []
+  for (let i = data.start; i <= data.end; i++) {
+    const numStr = i.toString()
+    options.push({
+      value: numStr,
+      label: numStr,
+    })
+  }
+
+  return {
+    ...state,
+    currentQuestion: {
+      ...state.currentQuestion,
+      options: [...state.currentQuestion.options, ...options],
+    },
+    // Clear subtext and tooltip buffers when we encounter structured elements
+    subtextBuffer: null,
+    tooltipBuffer: null,
+    subquestionSubtextBuffer: null,
+    subquestionTooltipBuffer: null,
+    optionSubtextBuffer: null,
+    optionTooltipBuffer: null,
   }
 }
 
@@ -2102,6 +2182,10 @@ const reduceParsedLine = (
       return handleSubquestionSubtract(state, parsedLine.data)
     case "subquestion_value":
       return handleSubquestionValue(state, parsedLine.data)
+    case "subquestion_variable":
+      return handleSubquestionVariable(state, parsedLine.data)
+    case "subquestion_show_if":
+      return handleSubquestionShowIf(state, parsedLine.data)
     case "matrix_row":
       return handleSubquestion(state, parsedLine.data)
     case "input_type":
@@ -2118,6 +2202,8 @@ const reduceParsedLine = (
       return handlePrefix(state, parsedLine.data)
     case "suffix":
       return handleSuffix(state, parsedLine.data)
+    case "range":
+      return handleRange(state, parsedLine.data)
     case "content":
       return handleContent(state, parsedLine.data, parsedLine.raw)
     case "compute":

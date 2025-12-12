@@ -114,6 +114,7 @@ export type Subquestion = {
   subtract?: boolean
   subtotalLabel?: string
   value?: string
+  showIf?: string
 }
 
 
@@ -202,6 +203,7 @@ export type OptionExcludeData = { exclude: true }
 export type OptionHeaderData = { label: string }
 export type OptionSeparatorData = { separator: true }
 export type CustomData = { custom: string }
+export type RangeData = { start: number; end: number }
 
 export type ParsedLine =
   | { type: "page"; raw: string; data: PageData }
@@ -228,6 +230,8 @@ export type ParsedLine =
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
   | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }
   | { type: "subquestion_value"; raw: string; data: SubquestionValueData }
+  | { type: "subquestion_variable"; raw: string; data: VariableData }
+  | { type: "subquestion_show_if"; raw: string; data: ShowIfData }
   | { type: "matrix_row"; raw: string; data: SubquestionData }
   | { type: "input_type"; raw: string; data: InputTypeData }
   | { type: "variable"; raw: string; data: VariableData }
@@ -241,6 +245,7 @@ export type ParsedLine =
   | { type: "block"; raw: string; data: BlockData }
   | { type: "nav_item"; raw: string; data: NavItemData }
   | { type: "nav_level"; raw: string; data: NavLevelData }
+  | { type: "range"; raw: string; data: RangeData }
 
 export type ParserState = {
   blocks: Block[]

@@ -1,40 +1,33 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { FileUpload } from "@/components/file-upload"
 import { TextEditor } from "@/components/text-editor"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 import { Settings } from "@/components/settings"
 import { Navbar } from "@/components/navbar"
 
 import { parseQuestionnaire } from "@/lib/parser"
-
-import { Block, NavItem } from "@/lib/types"
+import { useSurvey } from "@/contexts/survey-context"
 
 import { ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
 
-type ParsedQuestionnaire = {
-  blocks: Block[]
-  navItems: NavItem[]
-}
-
 const QuestionnaireApp = () => {
-  const [questionnaire, setQuestionnaire] = useState<ParsedQuestionnaire | null>(null)
+  const router = useRouter()
+  const { setSurveyData } = useSurvey()
   const [error, setError] = useState<string>("")
-  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
   const [showTextEditor, setShowTextEditor] = useState<boolean>(false)
 
   const handleFileLoaded = (content: string) => {
     try {
       const parsed = parseQuestionnaire(content)
       console.log(parsed)
-      setQuestionnaire(parsed)
-      setError("")
-      setIsPreviewMode(true)
+      setSurveyData(parsed)
+      router.push("/survey")
     } catch (err) {
       setError((err as Error).message)
     }
@@ -44,19 +37,11 @@ const QuestionnaireApp = () => {
     try {
       const parsed = parseQuestionnaire(ADVANCED_SAMPLE_TEXT)
       console.log(parsed)
-      setQuestionnaire(parsed)
-      setError("")
-      setIsPreviewMode(true)
+      setSurveyData(parsed)
+      router.push("/survey")
     } catch (err) {
       setError((err as Error).message)
     }
-  }
-
-  const handleResetToUpload = () => {
-    setQuestionnaire(null)
-    setError("")
-    setIsPreviewMode(false)
-    setShowTextEditor(false)
   }
 
   const handleTextEditorLoad = (content: string) => {
@@ -67,16 +52,6 @@ const QuestionnaireApp = () => {
   const handleTextEditorCancel = () => {
     setShowTextEditor(false)
     setError("")
-  }
-
-  if (isPreviewMode && questionnaire) {
-    return (
-      <QuestionnaireViewer
-        questionnaire={questionnaire.blocks}
-        navItems={questionnaire.navItems}
-        onResetToUpload={handleResetToUpload}
-      />
-    )
   }
 
   return (
@@ -125,20 +100,6 @@ const QuestionnaireApp = () => {
 
         <div className="border-t border-border pt-6">
           <Settings />
-        </div>
-
-        <div className="border-t border-border pt-6">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Help</h3>
-            <div className="flex flex-col gap-2">
-              <Link href="/docs" className="text-primary hover:underline">
-                Documentation
-              </Link>
-              <Link href="/releases" className="text-primary hover:underline">
-                Release Notes
-              </Link>
-            </div>
-          </div>
         </div>
         </div>
       </div>

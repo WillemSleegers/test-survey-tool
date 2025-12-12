@@ -1,5 +1,39 @@
 # Release Notes
 
+## Version 0.2.2
+
+Released December 2025
+
+### New Features
+
+- Added SHOW_IF support for matrix subquestions - rows can now be conditionally shown/hidden based on responses
+- Added RANGE syntax for generating numeric options (e.g., `RANGE: 1-10` creates options 1, 2, 3, ..., 10)
+- Redesigned documentation navigation with survey-style card layout
+- Added dedicated `/survey` route for better browser back button behavior
+
+### Improvements
+
+- Browser back button now properly returns to home page from surveys
+- Reduced shadow on navigation sidebars from `shadow-sm` to `shadow-xs` for more subtle styling
+  - Navigation shadows now match input element styling for consistency
+
+### Breaking Changes
+
+- **Subquestion VARIABLE syntax changed**: Use `- VARIABLE:` (with dash) instead of `VARIABLE:` (without dash)
+  - This makes all subquestion modifiers consistent with dash prefix: `- HINT:`, `- TOOLTIP:`, `- VARIABLE:`, `- SHOW_IF:`
+
+### Bug Fixes
+
+- Fixed matrix question parser bug where questions with subquestions were incorrectly classified as `multiple_choice` instead of `matrix` type
+
+### Testing
+
+- Added Vitest testing framework
+- Added comprehensive parser test suite with 13 tests covering all question types
+- Tests validate correct question type detection and conditional subquestion behavior
+
+---
+
 ## Version 0.2.1
 
 Released December 2025

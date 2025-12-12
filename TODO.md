@@ -78,6 +78,50 @@
 
 ## Ideas to Explore
 
+- [ ] Add INTEGER input type for whole numbers only
+  - **Use case**: Many survey questions require whole numbers (employee count, age, quantity) where decimals don't make sense
+  - **Current limitation**: NUMBER type accepts any numeric value including decimals
+  - **Proposal**: Add INTEGER keyword as an input type alongside NUMBER
+  - **Example**:
+    ```text
+    Q: How many employees work at your location?
+    INTEGER
+
+    Q: What is your annual revenue in thousands?
+    NUMBER
+    ```
+  - **Implementation**:
+    - Add INTEGER to input type keywords in parser
+    - Use `<input type="number" step="1">` for integer inputs
+    - Consider adding integer validation (reject decimal input)
+    - Works with all question types that support NUMBER (standard questions, breakdown columns)
+  - **Priority**: Medium - Common use case, improves UX and data quality
+
+- [ ] Add VALIDATE syntax for question validation with custom error messages
+  - **Use case**: Provide real-time validation feedback when responses don't meet specified conditions
+  - **Syntax**: Add `VALIDATE:` keyword followed by condition expression and error message
+  - **Example**:
+    ```text
+    Q: How many employees does your location have?
+    NUMBER
+    VALIDATE: Q1 > 0, "Please enter a positive number"
+    VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"
+    ```
+  - **Features**:
+    - Multiple validation rules per question
+    - Custom error messages displayed to respondent
+    - Validation runs on blur or value change
+    - Prevents navigation if validation fails
+    - Could support cross-question validation (e.g., `Q2 > Q1`)
+  - **Implementation considerations**:
+    - Parse validation conditions similar to SHOW_IF conditions
+    - Store validation rules in question type definitions
+    - Add validation state management to response hooks
+    - Display error messages near question input
+    - Consider validation timing (on change, on blur, on submit)
+    - Handle validation for all question types (TEXT, NUMBER, BREAKDOWN, etc.)
+  - **Priority**: Medium - Would significantly improve data quality and user experience
+
 - [ ] Add SUFFIX support for BREAKDOWN questions to handle thousands formatting
 
   - **Use case**: Allow writing "1" to display as "1,000" when values represent thousands
