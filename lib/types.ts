@@ -115,17 +115,6 @@ export type Question =
   | MatrixQuestion
   | BreakdownQuestion
 
-// Internal parser type that matches the final Question discriminated union
-// Since we determine the type upfront via lookahead, we can use proper types during parsing
-export type ParsedQuestion =
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "multiple_choice"; options: Option[]; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "checkbox"; options: Option[]; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "text"; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "essay"; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "number"; prefix?: string; suffix?: string; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "matrix"; subquestions: Subquestion[]; options: MatrixOption[]; inputType?: "checkbox" | "text" | "essay"; variable?: string; showIf?: string }
-  | { id: string; text: string; subtext?: string; tooltip?: string; type: "breakdown"; options: BreakdownOption[]; totalLabel?: string; prefix?: string; suffix?: string; variable?: string; showIf?: string }
-
 export type Subquestion = {
   id: string
   text: string
@@ -258,7 +247,7 @@ export type ParserState = {
   currentNavLevel: number
   currentPage: Page | null
   currentSection: Section | null
-  currentQuestion: ParsedQuestion | null
+  currentQuestion: Question | null
   currentSubquestion: Subquestion | null
   subtextBuffer: string[] | null
   tooltipBuffer: string[] | null
