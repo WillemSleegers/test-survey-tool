@@ -61,14 +61,41 @@ export type NumberQuestion = QuestionBase & {
   suffix?: string
 }
 
+export type MatrixOption = {
+  value: string
+  label: string
+  hint?: string
+  tooltip?: string
+  showIf?: string
+  allowsOtherText?: boolean
+  subquestions?: Subquestion[]
+}
+
 export type MatrixQuestion = QuestionBase & {
   type: "matrix"
   subquestions: Subquestion[]
-  options: Option[]
+  options: MatrixOption[]
   inputType?: "checkbox" | "text" | "essay"
 }
 
-export type BreakdownOption = Omit<Option, 'subquestions' | 'allowsOtherText'>
+export type BreakdownOption = {
+  value: string
+  label: string
+  hint?: string
+  tooltip?: string
+  showIf?: string
+  subtract?: boolean
+  prefillValue?: string
+  variable?: string
+  column?: number
+  exclude?: boolean
+  header?: boolean
+  subtotalLabel?: string
+  separator?: boolean
+  custom?: string
+  prefix?: string
+  suffix?: string
+}
 
 export type BreakdownQuestion = QuestionBase & {
   type: "breakdown"
@@ -87,23 +114,16 @@ export type Question =
   | MatrixQuestion
   | BreakdownQuestion
 
-// Internal parser type that allows all field combinations during parsing
-// This gets converted to the proper discriminated Question type after parsing is complete
-export type ParsedQuestion = {
-  id: string
-  text: string
-  subtext?: string
-  tooltip?: string
-  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "breakdown"
-  options: Option[]
-  subquestions?: Subquestion[]
-  inputType?: "checkbox" | "text" | "essay"
-  variable?: string
-  showIf?: string
-  totalLabel?: string
-  prefix?: string
-  suffix?: string
-}
+// Internal parser type that matches the final Question discriminated union
+// Since we determine the type upfront via lookahead, we can use proper types during parsing
+export type ParsedQuestion =
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "multiple_choice"; options: Option[]; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "checkbox"; options: Option[]; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "text"; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "essay"; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "number"; prefix?: string; suffix?: string; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "matrix"; subquestions: Subquestion[]; options: MatrixOption[]; inputType?: "checkbox" | "text" | "essay"; variable?: string; showIf?: string }
+  | { id: string; text: string; subtext?: string; tooltip?: string; type: "breakdown"; options: BreakdownOption[]; totalLabel?: string; prefix?: string; suffix?: string; variable?: string; showIf?: string }
 
 export type Subquestion = {
   id: string
@@ -125,18 +145,6 @@ export type Option = {
   tooltip?: string
   showIf?: string
   allowsOtherText?: boolean
-  subquestions?: Subquestion[]
-  subtract?: boolean
-  prefillValue?: string
-  variable?: string
-  column?: number
-  exclude?: boolean
-  header?: boolean
-  subtotalLabel?: string
-  separator?: boolean
-  custom?: string
-  prefix?: string
-  suffix?: string
 }
 
 export type Variables = {
@@ -266,4 +274,7 @@ export type ParserState = {
   optionSubtextBuffer: string[] | null
   optionTooltipBuffer: string[] | null
   questionCounter: number
+  // Lookahead support
+  allLines: Array<{ line: string; shouldParse: boolean }>
+  currentLineIndex: number
 }

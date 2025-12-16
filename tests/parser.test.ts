@@ -322,3 +322,258 @@ RANGE: 10-1`
     expect(() => parseQuestionnaire(text)).toThrow('Invalid RANGE: start (10) must be less than or equal to end (1)')
   })
 })
+
+describe('Parser - Breakdown Question Features', () => {
+  it('should parse breakdown with COLUMN for multi-column layout', () => {
+    const text = `Q: Revenue breakdown
+BREAKDOWN
+
+- Product A
+  - COLUMN: 1
+- Product B
+  - COLUMN: 1
+
+- Service X
+  - COLUMN: 2
+- Service Y
+  - COLUMN: 2
+
+TOTAL: Total Revenue`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options).toHaveLength(4)
+    expect(question.options[0].column).toBe(1)
+    expect(question.options[1].column).toBe(1)
+    expect(question.options[2].column).toBe(2)
+    expect(question.options[3].column).toBe(2)
+  })
+
+  it('should parse breakdown with EXCLUDE flag', () => {
+    const text = `Q: Budget calculation
+BREAKDOWN
+
+- Revenue
+- Costs
+  - EXCLUDE
+
+TOTAL: Net`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[1].exclude).toBe(true)
+  })
+
+  it('should parse breakdown with VALUE for calculated fields', () => {
+    const text = `Q: Financial summary
+BREAKDOWN
+
+- Revenue
+- Tax Rate
+  - VALUE: revenue * 0.2
+  - EXCLUDE
+
+TOTAL: Total`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[1].prefillValue).toBe('revenue * 0.2')
+    expect(question.options[1].exclude).toBe(true)
+  })
+
+  it('should parse breakdown with VARIABLE on options', () => {
+    const text = `Q: Cost breakdown
+BREAKDOWN
+
+- Labor costs
+  - VARIABLE: labor
+- Material costs
+  - VARIABLE: materials
+
+TOTAL: Total Costs`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[0].variable).toBe('labor')
+    expect(question.options[1].variable).toBe('materials')
+  })
+
+  it('should parse breakdown with SUBTRACT', () => {
+    const text = `Q: Calculate net income
+BREAKDOWN
+
+- Revenue
+- Expenses
+  - SUBTRACT
+
+TOTAL: Net Income`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[1].subtract).toBe(true)
+  })
+
+  it('should parse breakdown with HEADER rows', () => {
+    const text = `Q: Financial statement
+BREAKDOWN
+
+- HEADER: Income
+- Revenue
+- Sales
+
+- HEADER: Expenses
+- Costs
+
+TOTAL: Net`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[0].header).toBe(true)
+    expect(question.options[0].exclude).toBe(true)
+    expect(question.options[3].header).toBe(true)
+  })
+
+  it('should parse breakdown with SUBTOTAL rows', () => {
+    const text = `Q: Revenue breakdown
+BREAKDOWN
+
+- Product A
+- Product B
+- SUBTOTAL: Product Revenue
+
+- Service X
+- Service Y
+- SUBTOTAL: Service Revenue
+
+TOTAL: Total Revenue`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[2].subtotalLabel).toBe('Product Revenue')
+    expect(question.options[2].exclude).toBe(true)
+    expect(question.options[5].subtotalLabel).toBe('Service Revenue')
+  })
+
+  it('should parse breakdown with option-level PREFIX and SUFFIX', () => {
+    const text = `Q: Mixed units
+BREAKDOWN
+
+- Amount in dollars
+  - PREFIX: $
+- Amount in euros
+  - PREFIX: €
+- Percentage
+  - SUFFIX: %`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.options[0].prefix).toBe('$')
+    expect(question.options[1].prefix).toBe('€')
+    expect(question.options[2].suffix).toBe('%')
+  })
+
+  it('should parse breakdown with question-level PREFIX and SUFFIX', () => {
+    const text = `Q: Currency amounts
+BREAKDOWN
+PREFIX: $
+SUFFIX: USD
+
+- Item 1
+- Item 2
+
+TOTAL: Total`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('breakdown')
+    expect(question.prefix).toBe('$')
+    expect(question.suffix).toBe('USD')
+  })
+})
+
+describe('Parser - Question Type Switching', () => {
+  it('should handle type change from multiple_choice to checkbox', () => {
+    const text = `Q: Select items
+- Option 1
+- Option 2
+CHECKBOX`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('checkbox')
+    expect(question.options).toHaveLength(2)
+  })
+
+  it('should handle type change from multiple_choice to text', () => {
+    const text = `Q: Enter your response
+- This will be ignored
+TEXT`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('text')
+  })
+
+  it('should preserve matrix type when adding inputType', () => {
+    const text = `Q: Provide feedback
+- Q: Topic 1
+- Q: Topic 2
+- Option A
+- Option B
+TEXT`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('matrix')
+    expect(question.inputType).toBe('text')
+    expect(question.subquestions).toHaveLength(2)
+  })
+})
+
+describe('Parser - PREFIX and SUFFIX', () => {
+  it('should parse NUMBER question with PREFIX and SUFFIX', () => {
+    const text = `Q: What is your budget?
+NUMBER
+PREFIX: $
+SUFFIX: per month`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('number')
+    expect(question.prefix).toBe('$')
+    expect(question.suffix).toBe('per month')
+  })
+
+  it('should not allow PREFIX on TEXT question', () => {
+    const text = `Q: Enter text
+TEXT
+PREFIX: $`
+
+    const result = parseQuestionnaire(text)
+    const question = result.blocks[0].pages[0].sections[0].questions[0]
+
+    expect(question.type).toBe('text')
+    expect('prefix' in question).toBe(false)
+  })
+})

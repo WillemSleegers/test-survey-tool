@@ -42,20 +42,28 @@
 
 ## Medium Priority
 
+- [ ] Add SHOW_IF support to sections
+  - **Motivation**: Sections currently support content and tooltip but not conditional visibility
+  - **Benefit**: Would enable conditional showing/hiding of entire groups of questions within a page
+  - **Current state**: Sections provide organizational layer (Pages → Sections → Questions) with content, tooltip, and questions
+  - **Implementation**:
+    - Add `showIf?: string` field to Section type in `lib/types.ts`
+    - Update parser to recognize SHOW_IF keyword at section level (similar to page-level SHOW_IF)
+    - Update visibility logic in `hooks/use-visible-pages.ts` to evaluate section conditions
+    - Ensure section visibility affects all questions within that section
+  - **Use case**: Hide entire groups of related questions based on previous responses
+  - **Priority**: Medium - Would provide useful organizational capability without breaking existing functionality
 - [ ] Review tooltip icon positioning layout
   - Tooltip icons now positioned absolutely at -left-8 for consistent left-side placement
   - Main content container has pl-8 padding to accommodate icons
   - Table containers use -ml-8 pl-8 to prevent double-indentation while keeping icons visible
   - Should verify this approach is principled and doesn't cause issues with edge cases
   - Consider whether this pattern scales well for other absolutely positioned elements
-- [ ] Remove subquestions feature from BREAKDOWN questions
-  - Currently BREAKDOWN supports subquestions with `- Q:` syntax for hierarchical breakdowns
-  - This feature is unnecessary - flat options with descriptive labels work better
-  - Subquestions add complexity (3-column layout) and confusion
-  - The `- Q:` syntax was added for compatibility but creates ambiguity
-  - Should remove this feature entirely and standardize on flat `- Option` syntax
-  - Use descriptive labels like "Energiekosten: Waarvan aardgas" instead of parent-child structure
-  - Simpler to understand and maintain, consistent with other BREAKDOWN questions
+- [x] Remove subquestions feature from BREAKDOWN questions
+  - ✅ Investigation showed BREAKDOWN never supported subquestions
+  - ✅ The `- Q:` syntax only works for MATRIX questions
+  - ✅ BreakdownOption type already excludes subquestions
+  - No action needed - this was a misunderstanding
 - [x] Clean up legacy mainQuestions array
   - ✅ Removed always-empty `mainQuestions` array from `hooks/use-visible-pages.ts:46`
   - ✅ Updated `VisiblePageContent` type to remove mainQuestions
@@ -158,37 +166,142 @@
   - ✅ Updated all components to use specific types
   - ✅ TypeScript now enforces requirements and provides better type safety
   - Benefits: Component-level type safety, compile-time error detection, better IDE autocomplete
-- [ ] Refactor parser to use specialized parsing functions per question type
-  - **Problem**: Current parser is a single large state machine handling all question types with shared conditional logic
-  - **Proposal**: Split into specialized parser functions (e.g., `parseTextQuestion()`, `parseBreakdownQuestion()`, `parseMatrixQuestion()`)
-  - **Approach**:
-    1. Look ahead from `Q:` line to determine question type (scan for type keywords or `- Q:` pattern)
-    2. Call specialized parser function for that type
-    3. Each function returns the correct discriminated union type directly
-    4. Extract shared logic (HINT, TOOLTIP, VARIABLE) into helper functions
+- [x] Refactor parser to use lookahead and proper discriminated unions
+  - ✅ Implemented lookahead function `determineQuestionType()` that scans ahead to identify question type before creating question objects
+  - ✅ Changed parser from reduce to for loop to enable line index tracking for lookahead
+  - ✅ Created specialized option types: `Option`, `MatrixOption`, `BreakdownOption`
+  - ✅ Converted `ParsedQuestion` to proper discriminated union where each variant has only relevant fields
+  - ✅ Added type guard functions: `hasOptions()` and `hasSubquestions()` for safe property access
+  - ✅ Updated all handler functions to use type guards before accessing type-specific properties
+  - ✅ Modified `handleInputType` to properly handle type changes while maintaining discriminated union integrity
+  - **Implementation Details**:
+    - Lookahead scans for keywords: TEXT, ESSAY, NUMBER, BREAKDOWN, CHECKBOX, or `- Q:` (matrix indicator)
+    - Default type is multiple_choice if no type keyword found
+    - Type guards enable TypeScript to narrow union types for safe property access
+    - Breakdown-specific handlers check `question.type === 'breakdown'` before accessing breakdown fields
+    - Matrix-specific handlers check `hasSubquestions()` before accessing subquestions array
+    - Option handlers check `hasOptions()` before accessing options array
+  - **Benefits Achieved**:
+    - Full type safety throughout parser - TypeScript enforces that only valid fields are accessed
+    - No more ParsedOption "bag of all fields" - proper option types based on question type
+    - Compile-time error detection prevents accessing properties on wrong question types
+    - Better IDE autocomplete and code navigation
+    - Easier to add new question types with confidence
+  - **Note**: This is a stepping stone improvement. The parser still uses a single state machine rather than specialized parsing functions per type, but type safety is now enforced throughout
+- [ ] Refactor parser to use type-driven chunk-based approach
+  - **Motivation**: The discriminated union types define exactly what each question needs - the parser should directly mirror this structure
+  - **Current problems**:
+    - ~40 handler functions with scattered logic
+    - Lookahead scans lines twice (once to determine type, again to parse)
+    - Mutable state during parsing (question built up incrementally)
+    - Type guards needed throughout to work around line-by-line approach
+    - Validation is difficult because we don't have complete structure
+  - **Proposed approach**: Hierarchical chunk-based parsing with type-specific parsers
+    - Parse top-down: Questionnaire → Blocks/NavItems → Pages → Sections → Questions
+    - Each level identifies its child chunks and delegates to specialized parsers
+    - Type determination happens during chunk identification
+  - **Implementation sketch**:
+    ```typescript
+    // Top level - identify blocks and nav items
+    function parseQuestionnaire(lines) {
+      const chunks = identifyTopLevelChunks(lines) // blocks, navItems
+      return {
+        blocks: chunks.blocks.map(parseBlock),
+        navItems: chunks.navItems.map(parseNavItem)
+      }
+    }
+
+    // Block level - identify pages within block
+    function parseBlock(lines): Block {
+      const pageChunks = identifyPages(lines)
+      return {
+        name: findKeyword(lines, "BLOCK"),
+        showIf: findKeyword(lines, "SHOW_IF"),
+        pages: pageChunks.map(parsePage),
+        computedVariables: parseComputed(lines)
+      }
+    }
+
+    // Page level - identify sections within page
+    function parsePage(lines): Page {
+      const sectionChunks = identifySections(lines)
+      return {
+        title: extractTitle(lines),
+        tooltip: findKeyword(lines, "TOOLTIP"),
+        sections: sectionChunks.map(parseSection),
+        computedVariables: parseComputed(lines)
+      }
+    }
+
+    // Section level - identify questions within section
+    function parseSection(lines): Section {
+      const questionChunks = identifyQuestions(lines)
+      return {
+        content: extractContent(lines),
+        tooltip: findKeyword(lines, "TOOLTIP"),
+        questions: questionChunks.map(chunk => parseQuestionByType(chunk))
+      }
+    }
+
+    // Question level - dispatch to type-specific parser
+    function parseQuestionByType(chunk): Question {
+      const type = determineQuestionType(chunk.lines)
+      switch (type) {
+        case "breakdown": return parseBreakdown(chunk.lines)
+        case "matrix": return parseMatrix(chunk.lines)
+        case "multiple_choice": return parseMultipleChoice(chunk.lines)
+        // etc for each type
+      }
+    }
+
+    // Type-specific parsers - mirror the type definitions!
+    const parseBreakdown = (lines): BreakdownQuestion => ({
+      type: "breakdown",
+      ...parseQuestionBase(lines),
+      options: parseBreakdownOptions(lines),
+      totalLabel: findKeyword(lines, "TOTAL"),
+      prefix: findKeyword(lines, "PREFIX"),
+      suffix: findKeyword(lines, "SUFFIX")
+    })
+
+    const parseMultipleChoice = (lines): MultipleChoiceQuestion => ({
+      type: "multiple_choice",
+      ...parseQuestionBase(lines),
+      options: parseOptions(lines)
+    })
+
+    // Shared utilities
+    const parseQuestionBase = (lines) => ({
+      id: generateId(),
+      text: extractQuestionText(lines),
+      subtext: findKeyword(lines, "HINT"),
+      tooltip: findKeyword(lines, "TOOLTIP"),
+      variable: findKeyword(lines, "VARIABLE"),
+      showIf: findKeyword(lines, "SHOW_IF")
+    })
+    ```
   - **Benefits**:
-    - Separation of concerns - each question type parser is isolated and self-contained
-    - Simpler logic - no more "does this question type support this keyword?" conditionals
-    - Easier to understand - each parser function is readable on its own
-    - Easier to test - unit test each question type parser independently
-    - No ParsedQuestion needed - return proper types directly
-    - Easier to add new question types
+    - Parser mirrors type structure exactly - easy to understand
+    - Type determination happens once during chunking - no need to scan lines twice
+    - No mutable state - build complete objects
+    - Validation is natural - have full structure before creating object
+    - Dramatically fewer functions - ~7 type parsers + shared utilities vs ~40 handlers
+    - Type-specific logic is localized in one place
   - **Challenges**:
-    - Need to extract and reuse shared parsing logic (hints, tooltips, variables)
-    - Look-ahead logic needs to scan for type keywords without consuming lines
-    - Buffer management for multi-line content (TOOLTIP: ---, HINT: ---)
-  - **Priority**: Medium - Would significantly reduce parser complexity, but requires careful design
-  - **Next steps when ready**:
-    1. Design look-ahead function to determine question type
-    2. Create proof-of-concept for simplest type (TEXT) to validate approach
-    3. Extract shared parsing helpers (parseHint, parseTooltip, parseVariable, etc.)
-    4. Implement specialized parsers one by one
-    5. Replace main parser logic to dispatch to specialized functions
-- [ ] Add validation for incompatible feature combinations
-  - Warn if breakdown option has both `prefillValue` (VALUE) and no `exclude` flag when in `totalColumn`
-  - Warn if `COLUMN` used without `BREAKDOWN`
-  - Warn if `TOTAL_COLUMN` references non-existent column number
-  - Would help catch user errors early
+    - Need robust boundary detection (when does a question end?)
+    - Shared keyword parsing (HINT, TOOLTIP, etc.) must be well-factored
+  - **Decision**: Pursue this refactor - types are clean and well-defined, making this the right time
+- [ ] Add parser validation for malformed input
+  - **Goal**: Provide clear error messages for common mistakes instead of silently ignoring them
+  - **Validation rules**:
+    - Throw error if TEXT/ESSAY/NUMBER question has options (e.g., `- Option` lines before `TEXT` keyword)
+    - Throw error if breakdown-specific keywords used on non-breakdown questions (COLUMN, EXCLUDE, VALUE, SUBTRACT on non-breakdown)
+    - Throw error if PREFIX/SUFFIX used on incompatible question types (currently silently ignored)
+    - Throw error if matrix has subquestions but no options
+    - Warn if breakdown option has both `prefillValue` (VALUE) and no `exclude` flag when in `totalColumn`
+  - **Benefits**: Users learn correct syntax immediately, fewer "why doesn't this work?" moments
+  - **Implementation**: Add validation checks in handler functions that throw descriptive errors
+  - **Related**: Could remove complex type-switching logic in `handleInputType` once validation is in place
 - [ ] Extract shared calculation logic
   - Both `breakdown-question.tsx` and `use-questionnaire-responses.ts` have similar `calculateBreakdownTotal` logic
   - Could extract to shared utility function in `lib/breakdown-calculations.ts`
