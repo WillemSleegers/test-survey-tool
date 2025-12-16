@@ -13,11 +13,19 @@ Released December 2025
   - Eliminated indentation-based parsing - dash markers now identify metadata
   - Improved maintainability and extensibility
 
-### Bug Fixes
+### Improvements
 
-- Fixed section content rendering bug where page titles appeared as section content
-  - Page chunks include title line for parser to extract title
-  - Section chunks now properly exclude page title lines
+- **Type system cleanup**: Removed redundant and confusing types
+  - Removed `VisiblePageContent` wrapper type - now use `Section[]` directly
+  - Removed `MatrixOption` type - matrix questions now use standard `Option` type
+  - Removed unused `Subquestion` fields: `subtract`, `subtotalLabel`, `value`
+  - Renamed `ComputedVariables` → `ComputedValues` for clarity (map of values, not array of definitions)
+  - Removed `ParsedQuestion` type that duplicated the `Question` discriminated union
+
+- **Section titles now display**: Section headings (after `##`) are now rendered as visible h2 elements
+  - Section `content` field is now optional (no empty strings stored)
+  - Updated documentation examples to demonstrate section usage
+  - Fixed section content rendering bug where page titles appeared as section content
 
 ### Documentation
 
