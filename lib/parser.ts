@@ -988,6 +988,17 @@ const parseSection = (chunk: Chunk, questionCounter: { count: number }): Section
     }
   }
 
+  // Extract section title
+  let title: string | undefined
+  for (const { line, shouldParse } of chunk.lines) {
+    if (!shouldParse) continue
+    const trimmed = line.trim()
+    if (matches(trimmed, /^##/)) {
+      title = trimmed.replace(/^##\s*/, '').trim()
+      break
+    }
+  }
+
   // Extract section content (lines that don't belong to questions)
   const contentLines: string[] = []
   for (const { line, shouldParse, index } of chunk.lines) {
@@ -1006,6 +1017,7 @@ const parseSection = (chunk: Chunk, questionCounter: { count: number }): Section
   }
 
   return {
+    title,
     content: contentLines.join('\n'),
     tooltip: parseDelimitedContent(chunk.lines, "TOOLTIP:"),
     questions: questionChunks.map(qChunk => parseQuestionByType(qChunk, questionCounter)),

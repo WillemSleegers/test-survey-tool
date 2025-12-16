@@ -29,7 +29,12 @@ export function SectionRenderer({
 
   return (
     <div className="space-y-6">
-      {/* Section Header */}
+      {/* Section Title */}
+      {section.title && (
+        <h2 className="text-2xl font-semibold">{section.title}</h2>
+      )}
+
+      {/* Section Content */}
       {(() => {
         const processedContent = section.content ? replacePlaceholders(section.content, variables, computedVariables).trim() : ''
 

@@ -22,6 +22,7 @@ export type Page = {
 }
 
 export type Section = {
+  title?: string
   content: string
   tooltip?: string
   questions: Question[]
@@ -172,6 +173,7 @@ export type ConditionalPlaceholder = {
 }
 
 export type VisibleSection = {
+  title?: string
   content: string
   tooltip?: string
   questions: Question[]

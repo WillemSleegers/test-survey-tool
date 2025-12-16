@@ -185,8 +185,8 @@ TEXT`)}
           <div>
             <h2 className="text-3xl font-bold">Sections</h2>
             <p className="text-muted-foreground mt-2">
-              Sections organize questions within a page. They're optional but
-              help structure longer pages.
+              Organize questions within a page using titled sections with optional
+              descriptive content.
             </p>
           </div>
 
@@ -194,36 +194,47 @@ TEXT`)}
             <h3 className="text-xl font-semibold">Usage</h3>
             {renderCodeBlock(`## Section Title
 
-Sections create visual groupings of related questions.`)}
+Section content appears here. Use this space to provide context,
+instructions, or explanations for the questions that follow.`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a section within a page</li>
+              <li>Creates a section heading within a page</li>
               <li>
-                Usually followed by text to provide additional instructions
+                Optional content after the section title provides context or
+                instructions
               </li>
-              <li>Helps visually group related questions together</li>
+              <li>Supports Markdown formatting in section content</li>
+              <li>Can include tooltips with additional information</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`# Contact Information
+            {renderExample(`# Employee Survey
 
-Q: Are you interested in receiving updates?
+## Work Environment
+Please rate the following aspects of your work environment. Your feedback helps us improve our workplace.
+
+Q: How satisfied are you with your workspace?
+- Very satisfied
+- Satisfied
+- Neutral
+- Dissatisfied
+
+Q: Do you have the tools you need?
 - Yes
 - No
 
-## Personal Details
-Q: What is your name?
-TEXT
+## Team Collaboration
+The next questions focus on how well your team works together.
 
-Q: What is your email?
-TEXT
+Q: How often does your team meet?
+- Daily
+- Weekly
+- Monthly
+- Rarely
 
-## Preferences
-Q: How would you like to be contacted?
-- Email
-- Phone
-- Mail`)}
+Q: Rate team communication
+RANGE: 1-5`)}
           </div>
         </div>
       )
