@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { MultipleChoiceQuestion, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { MultipleChoiceQuestion, Responses, Variables, ComputedValues } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
@@ -21,7 +21,7 @@ interface RadioQuestionProps {
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

@@ -1,7 +1,7 @@
 import React from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Page, Question, Variables, Section, ComputedVariables } from "@/lib/types"
+import { evaluateComputedValues } from "@/lib/conditions/computed-variables"
+import { Page, Question, Variables, Section, ComputedValues } from "@/lib/types"
 
 /**
  * Hook for managing page visibility and content filtering
@@ -13,21 +13,21 @@ import { Page, Question, Variables, Section, ComputedVariables } from "@/lib/typ
  * 
  * @param questionnaire - All questionnaire pages
  * @param variables - Current user variables
- * @param blockComputedVariables - Computed variables from block level (optional)
+ * @param blockComputedValues - Computed variables from block level (optional)
  * @returns Visible pages and content getter function
  */
 export function useVisiblePages(
   questionnaire: Page[], 
   variables: Variables, 
-  blockComputedVariables?: ComputedVariables,
-  getPageComputedVars?: (page: Page) => ComputedVariables
+  blockComputedValues?: ComputedValues,
+  getPageComputedVars?: (page: Page) => ComputedValues
 ) {
   // Get only visible pages - based purely on SHOW_IF conditions and computed variables
   const visiblePages = questionnaire.filter((page) => {
     // Use lazy computed variables if provided, otherwise fall back to eager evaluation
     const pageComputedVars = getPageComputedVars ?
       getPageComputedVars(page) :
-      evaluateComputedVariables(page, variables, blockComputedVariables)
+      evaluateComputedValues(page, variables, blockComputedValues)
 
     return evaluateCondition(page.showIf || "", variables, pageComputedVars)
   })
@@ -37,7 +37,7 @@ export function useVisiblePages(
     // Use lazy computed variables if provided, otherwise fall back to eager evaluation
     const pageComputedVars = getPageComputedVars ?
       getPageComputedVars(page) :
-      evaluateComputedVariables(page, variables, blockComputedVariables)
+      evaluateComputedValues(page, variables, blockComputedValues)
 
     // Filter sections and their questions based on individual SHOW_IF conditions
     return page.sections.map((section) => ({

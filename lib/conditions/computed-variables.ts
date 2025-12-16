@@ -1,4 +1,4 @@
-import { Page, Variables, ComputedVariables, ComputedVariable } from "@/lib/types"
+import { Page, Variables, ComputedValues, ComputedVariable } from "@/lib/types"
 import { evaluateCondition } from "./condition-evaluator"
 import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
 
@@ -27,13 +27,13 @@ function isComparisonExpression(expression: string): boolean {
  * @param variables - Current user variables
  * @returns Object mapping computed variable names to their evaluated values
  */
-export function evaluateComputedVariables(
+export function evaluateComputedValues(
   page: Page,
   variables: Variables,
-  existingComputedVariables?: ComputedVariables
-): ComputedVariables {
+  existingComputedValues?: ComputedValues
+): ComputedValues {
   // Start with existing computed variables (e.g., from block level)
-  const computedVars: ComputedVariables = { ...existingComputedVariables }
+  const computedVars: ComputedValues = { ...existingComputedValues }
   
   // Sort computed variables to handle dependencies
   // Variables that depend on other computed variables should be evaluated after their dependencies
@@ -80,7 +80,7 @@ export function evaluateComputedVariables(
  */
 function createExtendedVariables(
   variables: Variables,
-  computedVars: ComputedVariables
+  computedVars: ComputedValues
 ): Variables {
   const extended = { ...variables }
 

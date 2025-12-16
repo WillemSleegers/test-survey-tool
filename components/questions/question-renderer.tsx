@@ -1,5 +1,5 @@
 import React from "react"
-import { Question, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { Question, Responses, Variables, ComputedValues } from "@/lib/types"
 import { RadioQuestion } from "./radio-question"
 import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
@@ -19,7 +19,7 @@ interface QuestionRendererProps {
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

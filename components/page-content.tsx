@@ -4,14 +4,14 @@ import React from "react"
 
 import { SectionRenderer } from "@/components/section-renderer"
 
-import { Section, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { Section, Responses, Variables, ComputedValues } from "@/lib/types"
 
 interface PageContentProps {
   content: Section[]
   responses: Responses
   variables: Variables
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 export function PageContent({

@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Page, Variables, ComputedVariables } from "@/lib/types"
+import { Page, Variables, ComputedValues } from "@/lib/types"
 
 interface PageHeaderProps {
   /** The page to render header for */
@@ -10,7 +10,7 @@ interface PageHeaderProps {
   /** User variables for placeholder replacement */
   variables: Variables
   /** Computed variables from the current page */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

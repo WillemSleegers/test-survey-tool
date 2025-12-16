@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { Variables, ComputedVariables } from "@/lib/types"
+import { Variables, ComputedValues } from "@/lib/types"
 
 interface QuestionHeaderProps {
   /** The main question text */
@@ -14,7 +14,7 @@ interface QuestionHeaderProps {
   /** User variables for placeholder replacement */
   variables: Variables
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

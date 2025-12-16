@@ -1,4 +1,4 @@
-import { Variables, ComputedVariables } from "@/lib/types"
+import { Variables, ComputedValues } from "@/lib/types"
 import { processConditionalPlaceholders } from "./placeholder-processor"
 import { processVariablePlaceholders } from "./variable-replacer"
 
@@ -8,7 +8,7 @@ import { processVariablePlaceholders } from "./variable-replacer"
  */
 function createExtendedVariables(
   variables: Variables,
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 ): Variables {
   if (!computedVariables) {
     return variables
@@ -42,7 +42,7 @@ function createExtendedVariables(
 export function replacePlaceholders(
   text: string | undefined,
   variables: Variables,
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 ): string {
   if (!text) return ""
 

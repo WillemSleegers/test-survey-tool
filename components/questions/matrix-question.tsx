@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { MatrixQuestion as MatrixQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { MatrixQuestion as MatrixQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
@@ -31,7 +31,7 @@ interface MatrixQuestionProps {
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Variables, ConditionalPlaceholder, ComputedVariables } from "@/lib/types"
+import { Variables, ConditionalPlaceholder, ComputedValues } from "@/lib/types"
 import { evaluateCondition } from "../conditions/condition-evaluator"
 
 /**
@@ -147,7 +147,7 @@ function findKeyword(text: string, keyword: string, startPos: number): number {
 export function processConditionalPlaceholders(
   text: string,
   variables: Variables,
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 ): string {
   let result = text
   let maxIterations = 20 // Prevent infinite loops

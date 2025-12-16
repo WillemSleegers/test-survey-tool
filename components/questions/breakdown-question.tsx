@@ -4,7 +4,7 @@ import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 interface BreakdownQuestionProps {
@@ -19,7 +19,7 @@ interface BreakdownQuestionProps {
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

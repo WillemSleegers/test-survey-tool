@@ -1,6 +1,6 @@
 import React from "react"
 import { QuestionHeader } from "./question-header"
-import { Question, Variables, ComputedVariables } from "@/lib/types"
+import { Question, Variables, ComputedValues } from "@/lib/types"
 
 interface QuestionWrapperProps {
   /** The question data containing text and subtext */
@@ -10,7 +10,7 @@ interface QuestionWrapperProps {
   /** The input component to render */
   children: React.ReactNode
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

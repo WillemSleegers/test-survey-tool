@@ -2,7 +2,7 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { NumberQuestion as NumberQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { NumberQuestion as NumberQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 
 interface NumberQuestionProps {
   /** The question configuration */
@@ -16,7 +16,7 @@ interface NumberQuestionProps {
   /** Tab index for accessibility */
   tabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**

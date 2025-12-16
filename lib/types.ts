@@ -138,7 +138,7 @@ export type ComputedVariable = {
   value?: boolean | string | number
 }
 
-export type ComputedVariables = {
+export type ComputedValues = {
   [variableName: string]: boolean | string | number
 }
 

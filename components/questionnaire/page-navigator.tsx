@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Block, Page, Variables, ComputedVariables } from "@/lib/types"
+import { evaluateComputedValues } from "@/lib/conditions/computed-variables"
+import { Block, Page, Variables, ComputedValues } from "@/lib/types"
 
 interface PageNavigatorProps {
   /** All questionnaire blocks */
@@ -19,9 +19,9 @@ interface PageNavigatorProps {
   /** Current user variables */
   variables: Variables
   /** Current block's computed variables */
-  currentBlockComputedVars: ComputedVariables
+  currentBlockComputedVars: ComputedValues
   /** Current page's computed variables (page-level only) */
-  currentPageComputedVars: ComputedVariables
+  currentPageComputedVars: ComputedValues
   /** Function to jump to a specific page */
   onJumpToPage: (pageIndex: number) => void
   /** Function to reset back to upload page */
@@ -87,7 +87,7 @@ export function PageNavigator({
       sections: [],
       computedVariables: block.computedVariables
     }
-    const blockComputedVars = evaluateComputedVariables(mockPage, variables)
+    const blockComputedVars = evaluateComputedValues(mockPage, variables)
 
     return evaluateCondition(block.showIf, variables, blockComputedVars)
   }

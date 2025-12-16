@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { useLanguage } from "@/contexts/language-context"
-import { TextQuestion as TextQuestionType, EssayQuestion, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { TextQuestion as TextQuestionType, EssayQuestion, Responses, Variables, ComputedValues } from "@/lib/types"
 
 interface TextQuestionProps {
   /** The question configuration */
@@ -17,7 +17,7 @@ interface TextQuestionProps {
   /** Tab index for accessibility */
   tabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**
