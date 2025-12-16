@@ -121,9 +121,6 @@ export type Subquestion = {
   subtext?: string
   tooltip?: string
   variable?: string
-  subtract?: boolean
-  subtotalLabel?: string
-  value?: string
   showIf?: string
 }
 
@@ -180,8 +177,6 @@ export type NavItemData = { name: string }
 export type NavLevelData = { level: number }
 
 export type SubquestionData = { id: string; text: string }
-export type SubquestionSubtractData = { subtract: true }
-export type SubquestionValueData = { value: string }
 export type TotalLabelData = { totalLabel: string }
 export type SubtotalLabelData = { subtotalLabel: string }
 export type PrefixData = { prefix: string }
@@ -204,7 +199,6 @@ export type ParsedLine =
   | { type: "option_subtract"; raw: string; data: OptionSubtractData }
   | { type: "option_hint"; raw: string; data: SubtextData }
   | { type: "option_tooltip"; raw: string; data: TooltipData }
-  | { type: "option_value"; raw: string; data: SubquestionValueData }
   | { type: "option_variable"; raw: string; data: VariableData }
   | { type: "option_column"; raw: string; data: ColumnData }
   | { type: "option_exclude"; raw: string; data: OptionExcludeData }
@@ -216,8 +210,6 @@ export type ParsedLine =
   | { type: "option_suffix"; raw: string; data: SuffixData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
-  | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }
-  | { type: "subquestion_value"; raw: string; data: SubquestionValueData }
   | { type: "subquestion_variable"; raw: string; data: VariableData }
   | { type: "subquestion_show_if"; raw: string; data: ShowIfData }
   | { type: "matrix_row"; raw: string; data: SubquestionData }
