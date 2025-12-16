@@ -42,8 +42,8 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
           })
         }
 
-        // Option variables (for breakdown and other questions with options)
-        if ('options' in question && question.options) {
+        // Option variables (only for breakdown questions)
+        if (question.type === 'breakdown') {
           question.options.forEach(option => {
             if (option.variable) {
               // Create a unique key for this option: questionId + option value

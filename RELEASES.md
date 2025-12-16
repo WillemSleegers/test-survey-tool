@@ -1,5 +1,42 @@
 # Release Notes
 
+## Version 0.3.0
+
+Released December 2025
+
+### Major Changes
+
+- **Parser refactor**: Complete rewrite using chunk-based hierarchical architecture
+  - Reduced parser code from ~2600 lines to ~1100 lines (60% reduction)
+  - Hierarchical parsing: Questionnaire → Blocks/NavItems → Pages → Sections → Questions
+  - Type-specific parsers for all 7 question types
+  - Eliminated indentation-based parsing - dash markers now identify metadata
+  - Improved maintainability and extensibility
+
+### Bug Fixes
+
+- Fixed section content rendering bug where page titles appeared as section content
+  - Page chunks include title line for parser to extract title
+  - Section chunks now properly exclude page title lines
+
+### Documentation
+
+- Added 7 standard example files demonstrating text format features:
+  - basic-survey.md - Common question types
+  - conditional-logic.md - SHOW_IF demonstrations
+  - matrix-questions.md - Matrix question variations
+  - multi-page.md - Multi-page survey with sections
+  - breakdown-budget.md - Basic breakdown with computed variables
+  - breakdown-advanced.md - Advanced breakdown features
+  - range-syntax.md - RANGE syntax examples
+
+### Testing
+
+- All 36 parser tests passing after refactor
+- Expanded test coverage for RANGE syntax and breakdown features
+
+---
+
 ## Version 0.2.2
 
 Released December 2025

@@ -13,7 +13,9 @@ describe('Parser - Question Type Detection', () => {
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(3)
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(3)
+    }
   })
 
   it('should parse checkbox question', () => {
@@ -28,7 +30,9 @@ CHECKBOX`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('checkbox')
-    expect(question.options).toHaveLength(3)
+    if (question.type === 'checkbox') {
+      expect(question.options).toHaveLength(3)
+    }
   })
 
   it('should parse text question', () => {
@@ -77,8 +81,10 @@ NUMBER`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.subquestions).toHaveLength(3)
-    expect(question.options).toHaveLength(4)
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(3)
+      expect(question.options).toHaveLength(4)
+    }
   })
 
   it('should parse matrix question with variables on subquestions', () => {
@@ -99,10 +105,12 @@ NUMBER`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.subquestions).toHaveLength(2)
-    expect(question.subquestions?.[0].variable).toBe('statement_one')
-    expect(question.subquestions?.[1].variable).toBe('statement_two')
-    expect(question.options).toHaveLength(5)
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(2)
+      expect(question.subquestions[0].variable).toBe('statement_one')
+      expect(question.subquestions[1].variable).toBe('statement_two')
+      expect(question.options).toHaveLength(5)
+    }
   })
 
   it('should parse breakdown question', () => {
@@ -119,9 +127,11 @@ TOTAL: Total`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options).toHaveLength(3)
-    expect(question.prefix).toBe('€')
-    expect(question.totalLabel).toBe('Total')
+    if (question.type === 'breakdown') {
+      expect(question.options).toHaveLength(3)
+      expect(question.prefix).toBe('€')
+      expect(question.totalLabel).toBe('Total')
+    }
   })
 
   it('should parse matrix question without blank lines between subquestions and options', () => {
@@ -136,8 +146,10 @@ TOTAL: Total`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.subquestions).toHaveLength(2)
-    expect(question.options).toHaveLength(2)
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(2)
+      expect(question.options).toHaveLength(2)
+    }
   })
 
   it('should parse matrix question with SHOW_IF on subquestions', () => {
@@ -157,11 +169,13 @@ TOTAL: Total`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.subquestions).toHaveLength(3)
-    expect(question.subquestions?.[0].showIf).toBe('some_condition == "yes"')
-    expect(question.subquestions?.[1].showIf).toBeUndefined()
-    expect(question.subquestions?.[2].showIf).toBe('another_condition == "true"')
-    expect(question.options).toHaveLength(3)
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(3)
+      expect(question.subquestions[0].showIf).toBe('some_condition == "yes"')
+      expect(question.subquestions[1].showIf).toBeUndefined()
+      expect(question.subquestions[2].showIf).toBe('another_condition == "true"')
+      expect(question.options).toHaveLength(3)
+    }
   })
 })
 
@@ -212,11 +226,13 @@ RANGE: 1-10`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(10)
-    expect(question.options[0].value).toBe('1')
-    expect(question.options[0].label).toBe('1')
-    expect(question.options[9].value).toBe('10')
-    expect(question.options[9].label).toBe('10')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(10)
+      expect(question.options[0].value).toBe('1')
+      expect(question.options[0].label).toBe('1')
+      expect(question.options[9].value).toBe('10')
+      expect(question.options[9].label).toBe('10')
+    }
   })
 
   it('should parse RANGE for checkbox question', () => {
@@ -228,9 +244,11 @@ CHECKBOX`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('checkbox')
-    expect(question.options).toHaveLength(5)
-    expect(question.options[0].value).toBe('1')
-    expect(question.options[4].value).toBe('5')
+    if (question.type === 'checkbox') {
+      expect(question.options).toHaveLength(5)
+      expect(question.options[0].value).toBe('1')
+      expect(question.options[4].value).toBe('5')
+    }
   })
 
   it('should parse RANGE for matrix question', () => {
@@ -244,10 +262,12 @@ RANGE: 1-7`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.subquestions).toHaveLength(3)
-    expect(question.options).toHaveLength(7)
-    expect(question.options[0].value).toBe('1')
-    expect(question.options[6].value).toBe('7')
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(3)
+      expect(question.options).toHaveLength(7)
+      expect(question.options[0].value).toBe('1')
+      expect(question.options[6].value).toBe('7')
+    }
   })
 
   it('should parse negative RANGE values', () => {
@@ -258,10 +278,12 @@ RANGE: -5-5`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(11)
-    expect(question.options[0].value).toBe('-5')
-    expect(question.options[5].value).toBe('0')
-    expect(question.options[10].value).toBe('5')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(11)
+      expect(question.options[0].value).toBe('-5')
+      expect(question.options[5].value).toBe('0')
+      expect(question.options[10].value).toBe('5')
+    }
   })
 
   it('should parse RANGE starting from 0', () => {
@@ -272,9 +294,11 @@ RANGE: 0-10`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(11)
-    expect(question.options[0].value).toBe('0')
-    expect(question.options[10].value).toBe('10')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(11)
+      expect(question.options[0].value).toBe('0')
+      expect(question.options[10].value).toBe('10')
+    }
   })
 
   it('should parse RANGE with VARIABLE', () => {
@@ -286,8 +310,10 @@ VARIABLE: satisfaction_score`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(10)
-    expect(question.variable).toBe('satisfaction_score')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(10)
+      expect(question.variable).toBe('satisfaction_score')
+    }
   })
 
   it('should allow mixing RANGE with manual options', () => {
@@ -300,12 +326,14 @@ RANGE: 1-3
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('multiple_choice')
-    expect(question.options).toHaveLength(5)
-    expect(question.options[0].value).toBe('Low')
-    expect(question.options[1].value).toBe('1')
-    expect(question.options[2].value).toBe('2')
-    expect(question.options[3].value).toBe('3')
-    expect(question.options[4].value).toBe('High')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(5)
+      expect(question.options[0].value).toBe('Low')
+      expect(question.options[1].value).toBe('1')
+      expect(question.options[2].value).toBe('2')
+      expect(question.options[3].value).toBe('3')
+      expect(question.options[4].value).toBe('High')
+    }
   })
 
   it('should throw error for invalid RANGE syntax', () => {
@@ -344,11 +372,13 @@ TOTAL: Total Revenue`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options).toHaveLength(4)
-    expect(question.options[0].column).toBe(1)
-    expect(question.options[1].column).toBe(1)
-    expect(question.options[2].column).toBe(2)
-    expect(question.options[3].column).toBe(2)
+    if (question.type === 'breakdown') {
+      expect(question.options).toHaveLength(4)
+      expect(question.options[0].column).toBe(1)
+      expect(question.options[1].column).toBe(1)
+      expect(question.options[2].column).toBe(2)
+      expect(question.options[3].column).toBe(2)
+    }
   })
 
   it('should parse breakdown with EXCLUDE flag', () => {
@@ -365,7 +395,9 @@ TOTAL: Net`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[1].exclude).toBe(true)
+    if (question.type === 'breakdown') {
+      expect(question.options[1].exclude).toBe(true)
+    }
   })
 
   it('should parse breakdown with VALUE for calculated fields', () => {
@@ -383,8 +415,10 @@ TOTAL: Total`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[1].prefillValue).toBe('revenue * 0.2')
-    expect(question.options[1].exclude).toBe(true)
+    if (question.type === 'breakdown') {
+      expect(question.options[1].prefillValue).toBe('revenue * 0.2')
+      expect(question.options[1].exclude).toBe(true)
+    }
   })
 
   it('should parse breakdown with VARIABLE on options', () => {
@@ -402,8 +436,10 @@ TOTAL: Total Costs`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[0].variable).toBe('labor')
-    expect(question.options[1].variable).toBe('materials')
+    if (question.type === 'breakdown') {
+      expect(question.options[0].variable).toBe('labor')
+      expect(question.options[1].variable).toBe('materials')
+    }
   })
 
   it('should parse breakdown with SUBTRACT', () => {
@@ -420,7 +456,9 @@ TOTAL: Net Income`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[1].subtract).toBe(true)
+    if (question.type === 'breakdown') {
+      expect(question.options[1].subtract).toBe(true)
+    }
   })
 
   it('should parse breakdown with HEADER rows', () => {
@@ -440,9 +478,11 @@ TOTAL: Net`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[0].header).toBe(true)
-    expect(question.options[0].exclude).toBe(true)
-    expect(question.options[3].header).toBe(true)
+    if (question.type === 'breakdown') {
+      expect(question.options[0].header).toBe(true)
+      expect(question.options[0].exclude).toBe(true)
+      expect(question.options[3].header).toBe(true)
+    }
   })
 
   it('should parse breakdown with SUBTOTAL rows', () => {
@@ -463,9 +503,11 @@ TOTAL: Total Revenue`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[2].subtotalLabel).toBe('Product Revenue')
-    expect(question.options[2].exclude).toBe(true)
-    expect(question.options[5].subtotalLabel).toBe('Service Revenue')
+    if (question.type === 'breakdown') {
+      expect(question.options[2].subtotalLabel).toBe('Product Revenue')
+      expect(question.options[2].exclude).toBe(true)
+      expect(question.options[5].subtotalLabel).toBe('Service Revenue')
+    }
   })
 
   it('should parse breakdown with option-level PREFIX and SUFFIX', () => {
@@ -483,9 +525,11 @@ BREAKDOWN
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.options[0].prefix).toBe('$')
-    expect(question.options[1].prefix).toBe('€')
-    expect(question.options[2].suffix).toBe('%')
+    if (question.type === 'breakdown') {
+      expect(question.options[0].prefix).toBe('$')
+      expect(question.options[1].prefix).toBe('€')
+      expect(question.options[2].suffix).toBe('%')
+    }
   })
 
   it('should parse breakdown with question-level PREFIX and SUFFIX', () => {
@@ -503,8 +547,10 @@ TOTAL: Total`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('breakdown')
-    expect(question.prefix).toBe('$')
-    expect(question.suffix).toBe('USD')
+    if (question.type === 'breakdown') {
+      expect(question.prefix).toBe('$')
+      expect(question.suffix).toBe('USD')
+    }
   })
 })
 
@@ -519,7 +565,9 @@ CHECKBOX`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('checkbox')
-    expect(question.options).toHaveLength(2)
+    if (question.type === 'checkbox') {
+      expect(question.options).toHaveLength(2)
+    }
   })
 
   it('should handle type change from multiple_choice to text', () => {
@@ -545,8 +593,10 @@ TEXT`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('matrix')
-    expect(question.inputType).toBe('text')
-    expect(question.subquestions).toHaveLength(2)
+    if (question.type === 'matrix') {
+      expect(question.inputType).toBe('text')
+      expect(question.subquestions).toHaveLength(2)
+    }
   })
 })
 
@@ -561,8 +611,10 @@ SUFFIX: per month`
     const question = result.blocks[0].pages[0].sections[0].questions[0]
 
     expect(question.type).toBe('number')
-    expect(question.prefix).toBe('$')
-    expect(question.suffix).toBe('per month')
+    if (question.type === 'number') {
+      expect(question.prefix).toBe('$')
+      expect(question.suffix).toBe('per month')
+    }
   })
 
   it('should not allow PREFIX on TEXT question', () => {
