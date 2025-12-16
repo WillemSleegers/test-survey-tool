@@ -161,10 +161,6 @@ export type ConditionalPlaceholder = {
   falseText: string
 }
 
-export type VisiblePageContent = {
-  sections: Section[]
-}
-
 // Parser-specific types with proper discriminated unions
 export type PageData = { title: string }
 export type QuestionData = { id: string; text: string }

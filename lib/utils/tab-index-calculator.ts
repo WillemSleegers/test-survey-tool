@@ -1,26 +1,26 @@
-import { VisiblePageContent, Variables, Question } from "@/lib/types"
+import { Section, Variables, Question } from "@/lib/types"
 
 /**
  * Calculates the total number of tab-accessible inputs in a page
- * 
+ *
  * Tab index logic:
  * - Text/Number questions: Always 1 input
  * - Radio questions: 1 input if answered (+ 1 for text if selected option has TEXT), all options + text inputs if not answered
  * - Checkbox questions: All options + text inputs for options with TEXT
- * 
- * @param pageContent - Visible content of the page
+ *
+ * @param sections - Visible sections of the page
  * @param variables - Current user variables for answered state checking
  * @returns Total number of tab-accessible inputs
- * 
+ *
  * @example
  * // Page with 2 text, 1 answered radio (3 options, selected has TEXT), 1 checkbox (2 options)
- * calculateTotalTabInputs(content, variables) // Returns: 2 + 2 + 4 = 8
+ * calculateTotalTabInputs(sections, variables) // Returns: 2 + 2 + 4 = 8
  */
 export function calculateTotalTabInputs(
-  pageContent: VisiblePageContent,
+  sections: Section[],
   variables: Variables
 ): number {
-  const sectionInputs = pageContent.sections.reduce((sum, sub) => {
+  const sectionInputs = sections.reduce((sum, sub) => {
     return sum + sub.questions.reduce((subSum, question) => {
       return subSum + calculateQuestionInputCount(question, variables)
     }, 0)

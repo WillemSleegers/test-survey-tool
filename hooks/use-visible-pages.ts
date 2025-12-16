@@ -1,7 +1,7 @@
 import React from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
-import { Page, Question, Variables, VisiblePageContent, ComputedVariables } from "@/lib/types"
+import { Page, Question, Variables, Section, ComputedVariables } from "@/lib/types"
 
 /**
  * Hook for managing page visibility and content filtering
@@ -33,14 +33,14 @@ export function useVisiblePages(
   })
 
   // Get visible content for a page
-  const getVisiblePageContent = (page: Page): VisiblePageContent => {
+  const getVisiblePageContent = (page: Page): Section[] => {
     // Use lazy computed variables if provided, otherwise fall back to eager evaluation
     const pageComputedVars = getPageComputedVars ?
       getPageComputedVars(page) :
       evaluateComputedVariables(page, variables, blockComputedVariables)
 
     // Filter sections and their questions based on individual SHOW_IF conditions
-    const visibleSections = page.sections.map((section) => ({
+    return page.sections.map((section) => ({
       title: section.title,
       content: section.content,
       tooltip: section.tooltip,
@@ -48,10 +48,6 @@ export function useVisiblePages(
         evaluateCondition(question.showIf || "", variables, pageComputedVars)
       ),
     }))
-
-    return {
-      sections: visibleSections,
-    }
   }
 
   return {

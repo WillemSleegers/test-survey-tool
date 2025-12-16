@@ -4,10 +4,10 @@ import React from "react"
 
 import { SectionRenderer } from "@/components/section-renderer"
 
-import { VisiblePageContent, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { Section, Responses, Variables, ComputedVariables } from "@/lib/types"
 
 interface PageContentProps {
-  content: VisiblePageContent
+  content: Section[]
   responses: Responses
   variables: Variables
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
@@ -27,7 +27,7 @@ export function PageContent({
   return (
     <div className="space-y-6">
       {/* Render sections */}
-      {content.sections.map((section, index) => {
+      {content.map((section, index) => {
         const sectionStartTabIndex = currentTabIndex
         
         // Update currentTabIndex for this section's questions
