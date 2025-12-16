@@ -12,7 +12,6 @@ import {
   NavItem,
   Section,
   Option,
-  MatrixOption,
   BreakdownOption,
   Subquestion,
   ComputedVariable,
@@ -825,7 +824,7 @@ const parseMatrixQuestion = (lines: Line[], questionCounter: { count: number }):
 
   // Parse subquestions and options
   const subquestions = parseSubquestions(lines, base.id)
-  const options = parseOptions(lines) as MatrixOption[]
+  const options = parseOptions(lines)
 
   return {
     type: "matrix",

@@ -62,20 +62,10 @@ export type NumberQuestion = QuestionBase & {
   suffix?: string
 }
 
-export type MatrixOption = {
-  value: string
-  label: string
-  hint?: string
-  tooltip?: string
-  showIf?: string
-  allowsOtherText?: boolean
-  subquestions?: Subquestion[]
-}
-
 export type MatrixQuestion = QuestionBase & {
   type: "matrix"
   subquestions: Subquestion[]
-  options: MatrixOption[]
+  options: Option[]
   inputType?: "checkbox" | "text" | "essay"
 }
 
