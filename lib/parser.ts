@@ -1016,9 +1016,11 @@ const parseSection = (chunk: Chunk, questionCounter: { count: number }): Section
     }
   }
 
+  const content = contentLines.join('\n')
+
   return {
     title,
-    content: contentLines.join('\n'),
+    ...(content && { content }),
     tooltip: parseDelimitedContent(chunk.lines, "TOOLTIP:"),
     questions: questionChunks.map(qChunk => parseQuestionByType(qChunk, questionCounter)),
   }

@@ -41,7 +41,9 @@ export function useVisiblePages(
 
     // Filter sections and their questions based on individual SHOW_IF conditions
     const visibleSections = page.sections.map((section) => ({
+      title: section.title,
       content: section.content,
+      tooltip: section.tooltip,
       questions: section.questions.filter((question) =>
         evaluateCondition(question.showIf || "", variables, pageComputedVars)
       ),
