@@ -172,15 +172,8 @@ export type ConditionalPlaceholder = {
   falseText: string
 }
 
-export type VisibleSection = {
-  title?: string
-  content?: string
-  tooltip?: string
-  questions: Question[]
-}
-
 export type VisiblePageContent = {
-  sections: VisibleSection[]
+  sections: Section[]
 }
 
 // Parser-specific types with proper discriminated unions

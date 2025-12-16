@@ -4,12 +4,12 @@ import React, { useState } from "react"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
-import { VisibleSection, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { Section, Responses, Variables, ComputedVariables } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 
 interface SectionRendererProps {
-  section: VisibleSection
+  section: Section
   responses: Responses
   variables: Variables
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
