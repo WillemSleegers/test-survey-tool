@@ -91,16 +91,17 @@ function DocumentationContent({
       const parsed = parseQuestionnaire(code)
       return (
         <div className="space-y-0 rounded-lg border border-border overflow-hidden">
-          <div className="bg-background p-6">
+          <div className="bg-muted p-4">
+            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
+          </div>
+          <div className="bg-background p-6 border-t border-border">
             <QuestionnaireViewer
               questionnaire={parsed.blocks}
               navItems={parsed.navItems}
               onResetToUpload={() => {}}
               hidePageNavigator={true}
+              disableAutoScroll={true}
             />
-          </div>
-          <div className="bg-muted p-4 border-t border-border">
-            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
           </div>
         </div>
       )

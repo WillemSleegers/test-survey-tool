@@ -158,6 +158,35 @@ const parseDelimitedContent = (
   return undefined
 }
 
+/**
+ * Parse computed variables (COMPUTE: lines)
+ */
+const parseComputedVariables = (lines: string[]): ComputedVariable[] => {
+  const computedVariables: ComputedVariable[] = []
+  for (const line of lines) {
+    if (startsWith(line, "COMPUTE:")) {
+      const value = extractAfterKeyword(line, "COMPUTE:")
+      const match = value.match(/^(\w+)\s*=\s*(.+)$/)
+      if (match) {
+        computedVariables.push({
+          name: match[1],
+          expression: match[2],
+        })
+      }
+    }
+  }
+  return computedVariables
+}
+
+/**
+ * Create an option with value and label set to the same string
+ */
+const createOption = (label: string, overrides?: Partial<Option>): Option => ({
+  value: label,
+  label: label,
+  ...overrides,
+})
+
 // ============================================================================
 // CHUNK IDENTIFICATION
 // ============================================================================
@@ -500,11 +529,7 @@ const generateRangeOptions = (rangeStr: string): Option[] => {
 
   const options: Option[] = []
   for (let i = start; i <= end; i++) {
-    const value = i.toString()
-    options.push({
-      value,
-      label: value,
-    })
+    options.push(createOption(i.toString()))
   }
 
   return options
@@ -529,14 +554,12 @@ const parseOptions = (lines: string[]): Option[] => {
     if (startsWith(trimmed, "RANGE:")) {
       // Save current option if any
       if (currentOption) {
-        options.push({
-          value: currentOption.label || '',
-          label: currentOption.label || '',
+        options.push(createOption(currentOption.label || '', {
           hint: currentOption.hint,
           tooltip: currentOption.tooltip,
           showIf: currentOption.showIf,
           allowsOtherText: currentOption.allowsOtherText,
-        })
+        }))
         currentOption = null
       }
 
@@ -617,14 +640,12 @@ const parseOptions = (lines: string[]): Option[] => {
       } else {
         // This is a new option
         if (currentOption) {
-          options.push({
-            value: currentOption.label || '',
-            label: currentOption.label || '',
+          options.push(createOption(currentOption.label || '', {
             hint: currentOption.hint,
             tooltip: currentOption.tooltip,
             showIf: currentOption.showIf,
             allowsOtherText: currentOption.allowsOtherText,
-          })
+          }))
         }
 
         currentOption = { label: content }
@@ -638,14 +659,12 @@ const parseOptions = (lines: string[]): Option[] => {
 
   // Save final option
   if (currentOption) {
-    options.push({
-      value: currentOption.label || '',
-      label: currentOption.label || '',
+    options.push(createOption(currentOption.label || '', {
       hint: currentOption.hint,
       tooltip: currentOption.tooltip,
       showIf: currentOption.showIf,
       allowsOtherText: currentOption.allowsOtherText,
-    })
+    }))
   }
 
   return options
@@ -953,26 +972,11 @@ const parsePage = (lines: string[], questionCounter: { count: number }): Page =>
     ? titleLine.trim().replace(/^#\s*/, '')
     : ''
 
-  // Parse computed variables (COMPUTE: lines)
-  const computedVariables: ComputedVariable[] = []
-  for (const line of lines) {
-    if (startsWith(line, "COMPUTE:")) {
-      const value = extractAfterKeyword(line, "COMPUTE:")
-      const match = value.match(/^(\w+)\s*=\s*(.+)$/)
-      if (match) {
-        computedVariables.push({
-          name: match[1],
-          expression: match[2],
-        })
-      }
-    }
-  }
-
   return {
     title,
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
     sections: sectionChunks.map(sChunk => parseSection(sChunk, questionCounter)),
-    computedVariables,
+    computedVariables: parseComputedVariables(lines),
   }
 }
 
@@ -991,26 +995,11 @@ const parseBlock = (lines: string[]): Block => {
     ? extractAfterKeyword(blockLine, "BLOCK:")
     : ''
 
-  // Parse computed variables
-  const computedVariables: ComputedVariable[] = []
-  for (const line of lines) {
-    if (startsWith(line, "COMPUTE:")) {
-      const value = extractAfterKeyword(line, "COMPUTE:")
-      const match = value.match(/^(\w+)\s*=\s*(.+)$/)
-      if (match) {
-        computedVariables.push({
-          name: match[1],
-          expression: match[2],
-        })
-      }
-    }
-  }
-
   return {
     name,
     showIf: findKeyword(lines, "SHOW_IF:"),
     pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter)),
-    computedVariables,
+    computedVariables: parseComputedVariables(lines),
   }
 }
 

@@ -251,17 +251,4 @@ This applies to:
 
 ### Documentation Guidelines
 
-#### Text Format Guide Organization (`components/text-format-guide.tsx`)
-
-When adding new features to the text format guide, carefully consider the learning progression:
-
-- **Basic**: Fundamental concepts that users need first (pages, sections, simple questions, basic options, input types)
-- **Intermediate**: Features that build on basics (variables, hints, conditional logic, matrix questions, text inputs on options)
-- **Advanced**: Complex features requiring deep understanding (blocks, computed variables, conditional text, arithmetic expressions, complex conditions)
-
-**Before adding documentation:**
-
-1. Consider what prerequisite knowledge the feature requires
-2. Ask: "What would a user need to understand before learning this?"
-3. Place features alongside others of similar complexity
-4. Matrix questions, for example, require understanding questions, options, AND table layouts - this belongs in Intermediate, not Basic
+When documenting new features, carefully consider the learning progression and prerequisite knowledge required.

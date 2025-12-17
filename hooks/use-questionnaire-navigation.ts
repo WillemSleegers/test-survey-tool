@@ -2,17 +2,18 @@ import { useState, useEffect } from "react"
 
 /**
  * Hook for managing questionnaire navigation state and actions
- * 
+ *
  * Handles:
  * - Current page tracking with bounds checking
  * - Navigation actions (next/previous)
  * - Auto-scroll on page changes
  * - Focus management for navigation buttons
- * 
+ *
  * @param totalVisiblePages - Number of visible pages
+ * @param disableAutoScroll - Disable auto-scroll to top on page change
  * @returns Navigation state and actions
  */
-export function useQuestionnaireNavigation(totalVisiblePages: number) {
+export function useQuestionnaireNavigation(totalVisiblePages: number, disableAutoScroll = false) {
   const [currentVisiblePageIndex, setCurrentVisiblePageIndex] = useState<number>(0)
 
   // Make sure current page index is valid when visible pages change
@@ -22,10 +23,12 @@ export function useQuestionnaireNavigation(totalVisiblePages: number) {
     }
   }, [totalVisiblePages, currentVisiblePageIndex])
 
-  // Scroll to top when page changes
+  // Scroll to top when page changes (unless disabled)
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [currentVisiblePageIndex])
+    if (!disableAutoScroll) {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [currentVisiblePageIndex, disableAutoScroll])
 
   /**
    * Navigate to next page with focus management

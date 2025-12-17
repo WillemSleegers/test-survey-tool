@@ -318,3 +318,10 @@
 - [ ] Simplify lazy vs eager computed variable evaluation
   - Consider consolidating dual evaluation paths for computed variables
   - Remove fallback complexity if not essential
+- [ ] Consider generic `chunkByMarker()` helper for parser consolidation
+  - **Current state**: `identifyPages()`, `identifySections()`, and `identifyQuestions()` have nearly identical chunking patterns
+  - **Proposal**: Extract generic chunking function with configurable marker test, skip test, and default filtering
+  - **Benefit**: Would reduce ~75 lines of code by consolidating identifyPages (30 lines) and identifySections (45 lines)
+  - **Trade-off**: Adds complexity through function parameters vs explicit inline logic
+  - **Recommendation**: Implement for identifyPages and identifySections (clear win), but keep identifyQuestions separate (needs QuestionChunk type and determineQuestionType call)
+  - **Priority**: Low - code is already clean and maintainable; this is an optimization not a necessity

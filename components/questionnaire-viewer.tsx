@@ -25,6 +25,7 @@ interface QuestionnaireViewerProps {
   navItems: NavItem[]
   onResetToUpload: () => void
   hidePageNavigator?: boolean
+  disableAutoScroll?: boolean
 }
 
 export function QuestionnaireViewer({
@@ -32,6 +33,7 @@ export function QuestionnaireViewer({
   navItems,
   onResetToUpload,
   hidePageNavigator = false,
+  disableAutoScroll = false,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
@@ -90,7 +92,7 @@ export function QuestionnaireViewer({
     nextPage,
     prevPage,
     jumpToPage,
-  } = useQuestionnaireNavigation(visiblePages.length)
+  } = useQuestionnaireNavigation(visiblePages.length, disableAutoScroll)
 
   // Navigation: jump to first visible page of a nav item
   const handleJumpToNavItem = (navItem: NavItem): void => {
