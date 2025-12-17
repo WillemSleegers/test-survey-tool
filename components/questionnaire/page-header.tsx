@@ -53,9 +53,9 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
               <Info className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
-          <div>
-            <Markdown>{processedTitle}</Markdown>
-          </div>
+          <h1 className="text-3xl font-bold">
+            {processedTitle}
+          </h1>
         </div>
         {processedTooltip && isTooltipVisible && (
           <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
