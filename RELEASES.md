@@ -15,6 +15,11 @@ Released December 2025
 
 ### Improvements
 
+- **Parser maintainability**: Extracted helper functions to reduce duplication
+  - Added `parseComputedVariables()` helper - eliminated duplication between `parsePage()` and `parseBlock()`
+  - Added `createOption()` helper - reduced boilerplate in option creation across 4 locations
+  - Reduced parser by 28+ lines while maintaining readability
+
 - **Type system cleanup**: Removed redundant and confusing types
   - Removed `VisiblePageContent` wrapper type - now use `Section[]` directly
   - Removed `MatrixOption` type - matrix questions now use standard `Option` type
@@ -37,6 +42,11 @@ Released December 2025
   - Fixed section content rendering bug where page titles appeared as section content
 
 ### Documentation
+
+- **Improved documentation UX**:
+  - Reversed example order: code appears first, then rendered result (follows standard technical documentation pattern)
+  - Fixed auto-scroll bug: documentation examples no longer cause page to scroll to top when navigating between survey pages
+  - Removed outdated text-format-guide component reference from CLAUDE.md
 
 - Added 7 standard example files demonstrating text format features:
   - basic-survey.md - Common question types
