@@ -199,9 +199,9 @@ const identifyTopLevelChunks = (lines: string[]): {
   navChunks: string[][]
 } => {
   const blockChunks: string[][] = []
-  const navChunks: string[][] = []
+  const navChunks: string[][]  = []
 
-  let currentBlockStart: number | null = null
+  let currentBlockStart: number | null = 0  // Start at beginning to capture content before first BLOCK/NAV
   let currentNavStart: number | null = null
   let inBlock = false
   let inNav = false
@@ -211,6 +211,15 @@ const identifyTopLevelChunks = (lines: string[]): {
     const trimmed = line.trim()
 
     if (startsWith(trimmed, "BLOCK:")) {
+      // Save content before first BLOCK as default block
+      if (!inBlock && !inNav && currentBlockStart !== null && currentBlockStart < i) {
+        const precedingContent = lines.slice(currentBlockStart, i)
+        // Only add if there's actual content (not just blank lines)
+        if (precedingContent.some(l => l.trim().length > 0)) {
+          blockChunks.push(precedingContent)
+        }
+      }
+
       // Save previous chunk
       if (inNav && currentNavStart !== null) {
         navChunks.push(lines.slice(currentNavStart, i))
@@ -225,6 +234,15 @@ const identifyTopLevelChunks = (lines: string[]): {
       inNav = false
       currentNavStart = null
     } else if (startsWith(trimmed, "NAV:")) {
+      // Save content before first NAV as default block
+      if (!inBlock && !inNav && currentBlockStart !== null && currentBlockStart < i) {
+        const precedingContent = lines.slice(currentBlockStart, i)
+        // Only add if there's actual content (not just blank lines)
+        if (precedingContent.some(l => l.trim().length > 0)) {
+          blockChunks.push(precedingContent)
+        }
+      }
+
       // Save previous chunk
       if (inBlock && currentBlockStart !== null) {
         blockChunks.push(lines.slice(currentBlockStart, i))
@@ -249,9 +267,12 @@ const identifyTopLevelChunks = (lines: string[]): {
     navChunks.push(lines.slice(currentNavStart))
   }
 
-  // If no explicit blocks or navs, treat all lines as default block
-  if (blockChunks.length === 0 && navChunks.length === 0 && lines.length > 0) {
-    blockChunks.push(lines)
+  // If we never entered a BLOCK or NAV but have content from start, save it
+  if (!inBlock && !inNav && currentBlockStart !== null) {
+    const remainingContent = lines.slice(currentBlockStart)
+    if (remainingContent.some(l => l.trim().length > 0)) {
+      blockChunks.push(remainingContent)
+    }
   }
 
   return { blockChunks, navChunks }

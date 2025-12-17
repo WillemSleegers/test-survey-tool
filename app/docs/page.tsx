@@ -106,7 +106,17 @@ function DocumentationContent({
         </div>
       )
     } catch (err) {
-      return null
+      return (
+        <div className="space-y-0 rounded-lg border border-destructive overflow-hidden">
+          <div className="bg-muted p-4">
+            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
+          </div>
+          <div className="bg-destructive/10 p-4 border-t border-destructive">
+            <p className="text-sm text-destructive font-semibold">Parse Error:</p>
+            <p className="text-sm text-destructive">{(err as Error).message}</p>
+          </div>
+        </div>
+      )
     }
   }
 
@@ -277,26 +287,25 @@ TEXT`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`# Consent
-Q: Would you like to participate?
+            {renderExample(`# Screening
+Q: Would you like to participate in our survey?
 - Yes
 - No
 VARIABLE: participate
 
-BLOCK: Survey Questions
+BLOCK: Main Survey
 SHOW_IF: participate == Yes
 
-# Question 1
+# Demographics
+Q: What is your age?
+NUMBER
+
+# Feedback
 Q: How satisfied are you?
 - Very satisfied
 - Satisfied
 - Neutral
-- Dissatisfied
-
-# Question 2
-Q: Would you recommend us?
-- Yes
-- No`)}
+- Dissatisfied`)}
           </div>
         </div>
       )
