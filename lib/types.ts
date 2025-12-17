@@ -21,11 +21,22 @@ export type Page = {
   computedVariables: ComputedVariable[]
 }
 
+export type SectionContentItem = {
+  type: "content"
+  content: string
+}
+
+export type SectionQuestionItem = {
+  type: "question"
+  question: Question
+}
+
+export type SectionItem = SectionContentItem | SectionQuestionItem
+
 export type Section = {
   title?: string
-  content?: string
   tooltip?: string
-  questions: Question[]
+  items: SectionItem[]
 }
 
 // Base fields common to all questions

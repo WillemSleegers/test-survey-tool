@@ -20,10 +20,14 @@ export function calculateTotalTabInputs(
   sections: Section[],
   variables: Variables
 ): number {
-  const sectionInputs = sections.reduce((sum, sub) => {
-    return sum + sub.questions.reduce((subSum, question) => {
-      return subSum + calculateQuestionInputCount(question, variables)
+  const sectionInputs = sections.reduce((sum, section) => {
+    const questionInputs = section.items.reduce((subSum, item) => {
+      if (item.type === 'question') {
+        return subSum + calculateQuestionInputCount(item.question, variables)
+      }
+      return subSum
     }, 0)
+    return sum + questionInputs
   }, 0)
 
   return sectionInputs

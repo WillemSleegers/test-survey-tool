@@ -24,34 +24,37 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
 
   questionnaire?.forEach(page => {
     page.sections.forEach(section => {
-      section.questions.forEach(question => {
-        // Store question for lookup
-        questionLookup.set(question.id, question)
+      section.items.forEach(item => {
+        if (item.type === 'question') {
+          const question = item.question
+          // Store question for lookup
+          questionLookup.set(question.id, question)
 
-        // Regular question variable
-        if (question.variable) {
-          questionVariableMap.set(question.id, question.variable)
-        }
+          // Regular question variable
+          if (question.variable) {
+            questionVariableMap.set(question.id, question.variable)
+          }
 
-        // Subquestion variables (only for matrix questions)
-        if (question.type === 'matrix' && question.subquestions) {
-          question.subquestions.forEach(subquestion => {
-            if (subquestion.variable) {
-              questionVariableMap.set(subquestion.id, subquestion.variable)
-            }
-          })
-        }
+          // Subquestion variables (only for matrix questions)
+          if (question.type === 'matrix' && question.subquestions) {
+            question.subquestions.forEach(subquestion => {
+              if (subquestion.variable) {
+                questionVariableMap.set(subquestion.id, subquestion.variable)
+              }
+            })
+          }
 
-        // Option variables (only for breakdown questions)
-        if (question.type === 'breakdown') {
-          question.options.forEach(option => {
-            if (option.variable) {
-              // Create a unique key for this option: questionId + option value
-              const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
-              const optionKey = `${question.id}:${key}`
-              optionVariableMap.set(optionKey, option.variable)
-            }
-          })
+          // Option variables (only for breakdown questions)
+          if (question.type === 'breakdown') {
+            question.options.forEach(option => {
+              if (option.variable) {
+                // Create a unique key for this option: questionId + option value
+                const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
+                const optionKey = `${question.id}:${key}`
+                optionVariableMap.set(optionKey, option.variable)
+              }
+            })
+          }
         }
       })
     })

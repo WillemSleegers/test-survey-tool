@@ -39,14 +39,19 @@ export function useVisiblePages(
       getPageComputedVars(page) :
       evaluateComputedValues(page, variables, blockComputedValues)
 
-    // Filter sections and their questions based on individual SHOW_IF conditions
+    // Filter section items based on individual SHOW_IF conditions
     return page.sections.map((section) => ({
       title: section.title,
-      content: section.content,
       tooltip: section.tooltip,
-      questions: section.questions.filter((question) =>
-        evaluateCondition(question.showIf || "", variables, pageComputedVars)
-      ),
+      items: section.items.filter((item) => {
+        if (item.type === 'content') {
+          // Content is always visible
+          return true
+        } else {
+          // Filter questions based on SHOW_IF
+          return evaluateCondition(item.question.showIf || "", variables, pageComputedVars)
+        }
+      }),
     }))
   }
 

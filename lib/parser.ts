@@ -11,6 +11,9 @@ import {
   Block,
   NavItem,
   Section,
+  SectionItem,
+  SectionContentItem,
+  SectionQuestionItem,
   Option,
   BreakdownOption,
   Subquestion,
@@ -29,6 +32,7 @@ import {
 type QuestionChunk = {
   lines: string[]
   type: Question["type"]
+  startIndex?: number // Track the starting index in the parent array
 }
 
 // ============================================================================
@@ -369,6 +373,7 @@ const identifySections = (lines: string[]): string[][] => {
 /**
  * Identify question chunks within a section
  * Questions are marked by `Q:` or `Q1:`
+ * Questions end at: blank line, next question, or structural marker
  */
 const identifyQuestions = (lines: string[]): QuestionChunk[] => {
   const questionChunks: QuestionChunk[] = []
@@ -378,8 +383,21 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Skip structural markers
-    if (matches(trimmed, /^#/) || startsWith(trimmed, "BLOCK:") || startsWith(trimmed, "NAV:")) {
+    // Check if this is a structural marker (ends current question)
+    const isStructuralMarker = matches(trimmed, /^#/) || startsWith(trimmed, "BLOCK:") || startsWith(trimmed, "NAV:")
+
+    if (isStructuralMarker) {
+      // Save current question before hitting structural marker
+      if (currentQuestionStart !== null) {
+        const questionLines = lines.slice(currentQuestionStart, i)
+        const type = determineQuestionType(questionLines)
+        questionChunks.push({
+          lines: questionLines,
+          type,
+          startIndex: currentQuestionStart,
+        })
+        currentQuestionStart = null
+      }
       continue
     }
 
@@ -392,21 +410,33 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
         questionChunks.push({
           lines: questionLines,
           type,
+          startIndex: currentQuestionStart,
         })
       }
 
       // Start new question
       currentQuestionStart = i
+    } else if (currentQuestionStart !== null && !trimmed) {
+      // Blank line ends the current question
+      const questionLines = lines.slice(currentQuestionStart, i)
+      const type = determineQuestionType(questionLines)
+      questionChunks.push({
+        lines: questionLines,
+        type,
+        startIndex: currentQuestionStart,
+      })
+      currentQuestionStart = null
     }
   }
 
-  // Save final question
+  // Save final question if we're still in one
   if (currentQuestionStart !== null) {
     const questionLines = lines.slice(currentQuestionStart)
     const type = determineQuestionType(questionLines)
     questionChunks.push({
       lines: questionLines,
       type,
+      startIndex: currentQuestionStart,
     })
   }
 
@@ -930,15 +960,27 @@ const parseQuestionByType = (chunk: QuestionChunk, questionCounter: { count: num
 
 /**
  * Parse a section chunk
+ * Builds an interleaved array of content and questions
  */
 const parseSection = (lines: string[], questionCounter: { count: number }): Section => {
   const questionChunks = identifyQuestions(lines)
 
-  // Build a set of lines that belong to questions
-  const questionLines = new Set<string>()
+  // Build a map of line index -> question chunk
+  const lineToQuestion = new Map<number, QuestionChunk>()
+  for (const qChunk of questionChunks) {
+    // Find the first line of this question chunk in the original lines
+    const firstLine = qChunk.lines[0]
+    const lineIndex = lines.indexOf(firstLine)
+    if (lineIndex !== -1) {
+      lineToQuestion.set(lineIndex, qChunk)
+    }
+  }
+
+  // Build set of all lines that belong to questions
+  const questionLineSet = new Set<string>()
   for (const qChunk of questionChunks) {
     for (const line of qChunk.lines) {
-      questionLines.add(line)
+      questionLineSet.add(line)
     }
   }
 
@@ -952,30 +994,71 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
     }
   }
 
-  // Extract section content (lines that don't belong to questions)
-  // Note: Code fences (```) are preserved in content for markdown rendering
-  const contentLines: string[] = []
-  for (const line of lines) {
-    if (questionLines.has(line)) continue // Skip lines that belong to questions
+  // Build interleaved items array
+  const items: SectionItem[] = []
+  let contentBuffer: string[] = []
 
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
     const trimmed = line.trim()
 
-    // Skip structural markers
-    if (matches(trimmed, /^##/)) continue
+    // Check if this line starts a question
+    if (lineToQuestion.has(i)) {
+      // Flush any accumulated content
+      if (contentBuffer.length > 0) {
+        const content = contentBuffer.join('\n').trim()
+        if (content) {
+          items.push({ type: "content", content })
+        }
+        contentBuffer = []
+      }
 
-    // Add content line (skip section-level keywords)
-    if (trimmed && !matches(trimmed, /^(TOOLTIP:|HINT:|VARIABLE:|SHOW_IF:)/)) {
-      contentLines.push(line)
+      // Add the question
+      const qChunk = lineToQuestion.get(i)!
+      const question = parseQuestionByType(qChunk, questionCounter)
+      items.push({ type: "question", question })
+
+      // Skip ahead past this question's lines
+      i += qChunk.lines.length - 1
+      continue
+    }
+
+    // Skip lines that belong to questions (but weren't the start)
+    if (questionLineSet.has(line)) {
+      continue
+    }
+
+    // Skip structural markers
+    if (matches(trimmed, /^##/)) {
+      continue
+    }
+
+    // Skip section-level keywords
+    if (trimmed && matches(trimmed, /^(TOOLTIP:|HINT:|VARIABLE:|SHOW_IF:)/)) {
+      continue
+    }
+
+    // Add to content buffer
+    if (trimmed) {
+      contentBuffer.push(line)
+    } else if (contentBuffer.length > 0) {
+      // Preserve blank lines within content
+      contentBuffer.push(line)
     }
   }
 
-  const content = contentLines.join('\n')
+  // Flush any remaining content
+  if (contentBuffer.length > 0) {
+    const content = contentBuffer.join('\n').trim()
+    if (content) {
+      items.push({ type: "content", content })
+    }
+  }
 
   return {
     title,
-    ...(content && { content }),
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
-    questions: questionChunks.map(qChunk => parseQuestionByType(qChunk, questionCounter)),
+    items,
   }
 }
 

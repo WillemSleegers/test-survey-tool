@@ -375,13 +375,9 @@ LEVEL: 2
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-or
-Q1: What is your name?
-
-Both formats work. Use numbers when you want to reference questions explicitly.`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a question</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Questions start with <code>Q:</code> or <code>Q1:</code>, <code>Q2:</code>, etc.</li>
+              <li>Use numbers when you want to reference questions explicitly</li>
               <li>Content on following lines gets appended to question text</li>
               <li>
                 By default, a question is a multiple choice question (unless you
@@ -392,8 +388,7 @@ Both formats work. Use numbers when you want to reference questions explicitly.`
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite color?
+            {renderExample(`Q: What is your favorite color?
 - Red
 - Blue
 - Green`)}
@@ -413,12 +408,7 @@ Q: What is your favorite color?
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-TEXT
-
-Q: Tell us about yourself
-ESSAY`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>TEXT creates a single-line text input field</li>
               <li>ESSAY creates a multi-line text area for longer responses</li>
               <li>Place TEXT or ESSAY immediately after the question line</li>
@@ -427,8 +417,7 @@ ESSAY`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your name?
+            {renderExample(`Q: What is your name?
 TEXT
 
 Q: Tell us about yourself
@@ -449,9 +438,7 @@ ESSAY`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: How old are you?
-NUMBER`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>NUMBER creates a numeric input field</li>
               <li>Only accepts numeric values</li>
               <li>Place NUMBER immediately after the question line</li>
@@ -460,8 +447,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: How old are you?
+            {renderExample(`Q: How old are you?
 NUMBER`)}
           </div>
         </div>
@@ -479,11 +465,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your favorite color?
-- Red
-- Blue
-- Green`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>
                 Creates radio button options where only one can be selected
               </li>
@@ -496,8 +478,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite color?
+            {renderExample(`Q: What is your favorite color?
 - Red
 - Blue
 - Green`)}
@@ -517,12 +498,7 @@ Q: What is your favorite color?
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Which languages do you speak?
-- English
-- Spanish
-- French
-CHECKBOX`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>Creates checkbox options where multiple can be selected</li>
               <li>Add CHECKBOX after the last option</li>
               <li>Each option starts with a dash (-) and space</li>
@@ -531,8 +507,7 @@ CHECKBOX`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: Which languages do you speak?
+            {renderExample(`Q: Which languages do you speak?
 - English
 - Spanish
 - French
@@ -568,8 +543,7 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Basic Example</h3>
-            {renderExample(`#
-Q: How many hours per week do you spend on each activity?
+            {renderExample(`Q: How many hours per week do you spend on each activity?
 - Work
 - Exercise
 - Hobbies
@@ -704,15 +678,8 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Rate the following
-- Q: Product quality
-- Q: Customer service
-- Poor
-- Fair
-- Good
-- Excellent`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a matrix question row (sub-question)</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Sub-questions start with <code>- Q:</code> within a question</li>
               <li>
                 Multiple <code>- Q:</code> lines create multiple rows sharing
                 the same options
@@ -734,8 +701,7 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: Rate the following
+            {renderExample(`Q: Rate the following
 - Q: Product quality
 - Q: Customer service
 - Q: Value for money
@@ -760,14 +726,8 @@ Q: Rate the following
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-TEXT
-VARIABLE: name
-
-# Welcome
-Hello {name}!`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Stores the response to the question into a variable</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>VARIABLE: name</code> to store the question's response</li>
               <li>
                 Can be used to insert the response into texts later in the
                 survey or for use in conditions
@@ -1030,8 +990,7 @@ SHOW_IF: has_pets == Yes
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Do you have pets?
+                {renderExample(`Q: Do you have pets?
 - Yes
 - No
 VARIABLE: has_pets
@@ -1074,8 +1033,7 @@ TEXT`)}
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Are you a student?
+                {renderExample(`Q: Are you a student?
 - Yes
 - No
 VARIABLE: student
@@ -1128,8 +1086,7 @@ ESSAY`)}
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Did you witness fraud?
+                {renderExample(`Q: Did you witness fraud?
 - Yes
 - No
 VARIABLE: crime_fraud
@@ -1180,8 +1137,7 @@ TEXT`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your email address?
+            {renderExample(`Q: What is your email address?
 HINT: We'll only use this to send you survey results
 TEXT
 
@@ -1229,8 +1185,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your annual income?
+            {renderExample(`Q: What is your annual income?
 HINT: Please provide your gross income
 TOOLTIP: Why we ask this
 * This helps us understand our user demographics
@@ -1273,8 +1228,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite hobby?
+            {renderExample(`Q: What is your favorite hobby?
 - Sports
 - Reading
 - Gaming
@@ -1326,16 +1280,14 @@ RANGE: 1-10`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example: Rating Scale</h3>
-            {renderExample(`#
-Q: How satisfied are you with our service?
+            {renderExample(`Q: How satisfied are you with our service?
 RANGE: 1-10
 VARIABLE: satisfaction`)}
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example: Matrix with Range</h3>
-            {renderExample(`#
-Q: Please rate the following aspects:
+            {renderExample(`Q: Please rate the following aspects:
 - Q: Quality
 - Q: Service
 - Q: Value
@@ -1344,8 +1296,7 @@ RANGE: 1-7`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example: Net Promoter Score</h3>
-            {renderExample(`#
-Q: How likely are you to recommend us?
+            {renderExample(`Q: How likely are you to recommend us?
 RANGE: 0-10
 VARIABLE: nps_score`)}
           </div>

@@ -29,30 +29,33 @@ export function PageContent({
       {/* Render sections */}
       {content.map((section, index) => {
         const sectionStartTabIndex = currentTabIndex
-        
-        // Update currentTabIndex for this section's questions
-        section.questions.forEach(question => {
-          let inputCount
-          if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
-            inputCount = 1
-          } else if (question.type === 'multiple_choice') {
-            // For radio buttons, use 1 slot if answered, all options if not answered
-            const responseValue = responses[question.id]
-            const isAnswered = responseValue !== undefined && responseValue !== ""
-            inputCount = isAnswered ? 1 : question.options.length
-          } else if (question.type === 'checkbox') {
-            // For checkboxes, always use all options
-            inputCount = question.options.length
-          } else if (question.type === 'matrix' || question.type === 'breakdown') {
-            // For matrix and breakdown, use options length
-            inputCount = question.options.length
-          } else {
-            // Default fallback
-            inputCount = 1
+
+        // Update currentTabIndex for this section's items
+        section.items.forEach(item => {
+          if (item.type === 'question') {
+            const question = item.question
+            let inputCount
+            if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
+              inputCount = 1
+            } else if (question.type === 'multiple_choice') {
+              // For radio buttons, use 1 slot if answered, all options if not answered
+              const responseValue = responses[question.id]
+              const isAnswered = responseValue !== undefined && responseValue !== ""
+              inputCount = isAnswered ? 1 : question.options.length
+            } else if (question.type === 'checkbox') {
+              // For checkboxes, always use all options
+              inputCount = question.options.length
+            } else if (question.type === 'matrix' || question.type === 'breakdown') {
+              // For matrix and breakdown, use options length
+              inputCount = question.options.length
+            } else {
+              // Default fallback
+              inputCount = 1
+            }
+            currentTabIndex += inputCount
           }
-          currentTabIndex += inputCount
         })
-        
+
         return (
           <SectionRenderer
             key={`section-${index}`}
