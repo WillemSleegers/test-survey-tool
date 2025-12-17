@@ -28,7 +28,6 @@ import {
 
 type Line = {
   line: string
-  shouldParse: boolean
   index: number
 }
 
@@ -90,8 +89,7 @@ const extractAfterKeyword = (line: string, keyword: string): string => {
  * Returns undefined if not found
  */
 const findKeyword = (lines: Line[], keyword: string): string | undefined => {
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
     if (startsWith(line, keyword)) {
       return extractAfterKeyword(line, keyword)
     }
@@ -104,8 +102,7 @@ const findKeyword = (lines: Line[], keyword: string): string | undefined => {
  */
 const findAllKeywords = (lines: Line[], keyword: string): string[] => {
   const results: string[] = []
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
     if (startsWith(line, keyword)) {
       results.push(extractAfterKeyword(line, keyword))
     }
@@ -125,9 +122,7 @@ const parseDelimitedContent = (
   let isCollecting = false
   let useDelimiters = false
 
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
-
+  for (const { line } of lines) {
     const trimmed = line.trim()
 
     // Check for keyword with delimiter on same line
@@ -193,9 +188,7 @@ const identifyTopLevelChunks = (lines: Line[]): {
   let inNav = false
 
   for (let i = 0; i < lines.length; i++) {
-    const { line, shouldParse } = lines[i]
-    if (!shouldParse) continue
-
+    const { line } = lines[i]
     const trimmed = line.trim()
 
     if (startsWith(trimmed, "BLOCK:")) {
@@ -283,8 +276,7 @@ const identifyPages = (chunk: Chunk): Chunk[] => {
   let currentPageStart: number | null = null
 
   for (let i = 0; i < chunk.lines.length; i++) {
-    const { line, shouldParse, index } = chunk.lines[i]
-    if (!shouldParse) continue
+    const { line, index } = chunk.lines[i]
 
     const trimmed = line.trim()
 
@@ -334,8 +326,7 @@ const identifySections = (chunk: Chunk): Chunk[] => {
   let currentSectionStart: number | null = null
 
   for (let i = 0; i < chunk.lines.length; i++) {
-    const { line, shouldParse, index } = chunk.lines[i]
-    if (!shouldParse) continue
+    const { line, index } = chunk.lines[i]
 
     const trimmed = line.trim()
 
@@ -371,8 +362,7 @@ const identifySections = (chunk: Chunk): Chunk[] => {
 
   // If no sections found, treat entire chunk as default section (excluding page title)
   if (sectionChunks.length === 0 && chunk.lines.length > 0) {
-    const filteredLines = chunk.lines.filter(({ line, shouldParse }) => {
-      if (!shouldParse) return true // Keep unparsed lines
+    const filteredLines = chunk.lines.filter(({ line }) => {
       const trimmed = line.trim()
       // Exclude page title markers
       return !(matches(trimmed, /^#\s/) || trimmed === "#")
@@ -399,8 +389,7 @@ const identifyQuestions = (chunk: Chunk): QuestionChunk[] => {
   let currentQuestionStart: number | null = null
 
   for (let i = 0; i < chunk.lines.length; i++) {
-    const { line, shouldParse, index } = chunk.lines[i]
-    if (!shouldParse) continue
+    const { line, index } = chunk.lines[i]
 
     const trimmed = line.trim()
 
@@ -456,8 +445,7 @@ const determineQuestionType = (lines: Line[]): Question["type"] => {
   let hasExplicitNumberType = false
   let hasExplicitCheckboxType = false
 
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
 
     const trimmed = line.trim()
 
@@ -514,8 +502,8 @@ const parseQuestionBase = (lines: Line[], questionCounter: { count: number }) =>
   const id = `Q${questionCounter.count++}`
 
   // Extract question text (first line after Q:)
-  const questionLine = lines.find(({ line, shouldParse }) =>
-    shouldParse && matches(line.trim(), /^Q\d*:/)
+  const questionLine = lines.find(({ line }) =>
+    matches(line.trim(), /^Q\d*:/)
   )
   const text = questionLine
     ? questionLine.line.trim().replace(/^Q\d*:\s*/, '')
@@ -602,8 +590,7 @@ const parseOptions = (lines: Line[]): Option[] => {
   let hintBuffer: string[] = []
   let tooltipBuffer: string[] = []
 
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
 
     const trimmed = line.trim()
 
@@ -763,8 +750,7 @@ const parseSubquestions = (lines: Line[], baseId: string): Subquestion[] => {
   let currentSubquestion: Partial<Subquestion> | null = null
   let subquestionIndex = 0
 
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
 
     const trimmed = line.trim()
 
@@ -814,8 +800,7 @@ const parseMatrixQuestion = (lines: Line[], questionCounter: { count: number }):
 
   // Determine input type (TEXT, ESSAY, CHECKBOX, or default radio)
   let inputType: "checkbox" | "text" | "essay" | undefined
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
     const trimmed = line.trim()
     if (trimmed === "CHECKBOX") inputType = "checkbox"
     else if (trimmed === "TEXT") inputType = "text"
@@ -842,8 +827,7 @@ const parseBreakdownOptions = (lines: Line[]): BreakdownOption[] => {
   const options: BreakdownOption[] = []
   let currentOption: Partial<BreakdownOption> | null = null
 
-  for (const { line, shouldParse } of lines) {
-    if (!shouldParse) continue
+  for (const { line } of lines) {
 
     const trimmed = line.trim()
 
@@ -989,8 +973,7 @@ const parseSection = (chunk: Chunk, questionCounter: { count: number }): Section
 
   // Extract section title
   let title: string | undefined
-  for (const { line, shouldParse } of chunk.lines) {
-    if (!shouldParse) continue
+  for (const { line } of chunk.lines) {
     const trimmed = line.trim()
     if (matches(trimmed, /^##/)) {
       title = trimmed.replace(/^##\s*/, '').trim()
@@ -999,9 +982,9 @@ const parseSection = (chunk: Chunk, questionCounter: { count: number }): Section
   }
 
   // Extract section content (lines that don't belong to questions)
+  // Note: Code fences (```) are preserved in content for markdown rendering
   const contentLines: string[] = []
-  for (const { line, shouldParse, index } of chunk.lines) {
-    if (!shouldParse) continue
+  for (const { line, index } of chunk.lines) {
     if (questionLineIndices.has(index)) continue // Skip lines that belong to questions
 
     const trimmed = line.trim()
@@ -1032,8 +1015,8 @@ const parsePage = (chunk: Chunk, questionCounter: { count: number }): Page => {
   const sectionChunks = identifySections(chunk)
 
   // Extract page title
-  const titleLine = chunk.lines.find(({ line, shouldParse }) =>
-    shouldParse && (matches(line.trim(), /^#\s/) || line.trim() === "#")
+  const titleLine = chunk.lines.find(({ line }) =>
+    (matches(line.trim(), /^#\s/) || line.trim() === "#")
   )
   const title = titleLine
     ? titleLine.line.trim().replace(/^#\s*/, '')
@@ -1041,8 +1024,7 @@ const parsePage = (chunk: Chunk, questionCounter: { count: number }): Page => {
 
   // Parse computed variables (COMPUTE: lines)
   const computedVariables: ComputedVariable[] = []
-  for (const { line, shouldParse } of chunk.lines) {
-    if (!shouldParse) continue
+  for (const { line } of chunk.lines) {
     if (startsWith(line, "COMPUTE:")) {
       const value = extractAfterKeyword(line, "COMPUTE:")
       const match = value.match(/^(\w+)\s*=\s*(.+)$/)
@@ -1071,8 +1053,8 @@ const parseBlock = (chunk: Chunk): Block => {
   const questionCounter = { count: 1 }
 
   // Extract block name
-  const blockLine = chunk.lines.find(({ line, shouldParse }) =>
-    shouldParse && startsWith(line, "BLOCK:")
+  const blockLine = chunk.lines.find(({ line }) =>
+    startsWith(line, "BLOCK:")
   )
   const name = blockLine
     ? extractAfterKeyword(blockLine.line, "BLOCK:")
@@ -1080,8 +1062,7 @@ const parseBlock = (chunk: Chunk): Block => {
 
   // Parse computed variables
   const computedVariables: ComputedVariable[] = []
-  for (const { line, shouldParse } of chunk.lines) {
-    if (!shouldParse) continue
+  for (const { line } of chunk.lines) {
     if (startsWith(line, "COMPUTE:")) {
       const value = extractAfterKeyword(line, "COMPUTE:")
       const match = value.match(/^(\w+)\s*=\s*(.+)$/)
@@ -1110,8 +1091,8 @@ const parseNavItem = (chunk: Chunk): NavItem => {
   const questionCounter = { count: 1 }
 
   // Extract nav item name
-  const navLine = chunk.lines.find(({ line, shouldParse }) =>
-    shouldParse && startsWith(line, "NAV:")
+  const navLine = chunk.lines.find(({ line }) =>
+    startsWith(line, "NAV:")
   )
   const name = navLine
     ? extractAfterKeyword(navLine.line, "NAV:")
@@ -1135,24 +1116,7 @@ const parseNavItem = (chunk: Chunk): NavItem => {
 export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: NavItem[] } => {
   try {
     const rawLines = text.split("\n")
-
-    // Track code fence state to avoid parsing content inside fences
-    let insideCodeFence = false
-    const lines: Line[] = []
-
-    for (let i = 0; i < rawLines.length; i++) {
-      const line = rawLines[i]
-      const trimmed = line.trim()
-
-      // Check if this line is a code fence delimiter
-      if (trimmed.startsWith("```")) {
-        insideCodeFence = !insideCodeFence
-        lines.push({ line, shouldParse: false, index: i })
-        continue
-      }
-
-      lines.push({ line, shouldParse: !insideCodeFence, index: i })
-    }
+    const lines: Line[] = rawLines.map((line, index) => ({ line, index }))
 
     // Identify top-level chunks
     const { blockChunks, navChunks } = identifyTopLevelChunks(lines)

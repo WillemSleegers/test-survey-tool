@@ -22,6 +22,12 @@ Released December 2025
   - Renamed `ComputedVariables` → `ComputedValues` for clarity (map of values, not array of definitions)
   - Removed `ParsedQuestion` type that duplicated the `Question` discriminated union
 
+- **Simplified code fence handling**: Removed unnecessary complexity in parser
+  - Eliminated `shouldParse` flag that was tracked throughout the entire parsing pipeline
+  - Reduced parser complexity by ~40 lines of code fence tracking logic
+  - Code fences in section content are preserved naturally for markdown rendering
+  - No functional changes - markdown code blocks still render correctly
+
 - **Section titles now display**: Section headings (after `##`) are now rendered as visible h2 elements
   - Section `content` field is now optional (no empty strings stored)
   - Updated documentation examples to demonstrate section usage
