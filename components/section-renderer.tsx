@@ -31,7 +31,9 @@ export function SectionRenderer({
     <div className="space-y-6">
       {/* Section Title */}
       {section.title && (
-        <h2 className="text-2xl font-semibold">{section.title}</h2>
+        <div className="text-2xl">
+          <Markdown>{section.title}</Markdown>
+        </div>
       )}
 
       {/* Section Content */}
