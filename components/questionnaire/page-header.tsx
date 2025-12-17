@@ -53,7 +53,7 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
               <Info className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
-          <div className="text-2xl">
+          <div>
             <Markdown>{processedTitle}</Markdown>
           </div>
         </div>
