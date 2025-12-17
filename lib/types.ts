@@ -237,6 +237,6 @@ export type ParserState = {
   optionTooltipBuffer: string[] | null
   questionCounter: number
   // Lookahead support
-  allLines: Array<{ line: string }>
+  allLines: string[]
   currentLineIndex: number
 }

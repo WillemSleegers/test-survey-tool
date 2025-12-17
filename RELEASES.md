@@ -22,11 +22,14 @@ Released December 2025
   - Renamed `ComputedVariables` → `ComputedValues` for clarity (map of values, not array of definitions)
   - Removed `ParsedQuestion` type that duplicated the `Question` discriminated union
 
-- **Simplified code fence handling**: Removed unnecessary complexity in parser
+- **Simplified parser data structures**: Removed unnecessary object wrappers and dead code
+  - Eliminated `Chunk` wrapper type - chunks are now just `string[]` instead of `{ lines: string[] }`
+  - Removed `Line` wrapper type - lines are now plain strings instead of `{ line: string, index: number }`
+  - Removed unused `index`, `startIndex`, and `endIndex` fields that were assigned but never read
   - Eliminated `shouldParse` flag that was tracked throughout the entire parsing pipeline
-  - Reduced parser complexity by ~40 lines of code fence tracking logic
+  - Reduced parser complexity by ~60 lines of unnecessary object creation and field tracking
   - Code fences in section content are preserved naturally for markdown rendering
-  - No functional changes - markdown code blocks still render correctly
+  - No functional changes - parser works exactly the same way with simpler data structures
 
 - **Section titles now display**: Section headings (after `##`) are now rendered as visible h2 elements
   - Section `content` field is now optional (no empty strings stored)
