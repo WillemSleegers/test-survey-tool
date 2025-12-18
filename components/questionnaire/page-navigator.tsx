@@ -80,12 +80,13 @@ export function PageNavigator({
   // Helper function to check if a block is visible
   const isBlockVisible = (block: Block): boolean => {
     if (!block.showIf) return true
-    
+
     // Create a mock page with block's computed variables to evaluate block visibility
     const mockPage: Page = {
+      id: 0,
       title: "",
       sections: [],
-      computedVariables: block.computedVariables
+      computedVariables: block.computedVariables,
     }
     const blockComputedVars = evaluateComputedValues(mockPage, variables)
 
@@ -106,14 +107,14 @@ export function PageNavigator({
   // Helper function to clean markdown from titles for navigation display
   const cleanTitle = (title: string): string => {
     return title
-      .replace(/#+\s+/g, '') // Remove headers: ### Text -> Text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold: **text** -> text
-      .replace(/\*(.*?)\*/g, '$1') // Remove italic: *text* -> text
-      .replace(/`(.*?)`/g, '$1') // Remove inline code: `code` -> code
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links: [text](url) -> text
-      .replace(/^\s*[-*+]\s+/gm, '') // Remove list markers: - item -> item
-      .replace(/^\s*\d+\.\s+/gm, '') // Remove numbered lists: 1. item -> item
-      .split('\n')[0] // Take only first line
+      .replace(/#+\s+/g, "") // Remove headers: ### Text -> Text
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold: **text** -> text
+      .replace(/\*(.*?)\*/g, "$1") // Remove italic: *text* -> text
+      .replace(/`(.*?)`/g, "$1") // Remove inline code: `code` -> code
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links: [text](url) -> text
+      .replace(/^\s*[-*+]\s+/gm, "") // Remove list markers: - item -> item
+      .replace(/^\s*\d+\.\s+/gm, "") // Remove numbered lists: 1. item -> item
+      .split("\n")[0] // Take only first line
       .trim()
   }
 
@@ -207,14 +208,13 @@ export function PageNavigator({
                           onClick={() => toggleBlockExpansion(blockIndex)}
                         >
                           {/* Expand/collapse icon */}
-                          <div className="w-4 h-4 flex-shrink-0">
+                          <div className="w-4 h-4 shrink-0">
                             {isExpanded ? (
                               <ChevronDown className="w-4 h-4" />
                             ) : (
                               <ChevronRight className="w-4 h-4" />
                             )}
                           </div>
-
 
                           {/* Block info */}
                           <div className="flex-1 min-w-0">
@@ -228,7 +228,8 @@ export function PageNavigator({
                             )}
                             {block.computedVariables.length > 0 && (
                               <div className="text-xs text-primary/70">
-                                {block.computedVariables.length} computed variable(s)
+                                {block.computedVariables.length} computed
+                                variable(s)
                               </div>
                             )}
                           </div>
@@ -236,64 +237,75 @@ export function PageNavigator({
                       )}
 
                       {/* Pages within block */}
-                      {(isExpanded || !block.name) && block.pages.map((page, pageIndex) => {
-                        // Skip expensive computation during render for non-visible pages
-                        // Just check if page is in visible pages list
-                        const pageVisible = visiblePages.includes(page)
+                      {(isExpanded || !block.name) &&
+                        block.pages.map((page, pageIndex) => {
+                          // Skip expensive computation during render for non-visible pages
+                          // Just check if page is in visible pages list
+                          const pageVisible = visiblePages.includes(page)
 
-                        // Find the visible page index for this page
-                        const visibleIndex = visiblePages.findIndex(
-                          (p) => p === page
-                        )
-                        const isCurrent = visibleIndex === currentVisiblePageIndex
+                          // Find the visible page index for this page
+                          const visibleIndex = visiblePages.findIndex(
+                            (p) => p === page
+                          )
+                          const isCurrent =
+                            visibleIndex === currentVisiblePageIndex
 
-                        // Calculate global page index
-                        const globalPageIndex = questionnaire
-                          .slice(0, blockIndex)
-                          .reduce((acc, b) => acc + b.pages.length, 0) + pageIndex
+                          // Calculate global page index
+                          const globalPageIndex =
+                            questionnaire
+                              .slice(0, blockIndex)
+                              .reduce((acc, b) => acc + b.pages.length, 0) +
+                            pageIndex
 
-                        return (
-                          <div
-                            key={`${blockIndex}-${pageIndex}`}
-                            className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
-                              isCurrent
-                                ? "bg-muted font-medium"
-                                : pageVisible && blockVisible
-                                ? "hover:bg-muted cursor-pointer"
-                                : "opacity-50"
-                            }`}
-                            onClick={
-                              pageVisible && blockVisible && visibleIndex !== -1
-                                ? () => onJumpToPage(visibleIndex)
-                                : undefined
-                            }
-                          >
-                            {/* Current page indicator */}
-                            <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-                              {isCurrent && (
-                                <Circle className="w-3 h-3 fill-primary text-primary" />
-                              )}
-                            </div>
-
-                            {/* Page info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium wrap-break-word">
-                                {page.title ? `Page ${globalPageIndex + 1}: ${cleanTitle(page.title)}` : `Page ${globalPageIndex + 1}`}
+                          return (
+                            <div
+                              key={`${blockIndex}-${pageIndex}`}
+                              className={`flex items-center gap-2 p-2 rounded text-sm transition-all ${
+                                isCurrent
+                                  ? "bg-muted font-medium"
+                                  : pageVisible && blockVisible
+                                  ? "hover:bg-muted cursor-pointer"
+                                  : "opacity-50"
+                              }`}
+                              onClick={
+                                pageVisible &&
+                                blockVisible &&
+                                visibleIndex !== -1
+                                  ? () => onJumpToPage(visibleIndex)
+                                  : undefined
+                              }
+                            >
+                              {/* Current page indicator */}
+                              <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                                {isCurrent && (
+                                  <Circle className="w-3 h-3 fill-primary text-primary" />
+                                )}
                               </div>
-                              {page.showIf && (
-                                <div className="text-xs text-muted-foreground wrap-break-word">
-                                  SHOW_IF: {page.showIf}
+
+                              {/* Page info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium wrap-break-word">
+                                  {page.title
+                                    ? `Page ${
+                                        globalPageIndex + 1
+                                      }: ${cleanTitle(page.title)}`
+                                    : `Page ${globalPageIndex + 1}`}
                                 </div>
-                              )}
-                              {page.computedVariables.length > 0 && (
-                                <div className="text-xs text-primary/70">
-                                  {page.computedVariables.length} computed variable(s)
-                                </div>
-                              )}
+                                {page.showIf && (
+                                  <div className="text-xs text-muted-foreground wrap-break-word">
+                                    SHOW_IF: {page.showIf}
+                                  </div>
+                                )}
+                                {page.computedVariables.length > 0 && (
+                                  <div className="text-xs text-primary/70">
+                                    {page.computedVariables.length} computed
+                                    variable(s)
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
                     </div>
                   )
                 })}
@@ -311,26 +323,35 @@ export function PageNavigator({
             )}
 
             {/* Computed Variables */}
-            {(Object.keys(currentBlockComputedVars).length > 0 || Object.keys(currentPageComputedVars).length > 0) && (
+            {(Object.keys(currentBlockComputedVars).length > 0 ||
+              Object.keys(currentPageComputedVars).length > 0) && (
               <div>
                 <h3 className="text-sm font-medium mb-3">Computed Variables</h3>
-                
+
                 {/* Block-level variables */}
                 {Object.keys(currentBlockComputedVars).length > 0 && (
                   <div className="mb-3">
-                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">Current Block</h4>
+                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">
+                      Current Block
+                    </h4>
                     <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                      <pre>{JSON.stringify(currentBlockComputedVars, null, 2)}</pre>
+                      <pre>
+                        {JSON.stringify(currentBlockComputedVars, null, 2)}
+                      </pre>
                     </div>
                   </div>
                 )}
-                
+
                 {/* Page-level variables */}
                 {Object.keys(currentPageComputedVars).length > 0 && (
                   <div>
-                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">Current Page</h4>
+                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">
+                      Current Page
+                    </h4>
                     <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                      <pre>{JSON.stringify(currentPageComputedVars, null, 2)}</pre>
+                      <pre>
+                        {JSON.stringify(currentPageComputedVars, null, 2)}
+                      </pre>
                     </div>
                   </div>
                 )}
