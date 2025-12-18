@@ -14,7 +14,7 @@ import { Navbar } from "@/components/navbar"
 import { parseQuestionnaire } from "@/lib/parser"
 import { useSurvey } from "@/contexts/survey-context"
 
-import { ADVANCED_SAMPLE_TEXT } from "@/lib/constants"
+import { SAMPLE_SURVEY } from "@/lib/constants"
 
 const QuestionnaireApp = () => {
   const router = useRouter()
@@ -35,7 +35,7 @@ const QuestionnaireApp = () => {
 
   const loadSample = (): void => {
     try {
-      const parsed = parseQuestionnaire(ADVANCED_SAMPLE_TEXT)
+      const parsed = parseQuestionnaire(SAMPLE_SURVEY)
       console.log(parsed)
       setSurveyData(parsed)
       router.push("/survey")
@@ -57,15 +57,15 @@ const QuestionnaireApp = () => {
   return (
     <div>
       <Navbar />
-      <div className="max-w-4xl mx-auto p-6 space-y-8 mb-8">
+      <div className="max-w-4xl mx-auto p-6 mb-8">
         {/* Header */}
-        <div className="my-8 text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">TST</h1>
+        <div className="text-center mb-12 mt-8">
+          <h1 className="text-4xl font-bold tracking-tight mb-2">TST</h1>
           <p className="text-lg text-muted-foreground">Test Survey Tool</p>
         </div>
 
         {/* Main Content */}
-        <div className="space-y-8">
+        <div className="space-y-6">
         {showTextEditor ? (
           <TextEditor
             onLoadContent={handleTextEditorLoad}
@@ -81,12 +81,12 @@ const QuestionnaireApp = () => {
               <div className="flex-1 border-t border-border"></div>
             </div>
 
-            <div className="space-y-4 flex justify-center gap-2">
+            <div className="flex justify-center gap-2">
               <Button onClick={() => setShowTextEditor(true)} variant="outline">
                 Draft Survey
               </Button>
               <Button onClick={loadSample} variant="outline">
-                Load Sample Survey
+                Load Sample
               </Button>
             </div>
           </>
@@ -98,7 +98,7 @@ const QuestionnaireApp = () => {
           </Alert>
         )}
 
-        <div className="border-t border-border pt-6">
+        <div className="border rounded-lg p-6 mt-12">
           <Settings />
         </div>
         </div>
