@@ -127,4 +127,8 @@
   li > ul {
     @apply ms-4;
   }
+
+  code {
+    @apply font-mono text-sm bg-muted px-1.5 py-0.5 rounded;
+  }
 }

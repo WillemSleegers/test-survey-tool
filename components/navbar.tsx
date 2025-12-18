@@ -1,10 +1,17 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export function Navbar() {
+interface NavbarProps {
+  maxWidth?: "4xl" | "7xl"
+}
+
+export function Navbar({ maxWidth = "4xl" }: NavbarProps) {
+  const maxWidthClass = maxWidth === "7xl" ? "max-w-7xl" : "max-w-4xl"
+  const paddingClass = maxWidth === "7xl" ? "px-4" : "px-6"
+
   return (
     <header>
-      <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between border-b border-border">
+      <div className={`${maxWidthClass} mx-auto ${paddingClass} h-16 flex items-center justify-between border-b border-border`}>
         <Link href="/" className="hover:opacity-80 transition-opacity">
           <span className="text-lg font-semibold">TST</span>
         </Link>

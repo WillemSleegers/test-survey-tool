@@ -77,13 +77,12 @@ export function AppSidebar({
 
   return (
     <div className="w-64 shrink-0">
-      <div className="sticky top-6 space-y-3">
-        <div className="font-semibold">Documentation</div>
+      <div className="sticky top-6">
         <Card className="py-3 shadow-xs">
           <CardContent className="px-4 py-0">
             <div
               className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted ${
-                activeSection === "overview" ? "bg-muted font-semibold" : ""
+                activeSection === "overview" ? "bg-muted font-semibold" : "font-medium"
               }`}
               onClick={() => onSectionChange("overview")}
             >

@@ -202,6 +202,7 @@ const createOption = (label: string, overrides?: Partial<Option>): Option => ({
 const identifyBlocks = (lines: string[]): string[][] => {
   const blockChunks: string[][] = []
   let currentBlockStart: number | null = null
+  let firstBlockIndex: number | null = null
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
@@ -213,8 +214,22 @@ const identifyBlocks = (lines: string[]): string[][] => {
         blockChunks.push(lines.slice(currentBlockStart, i))
       }
 
+      // Track first BLOCK: marker
+      if (firstBlockIndex === null) {
+        firstBlockIndex = i
+      }
+
       // Start new block
       currentBlockStart = i
+    }
+  }
+
+  // If we found BLOCK: markers, check for content before first block
+  if (firstBlockIndex !== null && firstBlockIndex > 0) {
+    const beforeFirstBlock = lines.slice(0, firstBlockIndex)
+    if (beforeFirstBlock.some(l => l.trim().length > 0)) {
+      // Insert default block at beginning for content before first BLOCK:
+      blockChunks.unshift(beforeFirstBlock)
     }
   }
 
@@ -225,7 +240,6 @@ const identifyBlocks = (lines: string[]): string[][] => {
 
   // If no BLOCK: markers found, treat all content as default block
   if (blockChunks.length === 0 && lines.length > 0) {
-    // Only add if there's actual content
     if (lines.some(l => l.trim().length > 0)) {
       blockChunks.push(lines)
     }

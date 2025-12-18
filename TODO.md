@@ -87,17 +87,17 @@
 ## Ideas to Explore
 
 - [ ] Add INTEGER input type for whole numbers only
+
   - **Use case**: Many survey questions require whole numbers (employee count, age, quantity) where decimals don't make sense
   - **Current limitation**: NUMBER type accepts any numeric value including decimals
   - **Proposal**: Add INTEGER keyword as an input type alongside NUMBER
-  - **Example**:
-    ```text
+  - **Example**: ```text
     Q: How many employees work at your location?
     INTEGER
 
     Q: What is your annual revenue in thousands?
-    NUMBER
-    ```
+    NUMBER```
+
   - **Implementation**:
     - Add INTEGER to input type keywords in parser
     - Use `<input type="number" step="1">` for integer inputs
@@ -106,15 +106,14 @@
   - **Priority**: Medium - Common use case, improves UX and data quality
 
 - [ ] Add VALIDATE syntax for question validation with custom error messages
+
   - **Use case**: Provide real-time validation feedback when responses don't meet specified conditions
   - **Syntax**: Add `VALIDATE:` keyword followed by condition expression and error message
-  - **Example**:
-    ```text
-    Q: How many employees does your location have?
-    NUMBER
-    VALIDATE: Q1 > 0, "Please enter a positive number"
-    VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"
-    ```
+  - **Example**: `text
+Q: How many employees does your location have?
+NUMBER
+VALIDATE: Q1 > 0, "Please enter a positive number"
+VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
   - **Features**:
     - Multiple validation rules per question
     - Custom error messages displayed to respondent
@@ -189,6 +188,7 @@
     - Easier to add new question types with confidence
   - **Note**: This is a stepping stone improvement. The parser still uses a single state machine rather than specialized parsing functions per type, but type safety is now enforced throughout
 - [ ] Refactor parser to use type-driven chunk-based approach
+
   - **Motivation**: The discriminated union types define exactly what each question needs - the parser should directly mirror this structure
   - **Current problems**:
     - ~40 handler functions with scattered logic
@@ -200,86 +200,85 @@
     - Parse top-down: Questionnaire → Blocks/NavItems → Pages → Sections → Questions
     - Each level identifies its child chunks and delegates to specialized parsers
     - Type determination happens during chunk identification
-  - **Implementation sketch**:
-    ```typescript
+  - **Implementation sketch**: ```typescript
     // Top level - identify blocks and nav items
     function parseQuestionnaire(lines) {
-      const chunks = identifyTopLevelChunks(lines) // blocks, navItems
-      return {
-        blocks: chunks.blocks.map(parseBlock),
-        navItems: chunks.navItems.map(parseNavItem)
-      }
+    const chunks = identifyTopLevelChunks(lines) // blocks, navItems
+    return {
+    blocks: chunks.blocks.map(parseBlock),
+    navItems: chunks.navItems.map(parseNavItem)
+    }
     }
 
     // Block level - identify pages within block
     function parseBlock(lines): Block {
-      const pageChunks = identifyPages(lines)
-      return {
-        name: findKeyword(lines, "BLOCK"),
-        showIf: findKeyword(lines, "SHOW_IF"),
-        pages: pageChunks.map(parsePage),
-        computedVariables: parseComputed(lines)
-      }
+    const pageChunks = identifyPages(lines)
+    return {
+    name: findKeyword(lines, "BLOCK"),
+    showIf: findKeyword(lines, "SHOW_IF"),
+    pages: pageChunks.map(parsePage),
+    computedVariables: parseComputed(lines)
+    }
     }
 
     // Page level - identify sections within page
     function parsePage(lines): Page {
-      const sectionChunks = identifySections(lines)
-      return {
-        title: extractTitle(lines),
-        tooltip: findKeyword(lines, "TOOLTIP"),
-        sections: sectionChunks.map(parseSection),
-        computedVariables: parseComputed(lines)
-      }
+    const sectionChunks = identifySections(lines)
+    return {
+    title: extractTitle(lines),
+    tooltip: findKeyword(lines, "TOOLTIP"),
+    sections: sectionChunks.map(parseSection),
+    computedVariables: parseComputed(lines)
+    }
     }
 
     // Section level - identify questions within section
     function parseSection(lines): Section {
-      const questionChunks = identifyQuestions(lines)
-      return {
-        content: extractContent(lines),
-        tooltip: findKeyword(lines, "TOOLTIP"),
-        questions: questionChunks.map(chunk => parseQuestionByType(chunk))
-      }
+    const questionChunks = identifyQuestions(lines)
+    return {
+    content: extractContent(lines),
+    tooltip: findKeyword(lines, "TOOLTIP"),
+    questions: questionChunks.map(chunk => parseQuestionByType(chunk))
+    }
     }
 
     // Question level - dispatch to type-specific parser
     function parseQuestionByType(chunk): Question {
-      const type = determineQuestionType(chunk.lines)
-      switch (type) {
-        case "breakdown": return parseBreakdown(chunk.lines)
-        case "matrix": return parseMatrix(chunk.lines)
-        case "multiple_choice": return parseMultipleChoice(chunk.lines)
-        // etc for each type
-      }
+    const type = determineQuestionType(chunk.lines)
+    switch (type) {
+    case "breakdown": return parseBreakdown(chunk.lines)
+    case "matrix": return parseMatrix(chunk.lines)
+    case "multiple_choice": return parseMultipleChoice(chunk.lines)
+    // etc for each type
+    }
     }
 
     // Type-specific parsers - mirror the type definitions!
     const parseBreakdown = (lines): BreakdownQuestion => ({
-      type: "breakdown",
-      ...parseQuestionBase(lines),
-      options: parseBreakdownOptions(lines),
-      totalLabel: findKeyword(lines, "TOTAL"),
-      prefix: findKeyword(lines, "PREFIX"),
-      suffix: findKeyword(lines, "SUFFIX")
+    type: "breakdown",
+    ...parseQuestionBase(lines),
+    options: parseBreakdownOptions(lines),
+    totalLabel: findKeyword(lines, "TOTAL"),
+    prefix: findKeyword(lines, "PREFIX"),
+    suffix: findKeyword(lines, "SUFFIX")
     })
 
     const parseMultipleChoice = (lines): MultipleChoiceQuestion => ({
-      type: "multiple_choice",
-      ...parseQuestionBase(lines),
-      options: parseOptions(lines)
+    type: "multiple_choice",
+    ...parseQuestionBase(lines),
+    options: parseOptions(lines)
     })
 
     // Shared utilities
     const parseQuestionBase = (lines) => ({
-      id: generateId(),
-      text: extractQuestionText(lines),
-      subtext: findKeyword(lines, "HINT"),
-      tooltip: findKeyword(lines, "TOOLTIP"),
-      variable: findKeyword(lines, "VARIABLE"),
-      showIf: findKeyword(lines, "SHOW_IF")
-    })
-    ```
+    id: generateId(),
+    text: extractQuestionText(lines),
+    subtext: findKeyword(lines, "HINT"),
+    tooltip: findKeyword(lines, "TOOLTIP"),
+    variable: findKeyword(lines, "VARIABLE"),
+    showIf: findKeyword(lines, "SHOW_IF")
+    })```
+
   - **Benefits**:
     - Parser mirrors type structure exactly - easy to understand
     - Type determination happens once during chunking - no need to scan lines twice
@@ -291,6 +290,7 @@
     - Need robust boundary detection (when does a question end?)
     - Shared keyword parsing (HINT, TOOLTIP, etc.) must be well-factored
   - **Decision**: Pursue this refactor - types are clean and well-defined, making this the right time
+
 - [ ] Add parser validation for malformed input
   - **Goal**: Provide clear error messages for common mistakes instead of silently ignoring them
   - **Validation rules**:

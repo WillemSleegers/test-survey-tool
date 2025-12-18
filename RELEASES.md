@@ -69,6 +69,17 @@ Released December 2025
 
 ### Documentation
 
+- **Improved documentation page design and readability**:
+  - Simplified Overview example to showcase markdown-like text format without BLOCKS or NAVIGATION
+  - Unified navbar component across all pages with proper width matching
+  - Improved typography: larger font sizes for primary content, muted colors reserved for secondary content only
+  - Consistent Usage section styling: all sections now use bullet points instead of mixed patterns
+  - Added visual styling for inline code elements (monospace, background, padding, rounded corners)
+  - Removed "Documentation" header from sidebar for cleaner design
+  - Fixed Overview item styling in sidebar to match other items
+  - Updated Questions section description to be more concrete
+  - Added comprehensive documentation system guidelines to CLAUDE.md
+
 - **Improved documentation UX**:
   - Reversed example order: code appears first, then rendered result (follows standard technical documentation pattern)
   - Fixed auto-scroll bug: documentation examples no longer cause page to scroll to top when navigating between survey pages
