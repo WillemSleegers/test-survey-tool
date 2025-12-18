@@ -102,7 +102,9 @@ export function RespondentNavigator({
   const isNavItemCurrent = (navItem: NavItem): boolean => {
     const currentPage = visiblePages[currentVisiblePageIndex]
     if (!currentPage) return false
-    return navItem.pages.some((page) => page === currentPage)
+
+    // Compare by unique page ID
+    return navItem.pages.some((page) => page.id === currentPage.id)
   }
 
   // Helper to check if a nav item can be clicked (visited or current)

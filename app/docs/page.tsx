@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 
 import { AppSidebar } from "@/components/app-sidebar"
-import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
+import { SAMPLE_SURVEY } from "@/lib/constants"
 import { parseQuestionnaire } from "@/lib/parser"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 
@@ -136,7 +136,7 @@ function DocumentationContent({
             <p className="text-muted-foreground">
               Here's a simple survey to get you started:
             </p>
-            {renderExample(BASIC_SAMPLE_TEXT)}
+            {renderExample(SAMPLE_SURVEY)}
           </div>
 
           <p className="text-muted-foreground">
@@ -279,7 +279,7 @@ TEXT`)}
                 Can be used with SHOW_IF to hide/show multiple pages at once
               </li>
               <li>
-                <strong>Note:</strong> BLOCKs are for logic only - use NAV for
+                <strong>Note:</strong> BLOCKs are for logic only - use NAVIGATION for
                 respondent navigation
               </li>
             </ul>
@@ -323,20 +323,21 @@ Q: How satisfied are you?
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`NAV: Introduction
-# Welcome
+            {renderCodeBlock(`# Welcome
+NAVIGATION: 1
 
-NAV: Demographics
-LEVEL: 2
 # Basic Info
+NAVIGATION: 2
 
-NAV: Contact
-LEVEL: 2
-# Contact Details`)}
+# Contact Details
+NAVIGATION: 2`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a navigation item in the survey sidebar</li>
-              <li>All pages until the next NAV belong to this item</li>
-              <li>Defaults to level 1 (top-level) navigation</li>
+              <li>Adds pages to the navigation sidebar</li>
+              <li>Use <code>NAVIGATION: 1</code> for top-level items</li>
+              <li>Use <code>NAVIGATION: 2</code> for nested items under the previous level 1</li>
+              <li>
+                The page title is used as the navigation label
+              </li>
               <li>
                 Appears as clickable item in navigation for respondents to jump
                 to sections
@@ -345,18 +346,8 @@ LEVEL: 2
                 Shows completion status (visited/current/upcoming) automatically
               </li>
               <li>
-                <strong>LEVEL:</strong> Must come immediately after NAV
-                declaration
-                <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>
-                    Level 1 = top-level navigation (default, can be omitted)
-                  </li>
-                  <li>Level 2 = nested under the previous level 1 item</li>
-                  <li>
-                    Level 1 items with level 2 children become collapsible
-                    sections
-                  </li>
-                </ul>
+                Level 1 items with level 2 children become collapsible
+                sections
               </li>
             </ul>
           </div>

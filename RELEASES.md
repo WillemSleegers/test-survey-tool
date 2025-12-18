@@ -13,6 +13,32 @@ Released December 2025
   - Eliminated indentation-based parsing - dash markers now identify metadata
   - Improved maintainability and extensibility
 
+### Breaking Changes
+
+- **Navigation syntax change**: Replaced `NAV:` + `LEVEL:` with single `NAVIGATION:` keyword
+  - Old syntax: `NAV: Section Name` followed by `LEVEL: 1`
+  - New syntax: `NAVIGATION: 1` placed after page title (page title becomes navigation label)
+  - Navigation is now page-based metadata instead of separate structure
+  - Pages have unique IDs for reliable navigation highlighting
+  - Single source of truth - no page duplication between BLOCKS and navigation
+
+### New Features
+
+- **Interleaved text and questions**: Text can now appear between questions in natural flow
+  - Questions end at blank lines, allowing content to be interspersed with questions
+  - Section structure changed to ordered `items` array (content and question items)
+  - Example:
+
+    ```text
+    Q: First question?
+    TEXT
+
+    Here's some explanatory text between questions.
+
+    Q: Second question?
+    NUMBER
+    ```
+
 ### Improvements
 
 - **Parser maintainability**: Extracted helper functions to reduce duplication

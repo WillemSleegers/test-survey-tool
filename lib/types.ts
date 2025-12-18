@@ -14,11 +14,13 @@ export type NavItem = {
 }
 
 export type Page = {
+  id: number
   title: string
   tooltip?: string
   sections: Section[]
   showIf?: string
   computedVariables: ComputedVariable[]
+  navLevel?: number  // Optional navigation level (1 = top-level, 2 = nested, etc.)
 }
 
 export type SectionContentItem = {

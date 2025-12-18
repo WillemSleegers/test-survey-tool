@@ -170,7 +170,7 @@ export function QuestionnaireViewer({
     <>
       <div className="flex justify-center px-6 py-6">
         <div className="flex gap-16 items-start w-full justify-center">
-          {/* Respondent Navigator - NAV-based navigation for survey takers */}
+          {/* Respondent Navigator - NAVIGATION-based navigation for survey takers */}
           {isNavVisible && navPosition === 'left' && navItems.length > 0 && (
             <RespondentNavigator
               navItems={navItems}

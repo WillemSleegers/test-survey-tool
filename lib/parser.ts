@@ -195,91 +195,43 @@ const createOption = (label: string, overrides?: Partial<Option>): Option => ({
 // CHUNK IDENTIFICATION
 // ============================================================================
 
-/**
- * Identify top-level chunks: BLOCK and NAV sections
- */
-const identifyTopLevelChunks = (lines: string[]): {
-  blockChunks: string[][]
-  navChunks: string[][]
-} => {
-  const blockChunks: string[][] = []
-  const navChunks: string[][]  = []
 
-  let currentBlockStart: number | null = 0  // Start at beginning to capture content before first BLOCK/NAV
-  let currentNavStart: number | null = null
-  let inBlock = false
-  let inNav = false
+/**
+ * Identify block chunks from lines
+ */
+const identifyBlocks = (lines: string[]): string[][] => {
+  const blockChunks: string[][] = []
+  let currentBlockStart: number | null = null
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
 
     if (startsWith(trimmed, "BLOCK:")) {
-      // Save content before first BLOCK as default block
-      if (!inBlock && !inNav && currentBlockStart !== null && currentBlockStart < i) {
-        const precedingContent = lines.slice(currentBlockStart, i)
-        // Only add if there's actual content (not just blank lines)
-        if (precedingContent.some(l => l.trim().length > 0)) {
-          blockChunks.push(precedingContent)
-        }
-      }
-
-      // Save previous chunk
-      if (inNav && currentNavStart !== null) {
-        navChunks.push(lines.slice(currentNavStart, i))
-      }
-      if (inBlock && currentBlockStart !== null) {
+      // Save previous block if any
+      if (currentBlockStart !== null) {
         blockChunks.push(lines.slice(currentBlockStart, i))
       }
 
       // Start new block
       currentBlockStart = i
-      inBlock = true
-      inNav = false
-      currentNavStart = null
-    } else if (startsWith(trimmed, "NAV:")) {
-      // Save content before first NAV as default block
-      if (!inBlock && !inNav && currentBlockStart !== null && currentBlockStart < i) {
-        const precedingContent = lines.slice(currentBlockStart, i)
-        // Only add if there's actual content (not just blank lines)
-        if (precedingContent.some(l => l.trim().length > 0)) {
-          blockChunks.push(precedingContent)
-        }
-      }
-
-      // Save previous chunk
-      if (inBlock && currentBlockStart !== null) {
-        blockChunks.push(lines.slice(currentBlockStart, i))
-      }
-      if (inNav && currentNavStart !== null) {
-        navChunks.push(lines.slice(currentNavStart, i))
-      }
-
-      // Start new nav
-      currentNavStart = i
-      inNav = true
-      inBlock = false
-      currentBlockStart = null
     }
   }
 
-  // Save final chunk
-  if (inBlock && currentBlockStart !== null) {
+  // Save final block
+  if (currentBlockStart !== null) {
     blockChunks.push(lines.slice(currentBlockStart))
   }
-  if (inNav && currentNavStart !== null) {
-    navChunks.push(lines.slice(currentNavStart))
-  }
 
-  // If we never entered a BLOCK or NAV but have content from start, save it
-  if (!inBlock && !inNav && currentBlockStart !== null) {
-    const remainingContent = lines.slice(currentBlockStart)
-    if (remainingContent.some(l => l.trim().length > 0)) {
-      blockChunks.push(remainingContent)
+  // If no BLOCK: markers found, treat all content as default block
+  if (blockChunks.length === 0 && lines.length > 0) {
+    // Only add if there's actual content
+    if (lines.some(l => l.trim().length > 0)) {
+      blockChunks.push(lines)
     }
   }
 
-  return { blockChunks, navChunks }
+  return blockChunks
 }
 
 /**
@@ -968,11 +920,8 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
   // Build a map of line index -> question chunk
   const lineToQuestion = new Map<number, QuestionChunk>()
   for (const qChunk of questionChunks) {
-    // Find the first line of this question chunk in the original lines
-    const firstLine = qChunk.lines[0]
-    const lineIndex = lines.indexOf(firstLine)
-    if (lineIndex !== -1) {
-      lineToQuestion.set(lineIndex, qChunk)
+    if (qChunk.startIndex !== undefined) {
+      lineToQuestion.set(qChunk.startIndex, qChunk)
     }
   }
 
@@ -1034,7 +983,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
     }
 
     // Skip section-level keywords
-    if (trimmed && matches(trimmed, /^(TOOLTIP:|HINT:|VARIABLE:|SHOW_IF:)/)) {
+    if (trimmed && matches(trimmed, /^(TOOLTIP:|HINT:|VARIABLE:|SHOW_IF:|NAVIGATION:|COMPUTE:)/)) {
       continue
     }
 
@@ -1065,7 +1014,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
 /**
  * Parse a page chunk
  */
-const parsePage = (lines: string[], questionCounter: { count: number }): Page => {
+const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCounter: { count: number }): Page => {
   const sectionChunks = identifySections(lines)
 
   // Extract page title
@@ -1076,18 +1025,27 @@ const parsePage = (lines: string[], questionCounter: { count: number }): Page =>
     ? titleLine.trim().replace(/^#\s*/, '')
     : ''
 
+  // Generate unique page ID
+  const pageId = pageIdCounter.count++
+
+  // Extract nav level if present
+  const navLevelValue = findKeyword(lines, "NAVIGATION:")
+  const navLevel = navLevelValue ? parseInt(navLevelValue, 10) : undefined
+
   return {
+    id: pageId,
     title,
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
     sections: sectionChunks.map(sChunk => parseSection(sChunk, questionCounter)),
     computedVariables: parseComputedVariables(lines),
+    navLevel,
   }
 }
 
 /**
  * Parse a block chunk
  */
-const parseBlock = (lines: string[]): Block => {
+const parseBlock = (lines: string[], pageIdCounter: { count: number }): Block => {
   const pageChunks = identifyPages(lines)
   const questionCounter = { count: 1 }
 
@@ -1102,36 +1060,11 @@ const parseBlock = (lines: string[]): Block => {
   return {
     name,
     showIf: findKeyword(lines, "SHOW_IF:"),
-    pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter)),
+    pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter, pageIdCounter)),
     computedVariables: parseComputedVariables(lines),
   }
 }
 
-/**
- * Parse a nav item chunk
- */
-const parseNavItem = (lines: string[]): NavItem => {
-  const pageChunks = identifyPages(lines)
-  const questionCounter = { count: 1 }
-
-  // Extract nav item name
-  const navLine = lines.find((line) =>
-    startsWith(line, "NAV:")
-  )
-  const name = navLine
-    ? extractAfterKeyword(navLine, "NAV:")
-    : ''
-
-  // Extract level (defaults to 1)
-  const levelValue = findKeyword(lines, "LEVEL:")
-  const level = levelValue ? parseInt(levelValue, 10) : 1
-
-  return {
-    name,
-    level,
-    pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter)),
-  }
-}
 
 // ============================================================================
 // MAIN EXPORT
@@ -1142,12 +1075,17 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
     const rawLines = text.split("\n")
     const lines: string[] = rawLines
 
-    // Identify top-level chunks
-    const { blockChunks, navChunks } = identifyTopLevelChunks(lines)
+    // Identify blocks
+    const blockChunks = identifyBlocks(lines)
 
-    // Parse chunks
-    const blocks = blockChunks.map(parseBlock)
-    const navItems = navChunks.map(parseNavItem)
+    // Create page ID counter for unique page identification
+    const pageIdCounter = { count: 1 }
+
+    // Parse blocks
+    const blocks = blockChunks.map(chunk => parseBlock(chunk, pageIdCounter))
+
+    // Derive navigation items from pages with navLevel metadata
+    const navItems = deriveNavItemsFromPages(blocks)
 
     // Run validation checks
     validateVariableNames(blocks)
@@ -1160,4 +1098,29 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
       "Failed to parse questionnaire format: " + (err as Error).message
     )
   }
+}
+
+/**
+ * Derive navigation items from pages that have navLevel metadata
+ * Pages with navLevel become nav items, using their title as the nav label
+ */
+const deriveNavItemsFromPages = (blocks: Block[]): NavItem[] => {
+  const navItems: NavItem[] = []
+
+  // Collect all pages from all blocks
+  const allPages = blocks.flatMap(block => block.pages)
+
+  // Group pages by their navLevel
+  for (const page of allPages) {
+    if (page.navLevel !== undefined) {
+      // Create a nav item for this page
+      navItems.push({
+        name: page.title,
+        level: page.navLevel,
+        pages: [page],
+      })
+    }
+  }
+
+  return navItems
 }
