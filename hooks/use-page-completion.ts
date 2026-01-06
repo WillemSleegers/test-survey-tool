@@ -1,4 +1,4 @@
-import { Section, Variables } from "@/lib/types"
+import { Section, Variables, isQuestion } from "@/lib/types"
 
 /**
  * Hook for checking page completion status
@@ -20,9 +20,7 @@ export function usePageCompletion(
   if (!sections) return false
 
   const allQuestions = sections.flatMap(section =>
-    section.items
-      .filter(item => item.type === 'question')
-      .map(item => item.question)
+    section.items.filter(isQuestion)
   )
 
   return allQuestions.every(question => {

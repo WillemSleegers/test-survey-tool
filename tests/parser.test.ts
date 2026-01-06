@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { parseQuestionnaire } from '@/lib/parser'
+import type { Question } from '@/lib/types'
+import { isQuestion, isText } from '@/lib/types'
+
+// Helper function to get questions from parsed result
+function getQuestions(text: string): Question[] {
+  const result = parseQuestionnaire(text)
+  return result.blocks[0].pages[0].sections[0].items.filter(isQuestion)
+}
 
 describe('Parser - Question Type Detection', () => {
   it('should parse multiple choice question', () => {
@@ -9,8 +17,8 @@ describe('Parser - Question Type Detection', () => {
 - Blue
 - Green`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -26,8 +34,8 @@ describe('Parser - Question Type Detection', () => {
 - Green
 CHECKBOX`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('checkbox')
     if (question.type === 'checkbox') {
@@ -39,8 +47,8 @@ CHECKBOX`
     const text = `Q: What is your name?
 TEXT`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('text')
   })
@@ -49,8 +57,8 @@ TEXT`
     const text = `Q: Tell us about yourself
 ESSAY`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('essay')
   })
@@ -59,8 +67,8 @@ ESSAY`
     const text = `Q: How old are you?
 NUMBER`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('number')
   })
@@ -77,8 +85,8 @@ NUMBER`
 - Fair
 - Poor`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -101,8 +109,8 @@ NUMBER`
 - Disagree
 - Strongly Disagree`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -123,8 +131,8 @@ BREAKDOWN
 PREFIX: €
 TOTAL: Total`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -142,8 +150,8 @@ TOTAL: Total`
 - Option A
 - Option B`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -165,8 +173,8 @@ TOTAL: Total`
 - Satisfied
 - Neutral`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -187,8 +195,8 @@ TEXT
 Q: Second question
 NUMBER`
 
-    const result = parseQuestionnaire(text)
-    const questions = result.blocks[0].pages[0].sections[0].questions
+    const questions = getQuestions(text)
+    // questions already available
 
     expect(questions[0].id).toBe('Q1')
     expect(questions[1].id).toBe('Q2')
@@ -199,8 +207,8 @@ NUMBER`
 HINT: We will never share your email
 TEXT`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.subtext).toBe('We will never share your email')
   })
@@ -210,8 +218,8 @@ TEXT`
 VARIABLE: user_name
 TEXT`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.variable).toBe('user_name')
   })
@@ -222,8 +230,8 @@ describe('Parser - RANGE Syntax', () => {
     const text = `Q: Rate your satisfaction
 RANGE: 1-10`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -240,8 +248,8 @@ RANGE: 1-10`
 RANGE: 1-5
 CHECKBOX`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('checkbox')
     if (question.type === 'checkbox') {
@@ -258,8 +266,8 @@ CHECKBOX`
 - Q: Value
 RANGE: 1-7`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -274,8 +282,8 @@ RANGE: 1-7`
     const text = `Q: Rate the temperature
 RANGE: -5-5`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -290,8 +298,8 @@ RANGE: -5-5`
     const text = `Q: How likely are you to recommend us?
 RANGE: 0-10`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -306,8 +314,8 @@ RANGE: 0-10`
 RANGE: 1-10
 VARIABLE: satisfaction_score`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -322,8 +330,8 @@ VARIABLE: satisfaction_score`
 RANGE: 1-3
 - High`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('multiple_choice')
     if (question.type === 'multiple_choice') {
@@ -368,8 +376,8 @@ BREAKDOWN
 
 TOTAL: Total Revenue`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -391,8 +399,8 @@ BREAKDOWN
 
 TOTAL: Net`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -411,8 +419,8 @@ BREAKDOWN
 
 TOTAL: Total`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -432,8 +440,8 @@ BREAKDOWN
 
 TOTAL: Total Costs`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -452,8 +460,8 @@ BREAKDOWN
 
 TOTAL: Net Income`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -474,8 +482,8 @@ BREAKDOWN
 
 TOTAL: Net`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -499,8 +507,8 @@ BREAKDOWN
 
 TOTAL: Total Revenue`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -521,8 +529,8 @@ BREAKDOWN
 - Percentage
   - SUFFIX: %`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -543,8 +551,8 @@ SUFFIX: USD
 
 TOTAL: Total`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('breakdown')
     if (question.type === 'breakdown') {
@@ -561,8 +569,8 @@ describe('Parser - Question Type Switching', () => {
 - Option 2
 CHECKBOX`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('checkbox')
     if (question.type === 'checkbox') {
@@ -575,8 +583,8 @@ CHECKBOX`
 - This will be ignored
 TEXT`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('text')
   })
@@ -589,8 +597,8 @@ TEXT`
 - Option B
 TEXT`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
@@ -607,8 +615,8 @@ NUMBER
 PREFIX: $
 SUFFIX: per month`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('number')
     if (question.type === 'number') {
@@ -622,10 +630,156 @@ SUFFIX: per month`
 TEXT
 PREFIX: $`
 
-    const result = parseQuestionnaire(text)
-    const question = result.blocks[0].pages[0].sections[0].questions[0]
+    const questions = getQuestions(text)
+    const question = questions[0]
 
     expect(question.type).toBe('text')
     expect('prefix' in question).toBe(false)
+  })
+})
+
+describe('Parser - Content vs TEXT Question Discrimination', () => {
+  it('should distinguish between text content and TEXT questions', () => {
+    const text = `This is plain text content.
+
+Q: What is your name?
+TEXT
+
+More plain text after the question.`
+
+    const result = parseQuestionnaire(text)
+    const section = result.blocks[0].pages[0].sections[0]
+
+    expect(section.items).toHaveLength(3)
+    expect(isText(section.items[0])).toBe(true)
+    expect(section.items[1].type).toBe('text')
+    expect(isText(section.items[2])).toBe(true)
+
+    if (isText(section.items[0])) {
+      expect(section.items[0].value).toBe('This is plain text content.')
+    }
+    if (isQuestion(section.items[1]) && section.items[1].type === 'text') {
+      expect(section.items[1].text).toBe('What is your name?')
+    }
+    if (isText(section.items[2])) {
+      expect(section.items[2].value).toBe('More plain text after the question.')
+    }
+  })
+
+  it('should handle interleaved content and questions', () => {
+    const text = `# Test Page
+
+Introduction text.
+
+Q: First question?
+TEXT
+
+Text between questions.
+
+Q: Second question?
+NUMBER
+
+Final text.`
+
+    const result = parseQuestionnaire(text)
+    const section = result.blocks[0].pages[0].sections[0]
+
+    expect(section.items).toHaveLength(5)
+    expect(isText(section.items[0])).toBe(true)
+    expect(section.items[1].type).toBe('text')
+    expect(isText(section.items[2])).toBe(true)
+    expect(section.items[3].type).toBe('number')
+    expect(isText(section.items[4])).toBe(true)
+  })
+})
+
+describe('Parser - Blank Line Handling', () => {
+  it('should handle blank lines between question and options', () => {
+    const text = `Q: Do you like surveys?
+
+- Yes
+- No`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('multiple_choice')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(2)
+      expect(question.options[0].label).toBe('Yes')
+      expect(question.options[1].label).toBe('No')
+    }
+  })
+
+  it('should handle multiple blank lines between question and options', () => {
+    const text = `Q: Select your preference
+
+
+- Option A
+- Option B
+- Option C`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('multiple_choice')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(3)
+    }
+  })
+
+  it('should end question when blank line is followed by non-option content', () => {
+    const text = `Q: First question?
+TEXT
+
+This is separate content, not part of the question.
+
+Q: Second question?
+NUMBER`
+
+    const result = parseQuestionnaire(text)
+    const section = result.blocks[0].pages[0].sections[0]
+
+    expect(section.items).toHaveLength(3)
+    expect(section.items[0].type).toBe('text')
+    expect(isText(section.items[1])).toBe(true)
+    expect(section.items[2].type).toBe('number')
+  })
+
+  it('should handle blank lines in checkbox questions', () => {
+    const text = `Q: Select all that apply
+
+- Option 1
+- Option 2
+- Option 3
+CHECKBOX`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('checkbox')
+    if (question.type === 'checkbox') {
+      expect(question.options).toHaveLength(3)
+    }
+  })
+
+  it('should handle blank lines before matrix options', () => {
+    const text = `Q: Rate these items
+
+- Q: Item 1
+- Q: Item 2
+
+- Excellent
+- Good
+- Fair`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('matrix')
+    if (question.type === 'matrix') {
+      expect(question.subquestions).toHaveLength(2)
+      expect(question.options).toHaveLength(3)
+    }
   })
 })

@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
-import { Section, Responses, Variables, ComputedValues } from "@/lib/types"
+import { Section, Responses, Variables, ComputedValues, isText, isQuestion } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 
@@ -32,7 +32,7 @@ export function SectionRenderer({
     : null
 
   const renderContentItem = (content: string) => (
-    <div className="whitespace-pre-wrap space-y-2">
+    <div className="whitespace-pre-wrap">
       <Markdown
         components={{
           code: (props) => {
@@ -74,25 +74,24 @@ export function SectionRenderer({
   const questionTabIndices = new Map<string, number>()
 
   for (const item of section.items) {
-    if (item.type === 'question') {
-      const question = item.question
-      questionTabIndices.set(question.id, currentTabIndex)
+    if (isQuestion(item)) {
+      questionTabIndices.set(item.id, currentTabIndex)
 
       // Calculate input count for this question
       let inputCount
-      if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
+      if (item.type === 'essay' || item.type === 'number' || item.type === 'text') {
         inputCount = 1
-      } else if (question.type === 'multiple_choice') {
+      } else if (item.type === 'multiple_choice') {
         // For radio buttons, use 1 slot if answered, all options if not answered
-        const responseValue = responses[question.id]
+        const responseValue = responses[item.id]
         const isAnswered = responseValue !== undefined && responseValue !== ""
-        inputCount = isAnswered ? 1 : question.options.length
-      } else if (question.type === 'checkbox') {
+        inputCount = isAnswered ? 1 : item.options.length
+      } else if (item.type === 'checkbox') {
         // For checkboxes, always use all options
-        inputCount = question.options.length
-      } else if (question.type === 'matrix' || question.type === 'breakdown') {
+        inputCount = item.options.length
+      } else if (item.type === 'matrix' || item.type === 'breakdown') {
         // For matrix and breakdown, use options length
-        inputCount = question.options.length
+        inputCount = item.options.length
       } else {
         // Default fallback
         inputCount = 1
@@ -127,24 +126,23 @@ export function SectionRenderer({
         </div>
       )}
 
-      {/* Interleaved Section Items (content and questions) */}
+      {/* Interleaved Section Items (text and questions) */}
       {section.items.map((item, index) => {
-        if (item.type === 'content') {
-          const processedContent = replacePlaceholders(item.content, variables, computedVariables).trim()
-          return processedContent ? (
+        if (isText(item)) {
+          const processedText = replacePlaceholders(item.value, variables, computedVariables).trim()
+          return processedText ? (
             <div key={`content-${index}`}>
-              {renderContentItem(processedContent)}
+              {renderContentItem(processedText)}
             </div>
           ) : null
         } else {
           // Question item
-          const question = item.question
-          const questionStartTabIndex = questionTabIndices.get(question.id) || startTabIndex
+          const questionStartTabIndex = questionTabIndices.get(item.id) || startTabIndex
 
           return (
             <QuestionRenderer
-              key={question.id}
-              question={question}
+              key={item.id}
+              question={item}
               responses={responses}
               variables={variables}
               onResponse={onResponse}

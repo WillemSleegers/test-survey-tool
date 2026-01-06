@@ -12,8 +12,7 @@ import {
   NavItem,
   Section,
   SectionItem,
-  SectionContentItem,
-  SectionQuestionItem,
+  Text,
   Option,
   BreakdownOption,
   Subquestion,
@@ -292,45 +291,49 @@ const identifyPages = (lines: string[]): string[][] => {
  */
 const identifySections = (lines: string[]): string[][] => {
   const sectionChunks: string[][] = []
-  let currentSectionStart: number | null = null
+  let currentSectionStart: number = 0 // Start from beginning for default section
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Skip page markers
+    // Skip page markers (they're not part of any section content)
     if (matches(trimmed, /^#\s/) || trimmed === "#") {
       continue
     }
 
     // Check for section marker: ##
     if (matches(trimmed, /^##\s/) || trimmed === "##") {
-      // Save previous section
-      if (currentSectionStart !== null) {
-        sectionChunks.push(lines.slice(currentSectionStart, i))
+      // Save content before this section marker (could be default section or previous explicit section)
+      const contentBeforeMarker = lines.slice(currentSectionStart, i).filter((line) => {
+        const trimmed = line.trim()
+        // Exclude page title markers and blank lines
+        return trimmed && !(matches(trimmed, /^#\s/) || trimmed === "#")
+      })
+
+      if (contentBeforeMarker.length > 0) {
+        sectionChunks.push(contentBeforeMarker)
       }
 
-      // Start new section
+      // Start new explicit section (includes the ## marker line)
       currentSectionStart = i
     }
   }
 
-  // Save final section
-  if (currentSectionStart !== null) {
-    sectionChunks.push(lines.slice(currentSectionStart))
-  }
-
-  // If no sections found, treat entire chunk as default section (excluding page title)
-  if (sectionChunks.length === 0 && lines.length > 0) {
-    const filteredLines = lines.filter((line) => {
-      const trimmed = line.trim()
-      // Exclude page title markers
+  // Save final section (either the default section if no ## found, or the last explicit section)
+  const finalContent = lines.slice(currentSectionStart).filter((line) => {
+    const trimmed = line.trim()
+    // Exclude page title markers (but keep ## for explicit sections)
+    if (currentSectionStart === 0) {
+      // Default section: exclude page markers
       return !(matches(trimmed, /^#\s/) || trimmed === "#")
-    })
-
-    if (filteredLines.length > 0) {
-      sectionChunks.push(filteredLines)
     }
+    // Explicit section: keep everything including ##
+    return true
+  })
+
+  if (finalContent.length > 0) {
+    sectionChunks.push(finalContent)
   }
 
   return sectionChunks
@@ -383,15 +386,26 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
       // Start new question
       currentQuestionStart = i
     } else if (currentQuestionStart !== null && !trimmed) {
-      // Blank line ends the current question
-      const questionLines = lines.slice(currentQuestionStart, i)
-      const type = determineQuestionType(questionLines)
-      questionChunks.push({
-        lines: questionLines,
-        type,
-        startIndex: currentQuestionStart,
-      })
-      currentQuestionStart = null
+      // Blank line - check if next non-blank line is an option
+      let nextNonBlankIndex = i + 1
+      while (nextNonBlankIndex < lines.length && !lines[nextNonBlankIndex].trim()) {
+        nextNonBlankIndex++
+      }
+
+      const nextLine = nextNonBlankIndex < lines.length ? lines[nextNonBlankIndex].trim() : ''
+      const isNextLineOption = matches(nextLine, /^-\s+/)
+
+      // Only end question if next line is NOT an option
+      if (!isNextLineOption) {
+        const questionLines = lines.slice(currentQuestionStart, i)
+        const type = determineQuestionType(questionLines)
+        questionChunks.push({
+          lines: questionLines,
+          type,
+          startIndex: currentQuestionStart,
+        })
+        currentQuestionStart = null
+      }
     }
   }
 
@@ -928,8 +942,11 @@ const parseQuestionByType = (chunk: QuestionChunk, questionCounter: { count: num
  * Parse a section chunk
  * Builds an interleaved array of content and questions
  */
-const parseSection = (lines: string[], questionCounter: { count: number }): Section => {
+const parseSection = (lines: string[], questionCounter: { count: number }, sectionIdCounter: { count: number }): Section => {
   const questionChunks = identifyQuestions(lines)
+
+  // Generate unique section ID
+  const sectionId = sectionIdCounter.count++
 
   // Build a map of line index -> question chunk
   const lineToQuestion = new Map<number, QuestionChunk>()
@@ -969,9 +986,9 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
     if (lineToQuestion.has(i)) {
       // Flush any accumulated content
       if (contentBuffer.length > 0) {
-        const content = contentBuffer.join('\n').trim()
-        if (content) {
-          items.push({ type: "content", content })
+        const value = contentBuffer.join('\n').trim()
+        if (value) {
+          items.push({ value })
         }
         contentBuffer = []
       }
@@ -979,7 +996,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
       // Add the question
       const qChunk = lineToQuestion.get(i)!
       const question = parseQuestionByType(qChunk, questionCounter)
-      items.push({ type: "question", question })
+      items.push(question)
 
       // Skip ahead past this question's lines
       i += qChunk.lines.length - 1
@@ -1012,16 +1029,18 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
 
   // Flush any remaining content
   if (contentBuffer.length > 0) {
-    const content = contentBuffer.join('\n').trim()
-    if (content) {
-      items.push({ type: "content", content })
+    const value = contentBuffer.join('\n').trim()
+    if (value) {
+      items.push({ value })
     }
   }
 
   return {
+    id: sectionId,
     title,
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
     items,
+    showIf: findKeyword(lines, "SHOW_IF:"),
   }
 }
 
@@ -1030,6 +1049,9 @@ const parseSection = (lines: string[], questionCounter: { count: number }): Sect
  */
 const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCounter: { count: number }): Page => {
   const sectionChunks = identifySections(lines)
+
+  // Create section ID counter for this page
+  const sectionIdCounter = { count: 1 }
 
   // Extract page title
   const titleLine = lines.find((line) =>
@@ -1050,7 +1072,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
     id: pageId,
     title,
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
-    sections: sectionChunks.map(sChunk => parseSection(sChunk, questionCounter)),
+    sections: sectionChunks.map(sChunk => parseSection(sChunk, questionCounter, sectionIdCounter)),
     computedVariables: parseComputedVariables(lines),
     navLevel,
   }
@@ -1059,9 +1081,12 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 /**
  * Parse a block chunk
  */
-const parseBlock = (lines: string[], pageIdCounter: { count: number }): Block => {
+const parseBlock = (lines: string[], blockIdCounter: { count: number }, pageIdCounter: { count: number }): Block => {
   const pageChunks = identifyPages(lines)
   const questionCounter = { count: 1 }
+
+  // Generate unique block ID
+  const blockId = blockIdCounter.count++
 
   // Extract block name
   const blockLine = lines.find((line) =>
@@ -1072,6 +1097,7 @@ const parseBlock = (lines: string[], pageIdCounter: { count: number }): Block =>
     : ''
 
   return {
+    id: blockId,
     name,
     showIf: findKeyword(lines, "SHOW_IF:"),
     pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter, pageIdCounter)),
@@ -1092,11 +1118,12 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
     // Identify blocks
     const blockChunks = identifyBlocks(lines)
 
-    // Create page ID counter for unique page identification
+    // Create ID counters for unique identification
+    const blockIdCounter = { count: 1 }
     const pageIdCounter = { count: 1 }
 
     // Parse blocks
-    const blocks = blockChunks.map(chunk => parseBlock(chunk, pageIdCounter))
+    const blocks = blockChunks.map(chunk => parseBlock(chunk, blockIdCounter, pageIdCounter))
 
     // Derive navigation items from pages with navLevel metadata
     const navItems = deriveNavItemsFromPages(blocks)

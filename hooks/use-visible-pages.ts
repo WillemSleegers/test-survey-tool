@@ -1,7 +1,7 @@
 import React from "react"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { evaluateComputedValues } from "@/lib/conditions/computed-variables"
-import { Page, Question, Variables, Section, ComputedValues } from "@/lib/types"
+import { Page, Question, Variables, Section, ComputedValues, isText } from "@/lib/types"
 
 /**
  * Hook for managing page visibility and content filtering
@@ -41,15 +41,17 @@ export function useVisiblePages(
 
     // Filter section items based on individual SHOW_IF conditions
     return page.sections.map((section) => ({
+      id: section.id,
       title: section.title,
       tooltip: section.tooltip,
+      showIf: section.showIf,
       items: section.items.filter((item) => {
-        if (item.type === 'content') {
-          // Content is always visible
+        if (isText(item)) {
+          // Text is always visible
           return true
         } else {
           // Filter questions based on SHOW_IF
-          return evaluateCondition(item.question.showIf || "", variables, pageComputedVars)
+          return evaluateCondition(item.showIf || "", variables, pageComputedVars)
         }
       }),
     }))

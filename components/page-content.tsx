@@ -4,7 +4,7 @@ import React from "react"
 
 import { SectionRenderer } from "@/components/section-renderer"
 
-import { Section, Responses, Variables, ComputedValues } from "@/lib/types"
+import { Section, Responses, Variables, ComputedValues, isQuestion } from "@/lib/types"
 
 interface PageContentProps {
   content: Section[]
@@ -32,22 +32,21 @@ export function PageContent({
 
         // Update currentTabIndex for this section's items
         section.items.forEach(item => {
-          if (item.type === 'question') {
-            const question = item.question
+          if (isQuestion(item)) {
             let inputCount
-            if (question.type === 'text' || question.type === 'essay' || question.type === 'number') {
+            if (item.type === 'essay' || item.type === 'number') {
               inputCount = 1
-            } else if (question.type === 'multiple_choice') {
+            } else if (item.type === 'multiple_choice') {
               // For radio buttons, use 1 slot if answered, all options if not answered
-              const responseValue = responses[question.id]
+              const responseValue = responses[item.id]
               const isAnswered = responseValue !== undefined && responseValue !== ""
-              inputCount = isAnswered ? 1 : question.options.length
-            } else if (question.type === 'checkbox') {
+              inputCount = isAnswered ? 1 : item.options.length
+            } else if (item.type === 'checkbox') {
               // For checkboxes, always use all options
-              inputCount = question.options.length
-            } else if (question.type === 'matrix' || question.type === 'breakdown') {
+              inputCount = item.options.length
+            } else if (item.type === 'matrix' || item.type === 'breakdown') {
               // For matrix and breakdown, use options length
-              inputCount = question.options.length
+              inputCount = item.options.length
             } else {
               // Default fallback
               inputCount = 1

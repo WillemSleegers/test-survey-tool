@@ -34,11 +34,56 @@ Test Survey Tool (TST) is a Next.js React application that converts structured t
 
 ### Core Data Types (`lib/types.ts`)
 
-- `Block`: Top-level container with pages and computed variables
-- `Page`: Contains questions, sections, and content
+The questionnaire data follows a four-level hierarchy:
+
+```
+Block (id, name, showIf?)
+└── Page[] (id, title, showIf?, computedVariables)
+    └── Section[] (id, title?, showIf?)
+        └── SectionItem[] (Text | Question)
+```
+
+**Detailed structure:**
+
+- `Block`: Top-level container
+
+  - `id` (number): Unique block identifier
+  - `name` (string): Block name/label
+  - `pages` (Page[]): Array of pages in this block
+  - `computedVariables` (ComputedVariable[]): Block-level calculations
+  - `showIf` (string, optional): Conditional visibility expression
+
+- `Page`: Second-level container (defined with `#` or `# Title`)
+
+  - `id` (number): Unique page identifier (for navigation and comparison)
+  - `title` (string): Page title
+  - `sections` (Section[]): Array of sections on this page
+  - `computedVariables` (ComputedVariable[]): Page-level calculations
+  - `tooltip`, `showIf`, `navLevel` (optional): Additional metadata
+
+- `Section`: Third-level container (defined with `##` or `## Title`)
+
+  - `id` (number): Unique section identifier (within the page)
+  - `items` (SectionItem[]): Array of content items (Text or Question). Use type guard functions `isText(item)` or `isQuestion(item)` to discriminate
+  - `title` (string, optional): Section title (undefined for implicit default section)
+  - `tooltip`, `showIf` (optional): Additional metadata
+  - Sections can be explicit (has `##` marker) or implicit (default section for content before first `##`)
+
+- `Text`: Plain text/markdown content
+
+  - `value` (string): The text content (markdown supported)
+  - No `type` property (discriminated from Question using `isText()` type guard)
+
 - `Question`: Individual survey questions with various types
-- `Section`: Groups questions within pages
+
+  - All questions share base fields: `type`, `id`, `text`, `subtext?`, `tooltip?`, `variable?`, `showIf?`
+  - `type` discriminates the question variant: `"text"`, `"number"`, `"essay"`, `"multiple_choice"`, `"checkbox"`, `"matrix"`, `"breakdown"`
+  - Type-specific fields vary by question type
+
 - `ComputedVariable`: Dynamic calculations based on responses
+  - `name` (string): Variable identifier
+  - `expression` (string): Calculation expression
+  - `value` (boolean | string | number, optional): Computed result
 
 ### Text Format Parser (`lib/parser.ts`)
 
@@ -93,6 +138,7 @@ Custom hooks manage questionnaire state:
 Strong TypeScript usage throughout:
 
 - Discriminated unions for parser types
+- Type guard functions (`isText()`, `isQuestion()`) for SectionItem discrimination
 - Comprehensive type definitions in `lib/types.ts`
 - Strict compiler settings in `tsconfig.json`
 

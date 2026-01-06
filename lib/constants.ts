@@ -17,8 +17,14 @@ Q: How many surveys have you created so far?
 NUMBER
 VARIABLE: surveys_created
 
+Q: What is your role or job title?
+TEXT
+VARIABLE: job_title
+
 # Getting Started
 NAVIGATION: 2
+
+Now let's explore the features you're using and how they're working for you.
 
 Q: Which types of questions do you use in your surveys?
 HINT: Select all that apply
@@ -37,6 +43,8 @@ HINT: Select all that apply
 - Variable interpolation in text
 CHECKBOX
 VARIABLE: features_tried
+
+Great! Now let's get your feedback on those features.
 
 #
 NAVIGATION: 2

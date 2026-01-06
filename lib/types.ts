@@ -1,6 +1,7 @@
 
 
 export type Block = {
+  id: number
   name: string
   showIf?: string
   pages: Page[]
@@ -23,22 +24,27 @@ export type Page = {
   navLevel?: number  // Optional navigation level (1 = top-level, 2 = nested, etc.)
 }
 
-export type SectionContentItem = {
-  type: "content"
-  content: string
+export type Text = {
+  value: string
 }
 
-export type SectionQuestionItem = {
-  type: "question"
-  question: Question
+export type SectionItem = Text | Question
+
+// Type guards for discriminating between Text and Question
+export function isText(item: SectionItem): item is Text {
+  return 'value' in item
 }
 
-export type SectionItem = SectionContentItem | SectionQuestionItem
+export function isQuestion(item: SectionItem): item is Question {
+  return 'type' in item
+}
 
 export type Section = {
+  id: number
   title?: string
   tooltip?: string
   items: SectionItem[]
+  showIf?: string
 }
 
 // Base fields common to all questions

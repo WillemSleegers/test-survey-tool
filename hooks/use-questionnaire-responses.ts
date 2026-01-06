@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Variables, Responses, Page, Question, BreakdownQuestion } from "@/lib/types"
+import { Variables, Responses, Page, Question, BreakdownQuestion, isQuestion } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 /**
@@ -25,19 +25,18 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
   questionnaire?.forEach(page => {
     page.sections.forEach(section => {
       section.items.forEach(item => {
-        if (item.type === 'question') {
-          const question = item.question
+        if (isQuestion(item)) {
           // Store question for lookup
-          questionLookup.set(question.id, question)
+          questionLookup.set(item.id, item)
 
           // Regular question variable
-          if (question.variable) {
-            questionVariableMap.set(question.id, question.variable)
+          if (item.variable) {
+            questionVariableMap.set(item.id, item.variable)
           }
 
           // Subquestion variables (only for matrix questions)
-          if (question.type === 'matrix' && question.subquestions) {
-            question.subquestions.forEach(subquestion => {
+          if (item.type === 'matrix' && item.subquestions) {
+            item.subquestions.forEach(subquestion => {
               if (subquestion.variable) {
                 questionVariableMap.set(subquestion.id, subquestion.variable)
               }
@@ -45,12 +44,12 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
           }
 
           // Option variables (only for breakdown questions)
-          if (question.type === 'breakdown') {
-            question.options.forEach(option => {
+          if (item.type === 'breakdown') {
+            item.options.forEach(option => {
               if (option.variable) {
                 // Create a unique key for this option: questionId + option value
                 const key = option.value.toLowerCase().replace(/[^a-z0-9]/g, '_')
-                const optionKey = `${question.id}:${key}`
+                const optionKey = `${item.id}:${key}`
                 optionVariableMap.set(optionKey, option.variable)
               }
             })

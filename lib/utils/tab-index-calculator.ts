@@ -1,4 +1,4 @@
-import { Section, Variables, Question } from "@/lib/types"
+import { Section, Variables, Question, isQuestion } from "@/lib/types"
 
 /**
  * Calculates the total number of tab-accessible inputs in a page
@@ -22,8 +22,8 @@ export function calculateTotalTabInputs(
 ): number {
   const sectionInputs = sections.reduce((sum, section) => {
     const questionInputs = section.items.reduce((subSum, item) => {
-      if (item.type === 'question') {
-        return subSum + calculateQuestionInputCount(item.question, variables)
+      if (isQuestion(item)) {
+        return subSum + calculateQuestionInputCount(item, variables)
       }
       return subSum
     }, 0)
