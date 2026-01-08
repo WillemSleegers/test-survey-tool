@@ -13,6 +13,33 @@ Released December 2025
   - Eliminated indentation-based parsing - dash markers now identify metadata
   - Improved maintainability and extensibility
 
+- **Single-pass parsing architecture**: Refactored `parseSection`, `parsePage`, and `parseBlock` to use state machines
+  - Fixed bug where multi-line delimited tooltip content was rendered twice (as metadata and as content)
+  - Each parser uses specific state names describing exactly what's being parsed (e.g., `'tooltip' | 'showif' | 'content'` instead of vague `'normal'`)
+  - Structural markers (`#`, `##`, `BLOCK:`) extracted immediately before entering state machine
+  - `parseSection`: Single-pass state machine extracts section metadata (TOOLTIP, SHOW_IF) and builds content/questions in one loop
+  - `parsePage`: Single-pass state machine extracts page metadata (NAVIGATION, TOOLTIP, COMPUTE) before building sections inline
+  - `parseBlock`: Single-pass state machine extracts block metadata (SHOW_IF, COMPUTE) before building pages inline
+  - Removed unused helper functions: `identifySections`, `identifyPages`, `parseComputedVariables`
+  - Benefits: No duplicate content bugs, no keyword leakage between levels, more efficient parsing, explicit state-driven logic
+
+- **Multi-line hints and tooltips for options**: Fixed option-level delimited content parsing
+  - `parseOptions` and `parseBreakdownOptions` now handle multi-line HINT/TOOLTIP content correctly
+  - Delimited content collection moved outside the `- ` prefix check to capture all lines
+  - Supports option-level syntax: `- HINT: ---` followed by multi-line content then `---`
+  - `identifyQuestions` updated to skip delimited keyword blocks when identifying question boundaries
+
+- **CUSTOM keyword support**: Added missing parser support for custom subtotal calculations
+  - `CUSTOM:` keyword now recognized as breakdown option metadata
+  - Enables custom expressions for SUBTOTAL calculations: `CUSTOM: {{salary + bonus}}`
+  - Previously treated as separate option row; now correctly parsed as SUBTOTAL metadata
+
+- **Consistent TOTAL styling**: Removed hardcoded styling from TOTAL rows
+  - Removed `font-bold`/`font-semibold` classes from TOTAL row rendering
+  - Added Markdown rendering to TOTAL labels for user-controlled styling
+  - TOTAL labels now support Markdown formatting like SUBTOTAL labels: `**Total Revenue**`
+  - Removed redundant `hover:bg-transparent` classes from all TableRow elements
+
 ### Breaking Changes
 
 - **Navigation syntax change**: Replaced `NAV:` + `LEVEL:` with single `NAVIGATION:` keyword

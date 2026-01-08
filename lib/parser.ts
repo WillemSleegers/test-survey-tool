@@ -162,26 +162,6 @@ const parseDelimitedContent = (
 }
 
 /**
- * Parse computed variables (COMPUTE: lines)
- */
-const parseComputedVariables = (lines: string[]): ComputedVariable[] => {
-  const computedVariables: ComputedVariable[] = []
-  for (const line of lines) {
-    if (startsWith(line, "COMPUTE:")) {
-      const value = extractAfterKeyword(line, "COMPUTE:")
-      const match = value.match(/^(\w+)\s*=\s*(.+)$/)
-      if (match) {
-        computedVariables.push({
-          name: match[1],
-          expression: match[2],
-        })
-      }
-    }
-  }
-  return computedVariables
-}
-
-/**
  * Create an option with value and label set to the same string
  */
 const createOption = (label: string, overrides?: Partial<Option>): Option => ({
@@ -252,93 +232,6 @@ const identifyBlocks = (lines: string[]): string[][] => {
  * Pages are marked by `#` or `# Title`
  * Page chunks include the title line (needed by parsePage to extract the title)
  */
-const identifyPages = (lines: string[]): string[][] => {
-  const pageChunks: string[][] = []
-  let currentPageStart: number | null = null
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const trimmed = line.trim()
-
-    // Check for page marker: # or # Title (but not ## which is section)
-    if (matches(trimmed, /^#\s/) || trimmed === "#") {
-      // Save previous page
-      if (currentPageStart !== null) {
-        pageChunks.push(lines.slice(currentPageStart, i))
-      }
-
-      // Start new page (includes the title line)
-      currentPageStart = i
-    }
-  }
-
-  // Save final page
-  if (currentPageStart !== null) {
-    pageChunks.push(lines.slice(currentPageStart))
-  }
-
-  // If no pages found, treat entire chunk as default page
-  if (pageChunks.length === 0 && lines.length > 0) {
-    pageChunks.push(lines)
-  }
-
-  return pageChunks
-}
-
-/**
- * Identify section chunks within a page
- * Sections are marked by `##` or `## Section Title`
- */
-const identifySections = (lines: string[]): string[][] => {
-  const sectionChunks: string[][] = []
-  let currentSectionStart: number = 0 // Start from beginning for default section
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const trimmed = line.trim()
-
-    // Skip page markers (they're not part of any section content)
-    if (matches(trimmed, /^#\s/) || trimmed === "#") {
-      continue
-    }
-
-    // Check for section marker: ##
-    if (matches(trimmed, /^##\s/) || trimmed === "##") {
-      // Save content before this section marker (could be default section or previous explicit section)
-      const contentBeforeMarker = lines.slice(currentSectionStart, i).filter((line) => {
-        const trimmed = line.trim()
-        // Exclude page title markers and blank lines
-        return trimmed && !(matches(trimmed, /^#\s/) || trimmed === "#")
-      })
-
-      if (contentBeforeMarker.length > 0) {
-        sectionChunks.push(contentBeforeMarker)
-      }
-
-      // Start new explicit section (includes the ## marker line)
-      currentSectionStart = i
-    }
-  }
-
-  // Save final section (either the default section if no ## found, or the last explicit section)
-  const finalContent = lines.slice(currentSectionStart).filter((line) => {
-    const trimmed = line.trim()
-    // Exclude page title markers (but keep ## for explicit sections)
-    if (currentSectionStart === 0) {
-      // Default section: exclude page markers
-      return !(matches(trimmed, /^#\s/) || trimmed === "#")
-    }
-    // Explicit section: keep everything including ##
-    return true
-  })
-
-  if (finalContent.length > 0) {
-    sectionChunks.push(finalContent)
-  }
-
-  return sectionChunks
-}
-
 /**
  * Identify question chunks within a section
  * Questions are marked by `Q:` or `Q1:`
@@ -347,10 +240,37 @@ const identifySections = (lines: string[]): string[][] => {
 const identifyQuestions = (lines: string[]): QuestionChunk[] => {
   const questionChunks: QuestionChunk[] = []
   let currentQuestionStart: number | null = null
+  let inDelimitedContent = false
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
+
+    // Check for delimiter start (HINT: ---, TOOLTIP: ---, etc.)
+    // Also check for option-level delimited keywords (- HINT: ---, - TOOLTIP: ---)
+    const keywords = ['HINT:', 'TOOLTIP:', 'VARIABLE:', 'SHOW_IF:']
+    for (const keyword of keywords) {
+      if (startsWith(trimmed, keyword) || startsWith(trimmed, `- ${keyword}`)) {
+        const afterKeyword = startsWith(trimmed, '- ')
+          ? trimmed.substring(2 + keyword.length).trim()
+          : trimmed.substring(keyword.length).trim()
+        if (afterKeyword === '---') {
+          inDelimitedContent = true
+          break
+        }
+      }
+    }
+
+    // Check for closing delimiter
+    if (inDelimitedContent && trimmed === '---') {
+      inDelimitedContent = false
+      continue
+    }
+
+    // Skip lines inside delimited content
+    if (inDelimitedContent) {
+      continue
+    }
 
     // Check if this is a structural marker (ends current question)
     const isStructuralMarker = matches(trimmed, /^#/) || startsWith(trimmed, "BLOCK:") || startsWith(trimmed, "NAV:")
@@ -581,6 +501,31 @@ const parseOptions = (lines: string[]): Option[] => {
 
     const trimmed = line.trim()
 
+    // Handle delimited content collection (must be before other checks)
+    if (collectingHint || collectingTooltip) {
+      if (trimmed === "---") {
+        // End delimiter
+        if (collectingHint && currentOption) {
+          currentOption.hint = hintBuffer.join('\n')
+          collectingHint = false
+        }
+        if (collectingTooltip && currentOption) {
+          currentOption.tooltip = tooltipBuffer.join('\n')
+          collectingTooltip = false
+        }
+        continue
+      } else {
+        // Collecting multi-line content
+        if (collectingHint) {
+          hintBuffer.push(trimmed)
+        }
+        if (collectingTooltip) {
+          tooltipBuffer.push(trimmed)
+        }
+        continue
+      }
+    }
+
     // Check for RANGE keyword
     if (startsWith(trimmed, "RANGE:")) {
       // Save current option if any
@@ -651,23 +596,7 @@ const parseOptions = (lines: string[]): Option[] => {
             collectingTooltip = true
             tooltipBuffer = []
           }
-        } else if (content === "---") {
-          // End delimiter
-          if (collectingHint) {
-            currentOption.hint = hintBuffer.join('\n')
-            collectingHint = false
-          }
-          if (collectingTooltip) {
-            currentOption.tooltip = tooltipBuffer.join('\n')
-            collectingTooltip = false
-          }
         }
-      } else if (collectingHint) {
-        // Collecting multi-line hint content
-        hintBuffer.push(trimmed)
-      } else if (collectingTooltip) {
-        // Collecting multi-line tooltip content
-        tooltipBuffer.push(trimmed)
       } else {
         // This is a new option
         if (currentOption) {
@@ -807,10 +736,39 @@ const parseMatrixQuestion = (lines: string[], questionCounter: { count: number }
 const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
   const options: BreakdownOption[] = []
   let currentOption: Partial<BreakdownOption> | null = null
+  let collectingHint = false
+  let collectingTooltip = false
+  let hintBuffer: string[] = []
+  let tooltipBuffer: string[] = []
 
   for (const line of lines) {
 
     const trimmed = line.trim()
+
+    // Handle delimited content collection (must be before other checks)
+    if (collectingHint || collectingTooltip) {
+      if (trimmed === "---") {
+        // End delimiter
+        if (collectingHint && currentOption) {
+          currentOption.hint = hintBuffer.join('\n')
+          collectingHint = false
+        }
+        if (collectingTooltip && currentOption) {
+          currentOption.tooltip = tooltipBuffer.join('\n')
+          collectingTooltip = false
+        }
+        continue
+      } else {
+        // Collecting multi-line content
+        if (collectingHint) {
+          hintBuffer.push(trimmed)
+        }
+        if (collectingTooltip) {
+          tooltipBuffer.push(trimmed)
+        }
+        continue
+      }
+    }
 
     // Check for special option types
     if (matches(trimmed, /^-\s+HEADER:/)) {
@@ -849,7 +807,8 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
         startsWith(content, "SUFFIX:") ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
-        startsWith(content, "TOOLTIP:")
+        startsWith(content, "TOOLTIP:") ||
+        startsWith(content, "CUSTOM:")
 
       if (isMetadata && currentOption) {
         // This is metadata for the current option
@@ -870,10 +829,30 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
           currentOption.suffix = extractAfterKeyword(content, "SUFFIX:")
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
+        } else if (startsWith(content, "CUSTOM:")) {
+          currentOption.custom = extractAfterKeyword(content, "CUSTOM:")
         } else if (startsWith(content, "HINT:")) {
-          currentOption.hint = extractAfterKeyword(content, "HINT:")
+          const hintValue = extractAfterKeyword(content, "HINT:")
+          if (hintValue === "---") {
+            collectingHint = true
+            hintBuffer = []
+          } else if (hintValue) {
+            currentOption.hint = hintValue
+          } else {
+            collectingHint = true
+            hintBuffer = []
+          }
         } else if (startsWith(content, "TOOLTIP:")) {
-          currentOption.tooltip = extractAfterKeyword(content, "TOOLTIP:")
+          const tooltipValue = extractAfterKeyword(content, "TOOLTIP:")
+          if (tooltipValue === "---") {
+            collectingTooltip = true
+            tooltipBuffer = []
+          } else if (tooltipValue) {
+            currentOption.tooltip = tooltipValue
+          } else {
+            collectingTooltip = true
+            tooltipBuffer = []
+          }
         }
       } else {
         // This is a new regular option
@@ -940,31 +919,13 @@ const parseQuestionByType = (chunk: QuestionChunk, questionCounter: { count: num
 
 /**
  * Parse a section chunk
- * Builds an interleaved array of content and questions
+ * Single-pass state machine that builds interleaved content/questions and extracts metadata
  */
 const parseSection = (lines: string[], questionCounter: { count: number }, sectionIdCounter: { count: number }): Section => {
   const questionChunks = identifyQuestions(lines)
-
-  // Generate unique section ID
   const sectionId = sectionIdCounter.count++
 
-  // Build a map of line index -> question chunk
-  const lineToQuestion = new Map<number, QuestionChunk>()
-  for (const qChunk of questionChunks) {
-    if (qChunk.startIndex !== undefined) {
-      lineToQuestion.set(qChunk.startIndex, qChunk)
-    }
-  }
-
-  // Build set of all lines that belong to questions
-  const questionLineSet = new Set<string>()
-  for (const qChunk of questionChunks) {
-    for (const line of qChunk.lines) {
-      questionLineSet.add(line)
-    }
-  }
-
-  // Extract section title
+  // Extract section title immediately
   let title: string | undefined
   for (const line of lines) {
     const trimmed = line.trim()
@@ -974,51 +935,130 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     }
   }
 
-  // Build interleaved items array
+  // Build question lookup structures
+  const lineToQuestion = new Map<number, QuestionChunk>()
+  const questionLineSet = new Set<string>()
+  for (const qChunk of questionChunks) {
+    if (qChunk.startIndex !== undefined) {
+      lineToQuestion.set(qChunk.startIndex, qChunk)
+    }
+    for (const line of qChunk.lines) {
+      questionLineSet.add(line)
+    }
+  }
+
+  // State for single-pass parsing
+  let tooltip: string | undefined
+  let showIf: string | undefined
   const items: SectionItem[] = []
   let contentBuffer: string[] = []
+
+  // State machine: parsing specific section elements
+  type State = 'tooltip' | 'showif' | 'content'
+  let state: State = 'content'
+  let metadataBuffer: string[] = []
+  let useDelimiters = false
+
+  const flushContent = () => {
+    if (contentBuffer.length > 0) {
+      const value = contentBuffer.join('\n').trim()
+      if (value) {
+        items.push({ value })
+      }
+      contentBuffer = []
+    }
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Check if this line starts a question
-    if (lineToQuestion.has(i)) {
-      // Flush any accumulated content
-      if (contentBuffer.length > 0) {
-        const value = contentBuffer.join('\n').trim()
-        if (value) {
-          items.push({ value })
+    // Handle metadata collection states
+    if (state === 'tooltip' || state === 'showif') {
+      if (useDelimiters && trimmed === '---') {
+        // End of delimited metadata
+        if (state === 'tooltip') {
+          tooltip = metadataBuffer.join('\n')
+        } else {
+          showIf = metadataBuffer.join('\n')
         }
-        contentBuffer = []
+        state = 'content'
+        metadataBuffer = []
+        useDelimiters = false
+        continue
       }
 
-      // Add the question
-      const qChunk = lineToQuestion.get(i)!
-      const question = parseQuestionByType(qChunk, questionCounter)
-      items.push(question)
-
-      // Skip ahead past this question's lines
-      i += qChunk.lines.length - 1
-      continue
+      // Non-delimiter mode: stop collecting if we hit structural elements
+      if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/))) {
+        if (state === 'tooltip') {
+          tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        } else {
+          showIf = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        }
+        state = 'content'
+        metadataBuffer = []
+        useDelimiters = false
+        // Don't continue - let this line be processed normally
+      } else {
+        // Collect metadata content
+        metadataBuffer.push(removeIndentation(line))
+        continue
+      }
     }
 
-    // Skip lines that belong to questions (but weren't the start)
-    if (questionLineSet.has(line)) {
-      continue
-    }
-
-    // Skip structural markers
+    // Skip section title marker (already extracted)
     if (matches(trimmed, /^##/)) {
       continue
     }
 
-    // Skip section-level keywords
-    if (trimmed && matches(trimmed, /^(TOOLTIP:|HINT:|VARIABLE:|SHOW_IF:|NAVIGATION:|COMPUTE:)/)) {
+    // Check for TOOLTIP keyword
+    if (trimmed.startsWith('TOOLTIP:')) {
+      flushContent()
+      const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
+      if (afterKeyword === '---') {
+        state = 'tooltip'
+        useDelimiters = true
+      } else if (afterKeyword) {
+        tooltip = afterKeyword
+      } else {
+        state = 'tooltip'
+        useDelimiters = false
+      }
       continue
     }
 
-    // Add to content buffer
+    // Check for SHOW_IF keyword
+    if (trimmed.startsWith('SHOW_IF:')) {
+      flushContent()
+      const afterKeyword = trimmed.substring('SHOW_IF:'.length).trim()
+      if (afterKeyword === '---') {
+        state = 'showif'
+        useDelimiters = true
+      } else if (afterKeyword) {
+        showIf = afterKeyword
+      } else {
+        state = 'showif'
+        useDelimiters = false
+      }
+      continue
+    }
+
+    // Handle questions
+    if (lineToQuestion.has(i)) {
+      flushContent()
+      const qChunk = lineToQuestion.get(i)!
+      const question = parseQuestionByType(qChunk, questionCounter)
+      items.push(question)
+      i += qChunk.lines.length - 1
+      continue
+    }
+
+    // Skip lines that belong to questions
+    if (questionLineSet.has(line)) {
+      continue
+    }
+
+    // Everything else is content
     if (trimmed) {
       contentBuffer.push(line)
     } else if (contentBuffer.length > 0) {
@@ -1027,81 +1067,270 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     }
   }
 
-  // Flush any remaining content
-  if (contentBuffer.length > 0) {
-    const value = contentBuffer.join('\n').trim()
-    if (value) {
-      items.push({ value })
-    }
+  // Flush any remaining content or metadata
+  flushContent()
+  if (state === 'tooltip' && metadataBuffer.length > 0) {
+    tooltip = metadataBuffer.join('\n')
+  }
+  if (state === 'showif' && metadataBuffer.length > 0) {
+    showIf = metadataBuffer.join('\n')
   }
 
   return {
     id: sectionId,
     title,
-    tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
+    tooltip,
     items,
-    showIf: findKeyword(lines, "SHOW_IF:"),
+    showIf,
   }
 }
 
 /**
  * Parse a page chunk
+ * Single-pass state machine that extracts page metadata and builds section chunks
  */
-const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCounter: { count: number }): Page => {
-  const sectionChunks = identifySections(lines)
-
-  // Create section ID counter for this page
+const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCounter: { count: number}): Page => {
+  const pageId = pageIdCounter.count++
   const sectionIdCounter = { count: 1 }
 
-  // Extract page title
-  const titleLine = lines.find((line) =>
-    (matches(line.trim(), /^#\s/) || line.trim() === "#")
-  )
-  const title = titleLine
-    ? titleLine.trim().replace(/^#\s*/, '')
-    : ''
+  // Extract page title immediately
+  let title = ''
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (matches(trimmed, /^#\s/) || trimmed === '#') {
+      title = trimmed.replace(/^#\s*/, '').trim()
+      break
+    }
+  }
 
-  // Generate unique page ID
-  const pageId = pageIdCounter.count++
+  // State for parsing
+  let tooltip: string | undefined
+  let navLevel: number | undefined
+  const computedVariables: ComputedVariable[] = []
+  const sectionLines: string[][] = []
+  let currentSectionLines: string[] = []
 
-  // Extract nav level if present
-  const navLevelValue = findKeyword(lines, "NAVIGATION:")
-  const navLevel = navLevelValue ? parseInt(navLevelValue, 10) : undefined
+  // State machine: parsing specific page elements
+  type State = 'navigation' | 'tooltip' | 'compute' | 'sections'
+  let state: State = 'navigation'
+  let metadataBuffer: string[] = []
+  let useDelimiters = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Skip page title (already extracted)
+    if (matches(trimmed, /^#\s/) || trimmed === '#') {
+      continue
+    }
+
+    // Handle tooltip metadata collection
+    if (state === 'tooltip') {
+      if (useDelimiters && trimmed === '---') {
+        tooltip = metadataBuffer.join('\n')
+        state = 'navigation'
+        metadataBuffer = []
+        useDelimiters = false
+        continue
+      }
+
+      // Non-delimiter mode: stop if we hit section content or other keywords
+      if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/) || (trimmed && !trimmed.startsWith('NAVIGATION:') && !trimmed.startsWith('COMPUTE:')))) {
+        tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        state = 'sections'
+        metadataBuffer = []
+        // Don't continue - process this line as section content
+      } else {
+        metadataBuffer.push(removeIndentation(line))
+        continue
+      }
+    }
+
+    // Handle page-level keywords (before we reach section content)
+    if (state !== 'sections') {
+      // Extract NAVIGATION
+      if (trimmed.startsWith('NAVIGATION:')) {
+        const navValue = trimmed.substring('NAVIGATION:'.length).trim()
+        navLevel = navValue ? parseInt(navValue, 10) : undefined
+        continue
+      }
+
+      // Extract TOOLTIP
+      if (trimmed.startsWith('TOOLTIP:')) {
+        const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
+        if (afterKeyword === '---') {
+          state = 'tooltip'
+          useDelimiters = true
+        } else if (afterKeyword) {
+          tooltip = afterKeyword
+        } else {
+          state = 'tooltip'
+          useDelimiters = false
+        }
+        continue
+      }
+
+      // Extract COMPUTE variables
+      if (trimmed.startsWith('COMPUTE:')) {
+        const computeContent = trimmed.substring('COMPUTE:'.length).trim()
+        if (computeContent) {
+          const match = computeContent.match(/^(\w+)\s*=\s*(.+)$/)
+          if (match) {
+            computedVariables.push({
+              name: match[1],
+              expression: match[2],
+            })
+          }
+        }
+        continue
+      }
+
+      // If we hit anything that's not a page-level keyword, transition to sections
+      if (trimmed) {
+        state = 'sections'
+        // Fall through to process this line as section content
+      } else {
+        continue
+      }
+    }
+
+    // In sections state: build section chunks
+    if (state === 'sections') {
+      // Check for section marker
+      if (matches(trimmed, /^##/)) {
+        // Save current section if it has content
+        if (currentSectionLines.length > 0) {
+          sectionLines.push(currentSectionLines)
+          currentSectionLines = []
+        }
+      }
+
+      // Add line to current section
+      currentSectionLines.push(line)
+    }
+  }
+
+  // Save final section
+  if (currentSectionLines.length > 0) {
+    sectionLines.push(currentSectionLines)
+  }
+
+  // Parse all sections
+  const sections = sectionLines.map(sLines => parseSection(sLines, questionCounter, sectionIdCounter))
 
   return {
     id: pageId,
     title,
-    tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
-    sections: sectionChunks.map(sChunk => parseSection(sChunk, questionCounter, sectionIdCounter)),
-    computedVariables: parseComputedVariables(lines),
+    tooltip,
+    sections,
+    computedVariables,
     navLevel,
   }
 }
 
 /**
  * Parse a block chunk
+ * Single-pass state machine that extracts block metadata and builds page chunks
  */
 const parseBlock = (lines: string[], blockIdCounter: { count: number }, pageIdCounter: { count: number }): Block => {
-  const pageChunks = identifyPages(lines)
+  const blockId = blockIdCounter.count++
   const questionCounter = { count: 1 }
 
-  // Generate unique block ID
-  const blockId = blockIdCounter.count++
+  // Extract block name immediately
+  let name = ''
+  for (const line of lines) {
+    if (startsWith(line, "BLOCK:")) {
+      name = extractAfterKeyword(line, "BLOCK:")
+      break
+    }
+  }
 
-  // Extract block name
-  const blockLine = lines.find((line) =>
-    startsWith(line, "BLOCK:")
-  )
-  const name = blockLine
-    ? extractAfterKeyword(blockLine, "BLOCK:")
-    : ''
+  // State for parsing
+  let showIf: string | undefined
+  const computedVariables: ComputedVariable[] = []
+  const pageLines: string[][] = []
+  let currentPageLines: string[] = []
+
+  // State machine: parsing specific block elements
+  type State = 'showif' | 'compute' | 'pages'
+  let state: State = 'showif'
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Skip block name (already extracted)
+    if (startsWith(trimmed, "BLOCK:")) {
+      continue
+    }
+
+    // Handle block-level keywords (before we reach page content)
+    if (state !== 'pages') {
+      // Extract SHOW_IF
+      if (trimmed.startsWith('SHOW_IF:')) {
+        showIf = extractAfterKeyword(trimmed, 'SHOW_IF:')
+        continue
+      }
+
+      // Extract COMPUTE variables
+      if (trimmed.startsWith('COMPUTE:')) {
+        const computeContent = trimmed.substring('COMPUTE:'.length).trim()
+        if (computeContent) {
+          const match = computeContent.match(/^(\w+)\s*=\s*(.+)$/)
+          if (match) {
+            computedVariables.push({
+              name: match[1],
+              expression: match[2],
+            })
+          }
+        }
+        continue
+      }
+
+      // If we hit a page marker, transition to pages
+      if (matches(trimmed, /^#\s/) || trimmed === '#') {
+        state = 'pages'
+        // Fall through to process this line as page content
+      } else if (trimmed) {
+        // Any other non-empty line means we're in page content
+        state = 'pages'
+        // Fall through to process this line as page content
+      } else {
+        continue
+      }
+    }
+
+    // In pages state: build page chunks
+    if (state === 'pages') {
+      // Check for page marker
+      if (matches(trimmed, /^#\s/) || trimmed === '#') {
+        // Save current page if it has content
+        if (currentPageLines.length > 0) {
+          pageLines.push(currentPageLines)
+          currentPageLines = []
+        }
+      }
+
+      // Add line to current page
+      currentPageLines.push(line)
+    }
+  }
+
+  // Save final page
+  if (currentPageLines.length > 0) {
+    pageLines.push(currentPageLines)
+  }
+
+  // Parse all pages
+  const pages = pageLines.map(pLines => parsePage(pLines, questionCounter, pageIdCounter))
 
   return {
     id: blockId,
     name,
-    showIf: findKeyword(lines, "SHOW_IF:"),
-    pages: pageChunks.map(pChunk => parsePage(pChunk, questionCounter, pageIdCounter)),
-    computedVariables: parseComputedVariables(lines),
+    showIf,
+    pages,
+    computedVariables,
   }
 }
 

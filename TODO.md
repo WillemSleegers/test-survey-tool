@@ -42,6 +42,13 @@
 
 ## Medium Priority
 
+- [x] Refactor parseSection and parsePage to eliminate multi-pass parsing
+  - ✅ Fixed bug where multi-line delimited tooltip content was rendered twice
+  - ✅ Implemented single-pass state machine for `parseSection` (extracts TOOLTIP, SHOW_IF inline)
+  - ✅ Implemented single-pass state machine for `parsePage` (extracts title, NAVIGATION, TOOLTIP, COMPUTE before building sections)
+  - ✅ Page-level keywords no longer leak into section content
+  - ✅ Removed unused `identifySections` function
+  - **Future consideration**: Apply same pattern to `parseBlock` and consider removing `identifyQuestions()` lookahead for fully inline question boundary detection
 - [ ] Add SHOW_IF support to sections
   - **Motivation**: Sections currently support content and tooltip but not conditional visibility
   - **Benefit**: Would enable conditional showing/hiding of entire groups of questions within a page

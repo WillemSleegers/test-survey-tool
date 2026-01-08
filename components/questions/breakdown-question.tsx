@@ -192,7 +192,7 @@ export function BreakdownQuestion({
     // If this is a header row, render it without an input field
     if (option.header) {
       return (
-        <TableRow key={index} className="font-bold hover:bg-transparent">
+        <TableRow key={index} className="font-bold">
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
             <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
@@ -203,7 +203,7 @@ export function BreakdownQuestion({
     // If this is a separator row, render a blank row
     if (option.separator) {
       return (
-        <TableRow key={index} className="hover:bg-transparent border-b-0!">
+        <TableRow key={index} className="border-b-0!">
           <TableCell className="h-12 pl-0" colSpan={2}>
             {/* Blank row for spacing */}
           </TableCell>
@@ -246,7 +246,7 @@ export function BreakdownQuestion({
       const suffix = option.suffix ?? questionSuffix
 
       return (
-        <TableRow key={index} className="hover:bg-transparent">
+        <TableRow key={index}>
           <TableCell className="align-middle whitespace-normal text-base pl-0">
             <div className="relative">
               {option.tooltip && (
@@ -297,7 +297,7 @@ export function BreakdownQuestion({
     const suffix = option.suffix ?? questionSuffix
 
     return (
-      <TableRow key={index} className="hover:bg-transparent">
+      <TableRow key={index}>
         <TableCell className="align-middle whitespace-normal pl-0">
           <div className="relative">
             {option.tooltip && (
@@ -366,7 +366,7 @@ export function BreakdownQuestion({
               // If this is a header row, render it without input fields
               if (option.header) {
                 return (
-                  <TableRow key={index} className="font-bold hover:bg-transparent">
+                  <TableRow key={index} className="font-bold">
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
                       <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                     </TableCell>
@@ -377,7 +377,7 @@ export function BreakdownQuestion({
               // If this is a separator row, render a blank row
               if (option.separator) {
                 return (
-                  <TableRow key={index} className="hover:bg-transparent border-b-0!">
+                  <TableRow key={index} className="border-b-0!">
                     <TableCell className="h-12 pl-0" colSpan={numColumns + 1}>
                       {/* Blank row for spacing */}
                     </TableCell>
@@ -419,7 +419,7 @@ export function BreakdownQuestion({
                 const suffix = option.suffix ?? questionSuffix
 
                 return (
-                  <TableRow key={index} className="hover:bg-transparent">
+                  <TableRow key={index}>
                     <TableCell className="align-middle whitespace-normal text-base pl-0">
                       <div className="relative">
                         {option.tooltip && (
@@ -470,7 +470,7 @@ export function BreakdownQuestion({
               const suffix = option.suffix ?? questionSuffix
 
               return (
-                <TableRow key={index} className="hover:bg-transparent">
+                <TableRow key={index}>
                   {/* Label column (always shown) */}
                   <TableCell className="align-middle whitespace-normal pl-0">
                     <div className="relative">
@@ -533,9 +533,9 @@ export function BreakdownQuestion({
 
             {/* Total row */}
             {totalLabel && (
-              <TableRow className="font-bold border-t border-border">
+              <TableRow className="border-t border-border">
                 <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                  {replacePlaceholders(totalLabel, variables, computedVariables)}
+                  <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
@@ -565,9 +565,9 @@ export function BreakdownQuestion({
 
               {/* Total row */}
               {totalLabel && (
-                <TableRow className="font-semibold border-t border-border">
+                <TableRow className="border-t border-border">
                   <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                    {replacePlaceholders(totalLabel, variables, computedVariables)}
+                    <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
                     {questionPrefix}{total}{questionSuffix}
