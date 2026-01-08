@@ -26,7 +26,7 @@ Released December 2025
 - **Multi-line hints and tooltips for options**: Fixed option-level delimited content parsing
   - `parseOptions` and `parseBreakdownOptions` now handle multi-line HINT/TOOLTIP content correctly
   - Delimited content collection moved outside the `- ` prefix check to capture all lines
-  - Supports option-level syntax: `- HINT: ---` followed by multi-line content then `---`
+  - Supports option-level syntax: `- HINT: """` followed by multi-line content then `"""`
   - `identifyQuestions` updated to skip delimited keyword blocks when identifying question boundaries
 
 - **CUSTOM keyword support**: Added missing parser support for custom subtotal calculations
@@ -42,6 +42,14 @@ Released December 2025
 
 ### Breaking Changes
 
+- **Delimiter syntax change**: Replaced triple dashes (`---`) with triple quotes (`"""`) for multi-line content
+  - **Reason**: Triple dashes conflict with Markdown setext heading syntax, causing Prettier to corrupt survey files
+  - **Old syntax**: `HINT: ---` followed by content then `---`
+  - **New syntax**: `HINT: """` followed by content then `"""`
+  - **Impact**: All multi-line HINT and TOOLTIP blocks must be updated
+  - **Migration**: Use find-and-replace to change `---` on delimiter lines to `"""`
+  - **Benefit**: Survey `.md` files can now be safely formatted with Prettier without corruption
+
 - **Navigation syntax change**: Replaced `NAV:` + `LEVEL:` with single `NAVIGATION:` keyword
   - Old syntax: `NAV: Section Name` followed by `LEVEL: 1`
   - New syntax: `NAVIGATION: 1` placed after page title (page title becomes navigation label)
@@ -50,6 +58,24 @@ Released December 2025
   - Single source of truth - no page duplication between BLOCKS and navigation
 
 ### New Features
+
+- **Navigation settings**: Added setting to control whether respondents can jump to unvisited pages
+  - New toggle in Settings: "Allow Navigation to Unvisited Pages"
+  - Default behavior: respondents can only navigate to visited or current pages
+  - When enabled: respondents can jump to any page in the navigation sidebar
+  - Setting persists in localStorage across sessions
+
+- **SEPARATOR support for breakdown questions**: Added missing parser support for separator rows
+  - `- SEPARATOR` keyword now recognized in breakdown questions
+  - Creates empty rows for visual organization between option groups
+  - Example: Place separator between different cost categories
+  - Separator rows are excluded from calculations automatically
+
+- **Improved computed value display in breakdown questions**: Placeholder shown when values aren't available
+  - When CUSTOM calculations reference unavailable variables, shows `–` instead of `€\{variable\}.000,-`
+  - When VALUE (prefillValue) uses unavailable variables, shows `–` instead of escaped placeholders
+  - Once variables become available, calculated values display normally with proper formatting
+  - Applies to both SUBTOTAL rows with CUSTOM and regular options with VALUE
 
 - **Interleaved text and questions**: Text can now appear between questions in natural flow
   - Questions end at blank lines, allowing content to be interspersed with questions

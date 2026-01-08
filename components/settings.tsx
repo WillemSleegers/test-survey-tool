@@ -14,7 +14,7 @@ import { Switch } from "./ui/switch"
 
 export function Settings() {
   const { language, setLanguage } = useLanguage()
-  const { isVisible, setIsVisible, position, setPosition } = useNavigation()
+  const { isVisible, setIsVisible, position, setPosition, allowUnvisitedNavigation, setAllowUnvisitedNavigation } = useNavigation()
 
   return (
     <div className="space-y-6">
@@ -65,6 +65,21 @@ export function Settings() {
         <p className="text-sm text-muted-foreground">
           Position of navigation sidebar
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">Allow Navigation to Unvisited Pages</Label>
+            <p className="text-sm text-muted-foreground">
+              Let respondents jump to any page in the navigation, even if not yet visited
+            </p>
+          </div>
+          <Switch
+            checked={allowUnvisitedNavigation}
+            onCheckedChange={setAllowUnvisitedNavigation}
+          />
+        </div>
       </div>
     </div>
   )

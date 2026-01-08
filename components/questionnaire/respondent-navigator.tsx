@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { NavItem, Page } from "@/lib/types"
 import { useLanguage } from "@/contexts/language-context"
+import { useNavigation } from "@/contexts/navigation-context"
 
 interface RespondentNavigatorProps {
   /** Navigation items with levels */
@@ -34,6 +35,7 @@ export function RespondentNavigator({
   onJumpToNavItem,
 }: RespondentNavigatorProps) {
   const { t } = useLanguage()
+  const { allowUnvisitedNavigation } = useNavigation()
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
   const [visitedNavItems, setVisitedNavItems] = useState<Set<NavItem>>(
     new Set()
@@ -107,8 +109,9 @@ export function RespondentNavigator({
     return navItem.pages.some((page) => page.id === currentPage.id)
   }
 
-  // Helper to check if a nav item can be clicked (visited or current)
+  // Helper to check if a nav item can be clicked (visited or current, or if setting allows)
   const isNavItemClickable = (navItem: NavItem): boolean => {
+    if (allowUnvisitedNavigation) return true
     return visitedNavItems.has(navItem) || isNavItemCurrent(navItem)
   }
 
@@ -235,7 +238,7 @@ export function RespondentNavigator({
                         return (
                           <div
                             key={`${index}-${childIdx}`}
-                            className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm ${
+                            className={`flex items-center gap-2 py-1 px-1.5 rounded-lg text-sm ${
                               isChildClickable
                                 ? "cursor-pointer hover:bg-muted"
                                 : "cursor-not-allowed opacity-50"

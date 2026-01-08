@@ -122,7 +122,7 @@ const parseDelimitedContent = (
     if (trimmed.startsWith(keyword)) {
       const afterKeyword = trimmed.substring(keyword.length).trim()
 
-      if (afterKeyword === "---") {
+      if (afterKeyword === '"""') {
         // Delimiter mode: keyword is on same line as opening delimiter
         useDelimiters = true
         isCollecting = true
@@ -139,7 +139,7 @@ const parseDelimitedContent = (
     }
 
     if (isCollecting) {
-      if (useDelimiters && trimmed === "---") {
+      if (useDelimiters && trimmed === '"""') {
         // End delimiter found
         return buffer.join('\n')
       }
@@ -246,15 +246,15 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Check for delimiter start (HINT: ---, TOOLTIP: ---, etc.)
-    // Also check for option-level delimited keywords (- HINT: ---, - TOOLTIP: ---)
+    // Check for delimiter start (HINT: """, TOOLTIP: """, etc.)
+    // Also check for option-level delimited keywords (- HINT: """, - TOOLTIP: """)
     const keywords = ['HINT:', 'TOOLTIP:', 'VARIABLE:', 'SHOW_IF:']
     for (const keyword of keywords) {
       if (startsWith(trimmed, keyword) || startsWith(trimmed, `- ${keyword}`)) {
         const afterKeyword = startsWith(trimmed, '- ')
           ? trimmed.substring(2 + keyword.length).trim()
           : trimmed.substring(keyword.length).trim()
-        if (afterKeyword === '---') {
+        if (afterKeyword === '"""') {
           inDelimitedContent = true
           break
         }
@@ -262,7 +262,7 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
     }
 
     // Check for closing delimiter
-    if (inDelimitedContent && trimmed === '---') {
+    if (inDelimitedContent && trimmed === '"""') {
       inDelimitedContent = false
       continue
     }
@@ -503,7 +503,7 @@ const parseOptions = (lines: string[]): Option[] => {
 
     // Handle delimited content collection (must be before other checks)
     if (collectingHint || collectingTooltip) {
-      if (trimmed === "---") {
+      if (trimmed === '"""') {
         // End delimiter
         if (collectingHint && currentOption) {
           currentOption.hint = hintBuffer.join('\n')
@@ -566,7 +566,7 @@ const parseOptions = (lines: string[]): Option[] => {
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
         startsWith(content, "TOOLTIP:") ||
-        content === "---"
+        content === '"""'
 
       if (isOptionMetadata && currentOption) {
         // This is metadata for the current option
@@ -576,7 +576,7 @@ const parseOptions = (lines: string[]): Option[] => {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
         } else if (startsWith(content, "HINT:")) {
           const hintValue = extractAfterKeyword(content, "HINT:")
-          if (hintValue === "---") {
+          if (hintValue === '"""') {
             collectingHint = true
             hintBuffer = []
           } else if (hintValue) {
@@ -587,7 +587,7 @@ const parseOptions = (lines: string[]): Option[] => {
           }
         } else if (startsWith(content, "TOOLTIP:")) {
           const tooltipValue = extractAfterKeyword(content, "TOOLTIP:")
-          if (tooltipValue === "---") {
+          if (tooltipValue === '"""') {
             collectingTooltip = true
             tooltipBuffer = []
           } else if (tooltipValue) {
@@ -747,7 +747,7 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
 
     // Handle delimited content collection (must be before other checks)
     if (collectingHint || collectingTooltip) {
-      if (trimmed === "---") {
+      if (trimmed === '"""') {
         // End delimiter
         if (collectingHint && currentOption) {
           currentOption.hint = hintBuffer.join('\n')
@@ -793,6 +793,16 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
         subtotalLabel: subtotalText,
         exclude: true,
       }
+    } else if (trimmed === '- SEPARATOR') {
+      if (currentOption) {
+        options.push(currentOption as BreakdownOption)
+      }
+      currentOption = {
+        value: '',
+        label: '',
+        separator: true,
+        exclude: true,
+      }
     } else if (matches(trimmed, /^-\s+/) && !matches(trimmed, /^-\s*Q\d*:/)) {
       const content = trimmed.replace(/^-\s+/, '')
 
@@ -833,7 +843,7 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
           currentOption.custom = extractAfterKeyword(content, "CUSTOM:")
         } else if (startsWith(content, "HINT:")) {
           const hintValue = extractAfterKeyword(content, "HINT:")
-          if (hintValue === "---") {
+          if (hintValue === '"""') {
             collectingHint = true
             hintBuffer = []
           } else if (hintValue) {
@@ -844,7 +854,7 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
           }
         } else if (startsWith(content, "TOOLTIP:")) {
           const tooltipValue = extractAfterKeyword(content, "TOOLTIP:")
-          if (tooltipValue === "---") {
+          if (tooltipValue === '"""') {
             collectingTooltip = true
             tooltipBuffer = []
           } else if (tooltipValue) {
@@ -975,7 +985,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
 
     // Handle metadata collection states
     if (state === 'tooltip' || state === 'showif') {
-      if (useDelimiters && trimmed === '---') {
+      if (useDelimiters && trimmed === '"""') {
         // End of delimited metadata
         if (state === 'tooltip') {
           tooltip = metadataBuffer.join('\n')
@@ -1015,7 +1025,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     if (trimmed.startsWith('TOOLTIP:')) {
       flushContent()
       const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
-      if (afterKeyword === '---') {
+      if (afterKeyword === '"""') {
         state = 'tooltip'
         useDelimiters = true
       } else if (afterKeyword) {
@@ -1031,7 +1041,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     if (trimmed.startsWith('SHOW_IF:')) {
       flushContent()
       const afterKeyword = trimmed.substring('SHOW_IF:'.length).trim()
-      if (afterKeyword === '---') {
+      if (afterKeyword === '"""') {
         state = 'showif'
         useDelimiters = true
       } else if (afterKeyword) {
@@ -1127,7 +1137,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
     // Handle tooltip metadata collection
     if (state === 'tooltip') {
-      if (useDelimiters && trimmed === '---') {
+      if (useDelimiters && trimmed === '"""') {
         tooltip = metadataBuffer.join('\n')
         state = 'navigation'
         metadataBuffer = []
@@ -1159,7 +1169,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
       // Extract TOOLTIP
       if (trimmed.startsWith('TOOLTIP:')) {
         const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
-        if (afterKeyword === '---') {
+        if (afterKeyword === '"""') {
           state = 'tooltip'
           useDelimiters = true
         } else if (afterKeyword) {

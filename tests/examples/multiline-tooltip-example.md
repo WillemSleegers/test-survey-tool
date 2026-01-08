@@ -3,15 +3,16 @@
 This example demonstrates multi-line HINT text at the question level using delimiter syntax.
 
 Q: **What is your total annual revenue?**
-HINT: ---
+TOOLTIP: """
 Please include all revenue sources:
+
 - Product sales
 - Service revenue
 - Licensing fees
 - Other income
 
 Round to the nearest thousand dollars.
----
+"""
 NUMBER
 PREFIX: $
 SUFFIX: ,000
@@ -21,17 +22,20 @@ HINT: Include all employees on your payroll, regardless of location or departmen
 NUMBER
 
 Q: **What are your primary business challenges?**
-HINT: ---
+TOOLTIP: """
 Select all that apply. Consider challenges in:
-1. **Operations**: Supply chain, logistics, efficiency
-2. **Finance**: Cash flow, funding, profitability
-3. **People**: Hiring, retention, training
-4. **Growth**: Market expansion, product development
----
+
+- **Operations**: Supply chain, logistics, efficiency
+- **Finance**: Cash flow, funding, profitability
+- **People**: Hiring, retention, training
+- **Growth**: Market expansion, product development
+
+"""
+
 - Supply chain issues
 - Cash flow management
 - Finding qualified talent
 - Market competition
 - Technology adoption
 - Regulatory compliance
-CHECKBOX
+  CHECKBOX

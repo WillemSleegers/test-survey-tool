@@ -7,6 +7,9 @@ import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
+// Placeholder shown when computed values aren't available yet
+const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
+
 interface BreakdownQuestionProps {
   /** The question configuration */
   question: BreakdownQuestionType
@@ -213,12 +216,14 @@ export function BreakdownQuestion({
 
     // If this is a subtotal row, calculate and render the subtotal
     if (option.subtotalLabel) {
-      let subtotal: number
+      let subtotal: number | null
 
       // If custom calculation is provided, use it; otherwise auto-calculate
       if (option.custom) {
         const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
-        subtotal = parseFloat(customValue) || 0
+        const parsed = parseFloat(customValue)
+        // If parsing fails (NaN) or result contains escaped placeholders, variables aren't available yet
+        subtotal = (isNaN(parsed) || customValue.includes('\\{')) ? null : parsed
       } else {
         // Calculate subtotal from the last subtotal/header (or start) to current position
         const optionIndex = question.options.indexOf(option)
@@ -237,7 +242,7 @@ export function BreakdownQuestion({
       }
 
       // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
-      if (option.variable) {
+      if (option.variable && subtotal !== null) {
         localVariables[option.variable] = subtotal
       }
 
@@ -277,7 +282,7 @@ export function BreakdownQuestion({
             </div>
           </TableCell>
           <TableCell className="text-right py-1">
-            {prefix}{subtotal}{suffix}
+            {subtotal !== null ? `${prefix}${subtotal}${suffix}` : UNAVAILABLE_VALUE_PLACEHOLDER}
           </TableCell>
         </TableRow>
       )
@@ -288,8 +293,11 @@ export function BreakdownQuestion({
 
     // Use prefillValue if present (replaces placeholders on every render)
     let value = currentValues[key] || ""
+    let hasUnresolvedPlaceholders = false
     if (isReadOnly) {
       value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+      // Check if value contains escaped placeholders (meaning variables aren't available yet)
+      hasUnresolvedPlaceholders = value.includes('\\{')
     }
 
     const isTooltipVisible = visibleTooltips.has(option.value)
@@ -330,7 +338,7 @@ export function BreakdownQuestion({
         <TableCell className="text-right align-middle">
           {isReadOnly ? (
             <div className="flex items-center justify-end text-muted-foreground">
-              {prefix}{value}{suffix}
+              {hasUnresolvedPlaceholders ? UNAVAILABLE_VALUE_PLACEHOLDER : `${prefix}${value}${suffix}`}
             </div>
           ) : (
             <div className="flex items-center justify-end gap-1">
@@ -387,12 +395,14 @@ export function BreakdownQuestion({
 
               // If this is a subtotal row, calculate and render the subtotal
               if (option.subtotalLabel) {
-                let subtotal: number
+                let subtotal: number | null
 
                 // If custom calculation is provided, use it; otherwise auto-calculate
                 if (option.custom) {
                   const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
-                  subtotal = parseFloat(customValue) || 0
+                  const parsed = parseFloat(customValue)
+                  // If parsing fails (NaN) or result contains escaped placeholders, variables aren't available yet
+                  subtotal = (isNaN(parsed) || customValue.includes('\\{')) ? null : parsed
                 } else {
                   // Calculate subtotal from the last subtotal/header (or start) to current position
                   let startIndex = 0
@@ -408,7 +418,7 @@ export function BreakdownQuestion({
                 }
 
                 // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
-                if (option.variable) {
+                if (option.variable && subtotal !== null) {
                   localVariables[option.variable] = subtotal
                 }
 
@@ -451,7 +461,7 @@ export function BreakdownQuestion({
                     </TableCell>
                     {columnNumbers.map((colNum) => (
                       <TableCell key={colNum} className="text-right py-1">
-                        {colNum === subtotalCol ? `${prefix}${subtotal}${suffix}` : null}
+                        {colNum === subtotalCol ? (subtotal !== null ? `${prefix}${subtotal}${suffix}` : UNAVAILABLE_VALUE_PLACEHOLDER) : null}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -461,8 +471,11 @@ export function BreakdownQuestion({
               const key = optionToKey(index)
               const isReadOnly = !!option.prefillValue
               let value = currentValues[key] || ""
+              let hasUnresolvedPlaceholders = false
               if (isReadOnly) {
                 value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+                // Check if value contains escaped placeholders (meaning variables aren't available yet)
+                hasUnresolvedPlaceholders = value.includes('\\{')
               }
               const isTooltipVisible = visibleTooltips.has(option.value)
               const optionColumn = option.column ?? 1
@@ -508,7 +521,7 @@ export function BreakdownQuestion({
                       {optionColumn === colNum ? (
                         isReadOnly ? (
                           <div className="flex items-center justify-end text-muted-foreground">
-                            {prefix}{value}{suffix}
+                            {hasUnresolvedPlaceholders ? UNAVAILABLE_VALUE_PLACEHOLDER : `${prefix}${value}${suffix}`}
                           </div>
                         ) : (
                           <div className="flex items-center justify-end gap-1">
