@@ -113,6 +113,12 @@ Released December 2025
   - Added paragraph spacing CSS (`mb-4`) to properly space separate paragraphs
   - Added test suite for paragraph spacing with 4 test cases
 
+- **Restored `- TEXT` and `- ESSAY` option modifiers**: These option-level modifiers were lost during parser refactor
+  - `- TEXT`, `- ESSAY`, and `- OTHER` now all set `allowsOtherText` flag on options
+  - Allows respondents to provide free text input when selecting specific options
+  - Works with both multiple choice and checkbox questions
+  - Added comprehensive test suite with 5 test cases
+
 ### Improvements
 
 - **Parser maintainability**: Extracted helper functions to reduce duplication
