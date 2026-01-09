@@ -128,6 +128,21 @@ RANGE: 1-3
     }
   })
 
+  it('should parse RANGE with spaces around dash', () => {
+    const text = `Q: Rate your satisfaction
+RANGE: 1 - 10`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('multiple_choice')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(10)
+      expect(question.options[0].value).toBe('1')
+      expect(question.options[9].value).toBe('10')
+    }
+  })
+
   it('should throw error for invalid RANGE syntax', () => {
     const text = `Q: Rate
 RANGE: 1 to 10`

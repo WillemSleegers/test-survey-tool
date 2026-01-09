@@ -99,7 +99,7 @@ export function SectionRenderer({
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Section Title */}
       {section.title && (
         <div className="relative">
@@ -129,9 +129,9 @@ export function SectionRenderer({
         if (isText(item)) {
           const processedText = replacePlaceholders(item.value, variables, computedVariables).trim()
           return processedText ? (
-            <div key={`content-${index}`}>
+            <React.Fragment key={`content-${index}`}>
               {renderContentItem(processedText)}
-            </div>
+            </React.Fragment>
           ) : null
         } else {
           // Question item
@@ -150,6 +150,6 @@ export function SectionRenderer({
           )
         }
       })}
-    </div>
+    </>
   )
 }

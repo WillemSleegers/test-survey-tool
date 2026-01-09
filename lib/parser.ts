@@ -466,9 +466,9 @@ const parseNumberQuestion = (lines: string[], questionCounter: { count: number }
  * Generate options from RANGE syntax
  */
 const generateRangeOptions = (rangeStr: string): Option[] => {
-  const match = rangeStr.match(/^(-?\d+)-(-?\d+)$/)
+  const match = rangeStr.match(/^(-?\d+)\s*-\s*(-?\d+)$/)
   if (!match) {
-    throw new Error(`Invalid RANGE syntax: "${rangeStr}". Expected format: "start-end" (e.g., "1-10")`)
+    throw new Error(`Invalid RANGE syntax: "${rangeStr}". Expected format: "start-end" (e.g., "1-10" or "1 - 10")`)
   }
 
   const start = parseInt(match[1], 10)
@@ -1108,6 +1108,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
   // State for parsing
   let tooltip: string | undefined
+  let showIf: string | undefined
   let navLevel: number | undefined
   const computedVariables: ComputedVariable[] = []
   const sectionLines: string[][] = []
@@ -1189,6 +1190,12 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
         continue
       }
 
+      // Extract SHOW_IF
+      if (trimmed.startsWith('SHOW_IF:')) {
+        showIf = extractAfterKeyword(trimmed, 'SHOW_IF:')
+        continue
+      }
+
       // If we hit anything that's not a page-level keyword, transition to sections
       if (trimmed) {
         state = 'sections'
@@ -1227,6 +1234,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
     title,
     tooltip,
     sections,
+    showIf,
     computedVariables,
     navLevel,
   }
