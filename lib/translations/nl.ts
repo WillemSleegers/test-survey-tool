@@ -6,14 +6,13 @@ export const nl = {
     contents: "Inhoud",
   },
   placeholders: {
-    textInput: "Voer je antwoord in...",
+    textInput: "Voer uw antwoord in...",
     numberInput: "Voer een nummer in...",
-    otherText: "Voer je antwoord in...",
+    otherText: "Voer uw antwoord in...",
   },
   completion: {
     title: "Enquête voltooid!",
-    description:
-      "Bedankt voor het invullen van de enquête.",
+    description: "Bedankt voor het invullen van de enquête.",
     close: "Sluiten",
   },
   errors: {
