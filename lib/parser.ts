@@ -945,15 +945,11 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     }
   }
 
-  // Build question lookup structures
+  // Build question lookup map
   const lineToQuestion = new Map<number, QuestionChunk>()
-  const questionLineSet = new Set<string>()
   for (const qChunk of questionChunks) {
     if (qChunk.startIndex !== undefined) {
       lineToQuestion.set(qChunk.startIndex, qChunk)
-    }
-    for (const line of qChunk.lines) {
-      questionLineSet.add(line)
     }
   }
 
@@ -1063,17 +1059,12 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
       continue
     }
 
-    // Skip lines that belong to questions
-    if (questionLineSet.has(line)) {
-      continue
-    }
-
     // Everything else is content
     if (trimmed) {
       contentBuffer.push(line)
     } else if (contentBuffer.length > 0) {
-      // Preserve blank lines within content
-      contentBuffer.push(line)
+      // Preserve blank lines between content (push empty line to maintain paragraph spacing)
+      contentBuffer.push('')
     }
   }
 

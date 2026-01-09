@@ -105,6 +105,14 @@ Released December 2025
     NUMBER
     ```
 
+### Bug Fixes
+
+- **Fixed paragraph spacing in text content**: Text with blank lines between paragraphs now renders correctly
+  - Fixed parser bug where blank lines between content paragraphs were incorrectly skipped
+  - Removed redundant `questionLineSet` check that was marking blank lines as question lines
+  - Added paragraph spacing CSS (`mb-4`) to properly space separate paragraphs
+  - Added test suite for paragraph spacing with 4 test cases
+
 ### Improvements
 
 - **Parser maintainability**: Extracted helper functions to reduce duplication
