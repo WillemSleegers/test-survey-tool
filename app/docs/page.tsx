@@ -362,7 +362,7 @@ Q: How was your experience?
               <li>
                 Use numbers when you want to reference questions explicitly
               </li>
-              <li>Content on following lines gets appended to question text</li>
+              <li>Question text must be on a single line after <code>Q:</code></li>
               <li>
                 By default, a question is a multiple choice question (unless you
                 specify a type like TEXT, NUMBER, etc.)

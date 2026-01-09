@@ -169,15 +169,15 @@ export function MatrixQuestion({
       computedVariables={computedVariables}
     >
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="table-fixed w-full">
           {hasOptions && (
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left font-medium"></TableHead>
+                <TableHead className="text-left font-medium w-1/4"></TableHead>
                 {responseOptions.map((option, index) => (
                   <TableHead
                     key={index}
-                    className="text-center text-base font-normal min-w-20 max-w-[120px] whitespace-normal align-bottom px-3 py-2"
+                    className="text-center text-base font-normal whitespace-normal align-bottom px-3 py-2"
                   >
                     <Markdown>
                       {replacePlaceholders(
