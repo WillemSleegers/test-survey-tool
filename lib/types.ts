@@ -1,6 +1,7 @@
 
 
 export type Block = {
+  id: number
   name: string
   showIf?: string
   pages: Page[]
@@ -14,17 +15,36 @@ export type NavItem = {
 }
 
 export type Page = {
+  id: number
   title: string
   tooltip?: string
   sections: Section[]
   showIf?: string
   computedVariables: ComputedVariable[]
+  navLevel?: number  // Optional navigation level (1 = top-level, 2 = nested, etc.)
+}
+
+export type Text = {
+  value: string
+}
+
+export type SectionItem = Text | Question
+
+// Type guards for discriminating between Text and Question
+export function isText(item: SectionItem): item is Text {
+  return 'value' in item
+}
+
+export function isQuestion(item: SectionItem): item is Question {
+  return 'type' in item
 }
 
 export type Section = {
-  content: string
+  id: number
+  title?: string
   tooltip?: string
-  questions: Question[]
+  items: SectionItem[]
+  showIf?: string
 }
 
 // Base fields common to all questions
@@ -68,7 +88,24 @@ export type MatrixQuestion = QuestionBase & {
   inputType?: "checkbox" | "text" | "essay"
 }
 
-export type BreakdownOption = Omit<Option, 'subquestions' | 'allowsOtherText'>
+export type BreakdownOption = {
+  value: string
+  label: string
+  hint?: string
+  tooltip?: string
+  showIf?: string
+  subtract?: boolean
+  prefillValue?: string
+  variable?: string
+  column?: number
+  exclude?: boolean
+  header?: boolean
+  subtotalLabel?: string
+  separator?: boolean
+  custom?: string
+  prefix?: string
+  suffix?: string
+}
 
 export type BreakdownQuestion = QuestionBase & {
   type: "breakdown"
@@ -87,33 +124,12 @@ export type Question =
   | MatrixQuestion
   | BreakdownQuestion
 
-// Internal parser type that allows all field combinations during parsing
-// This gets converted to the proper discriminated Question type after parsing is complete
-export type ParsedQuestion = {
-  id: string
-  text: string
-  subtext?: string
-  tooltip?: string
-  type: "multiple_choice" | "checkbox" | "text" | "essay" | "number" | "matrix" | "breakdown"
-  options: Option[]
-  subquestions?: Subquestion[]
-  inputType?: "checkbox" | "text" | "essay"
-  variable?: string
-  showIf?: string
-  totalLabel?: string
-  prefix?: string
-  suffix?: string
-}
-
 export type Subquestion = {
   id: string
   text: string
   subtext?: string
   tooltip?: string
   variable?: string
-  subtract?: boolean
-  subtotalLabel?: string
-  value?: string
   showIf?: string
 }
 
@@ -125,18 +141,6 @@ export type Option = {
   tooltip?: string
   showIf?: string
   allowsOtherText?: boolean
-  subquestions?: Subquestion[]
-  subtract?: boolean
-  prefillValue?: string
-  variable?: string
-  column?: number
-  exclude?: boolean
-  header?: boolean
-  subtotalLabel?: string
-  separator?: boolean
-  custom?: string
-  prefix?: string
-  suffix?: string
 }
 
 export type Variables = {
@@ -153,7 +157,7 @@ export type ComputedVariable = {
   value?: boolean | string | number
 }
 
-export type ComputedVariables = {
+export type ComputedValues = {
   [variableName: string]: boolean | string | number
 }
 
@@ -161,16 +165,6 @@ export type ConditionalPlaceholder = {
   condition: string
   trueText: string
   falseText: string
-}
-
-export type VisibleSection = {
-  content: string
-  tooltip?: string
-  questions: Question[]
-}
-
-export type VisiblePageContent = {
-  sections: VisibleSection[]
 }
 
 // Parser-specific types with proper discriminated unions
@@ -192,8 +186,6 @@ export type NavItemData = { name: string }
 export type NavLevelData = { level: number }
 
 export type SubquestionData = { id: string; text: string }
-export type SubquestionSubtractData = { subtract: true }
-export type SubquestionValueData = { value: string }
 export type TotalLabelData = { totalLabel: string }
 export type SubtotalLabelData = { subtotalLabel: string }
 export type PrefixData = { prefix: string }
@@ -216,7 +208,6 @@ export type ParsedLine =
   | { type: "option_subtract"; raw: string; data: OptionSubtractData }
   | { type: "option_hint"; raw: string; data: SubtextData }
   | { type: "option_tooltip"; raw: string; data: TooltipData }
-  | { type: "option_value"; raw: string; data: SubquestionValueData }
   | { type: "option_variable"; raw: string; data: VariableData }
   | { type: "option_column"; raw: string; data: ColumnData }
   | { type: "option_exclude"; raw: string; data: OptionExcludeData }
@@ -228,8 +219,6 @@ export type ParsedLine =
   | { type: "option_suffix"; raw: string; data: SuffixData }
   | { type: "subquestion_hint"; raw: string; data: SubtextData }
   | { type: "subquestion_tooltip"; raw: string; data: TooltipData }
-  | { type: "subquestion_subtract"; raw: string; data: SubquestionSubtractData }
-  | { type: "subquestion_value"; raw: string; data: SubquestionValueData }
   | { type: "subquestion_variable"; raw: string; data: VariableData }
   | { type: "subquestion_show_if"; raw: string; data: ShowIfData }
   | { type: "matrix_row"; raw: string; data: SubquestionData }
@@ -255,7 +244,7 @@ export type ParserState = {
   currentNavLevel: number
   currentPage: Page | null
   currentSection: Section | null
-  currentQuestion: ParsedQuestion | null
+  currentQuestion: Question | null
   currentSubquestion: Subquestion | null
   subtextBuffer: string[] | null
   tooltipBuffer: string[] | null
@@ -266,4 +255,7 @@ export type ParserState = {
   optionSubtextBuffer: string[] | null
   optionTooltipBuffer: string[] | null
   questionCounter: number
+  // Lookahead support
+  allLines: string[]
+  currentLineIndex: number
 }

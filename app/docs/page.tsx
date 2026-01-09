@@ -1,10 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 
 import { AppSidebar } from "@/components/app-sidebar"
-import { BASIC_SAMPLE_TEXT } from "@/lib/constants"
+import { Navbar } from "@/components/navbar"
 import { parseQuestionnaire } from "@/lib/parser"
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 
@@ -37,21 +36,7 @@ export default function DocsPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header>
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between border-b border-border">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <span className="text-xl font-bold">TST</span>
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/docs" className="text-sm hover:underline">
-              Documentation
-            </Link>
-            <Link href="/releases" className="text-sm hover:underline">
-              Releases
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Navbar maxWidth="7xl" />
 
       <div className="flex-1">
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -91,21 +76,34 @@ function DocumentationContent({
       const parsed = parseQuestionnaire(code)
       return (
         <div className="space-y-0 rounded-lg border border-border overflow-hidden">
-          <div className="bg-background p-6">
+          <div className="bg-muted p-4">
+            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
+          </div>
+          <div className="bg-background p-6 border-t border-border">
             <QuestionnaireViewer
               questionnaire={parsed.blocks}
               navItems={parsed.navItems}
               onResetToUpload={() => {}}
               hidePageNavigator={true}
+              disableAutoScroll={true}
             />
-          </div>
-          <div className="bg-muted p-4 border-t border-border">
-            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
           </div>
         </div>
       )
     } catch (err) {
-      return null
+      return (
+        <div className="space-y-0 rounded-lg border border-destructive overflow-hidden">
+          <div className="bg-muted p-4">
+            <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
+          </div>
+          <div className="bg-destructive/10 p-4 border-t border-destructive">
+            <p className="text-sm text-destructive font-semibold">
+              Parse Error:
+            </p>
+            <p className="text-sm text-destructive">{(err as Error).message}</p>
+          </div>
+        </div>
+      )
     }
   }
 
@@ -114,21 +112,40 @@ function DocumentationContent({
       return (
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold">Overview</h1>
-            <p className="text-lg text-muted-foreground mt-2">
+            <h1 className="text-2xl font-semibold">Overview</h1>
+            <p className="text-muted-foreground mt-1">
               Learn how to create surveys using the TST text format.
             </p>
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-2xl font-semibold">Basic Example</h2>
-            <p className="text-muted-foreground">
-              Here's a simple survey to get you started:
-            </p>
-            {renderExample(BASIC_SAMPLE_TEXT)}
+            <h2 className="text-xl font-semibold">Basic Example</h2>
+            <p>Here's a simple survey to get you started.</p>
+            {renderExample(`# **Welcome**
+
+Q: What is your name?
+TEXT
+
+Q: What is your email?
+TEXT
+
+# **Feedback**
+
+Q: How would you rate your experience?
+- Excellent
+- Good
+- Fair
+- Poor
+
+Q: Would you recommend us to others?
+- Yes
+- No
+
+Q: Any additional comments?
+ESSAY`)}
           </div>
 
-          <p className="text-muted-foreground">
+          <p>
             Select a topic from the sidebar to learn about specific features and
             capabilities.
           </p>
@@ -139,8 +156,8 @@ function DocumentationContent({
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Pages</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Pages</h2>
+            <p className="text-muted-foreground mt-1">
               Pages are the top-level containers in your survey. Each page is
               displayed separately with navigation controls.
             </p>
@@ -148,21 +165,11 @@ function DocumentationContent({
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`# Page Title
-or
-#`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>
-                Each <code>#</code> starts a new page with an optional title
-              </li>
-              <li>Not including a title simply creates a new page</li>
-              <li>
-                Use multiple pages to break long surveys into manageable
-                sections
-              </li>
-              <li>
-                Respondents navigate between pages using Next/Previous buttons
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Each <code>#</code> starts a new page with an optional title</li>
+              <li>Include a title after the <code>#</code>, or leave it blank for an untitled page</li>
+              <li>Respondents navigate through pages using Next/Previous buttons</li>
+              <li>Use multiple pages to break long surveys into manageable sections</li>
             </ul>
           </div>
 
@@ -183,47 +190,51 @@ TEXT`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Sections</h2>
-            <p className="text-muted-foreground mt-2">
-              Sections organize questions within a page. They're optional but
-              help structure longer pages.
+            <h2 className="text-2xl font-semibold">Sections</h2>
+            <p className="text-muted-foreground mt-1">
+              Organize questions within a page using titled sections with
+              optional descriptive content.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`## Section Title
-
-Sections create visual groupings of related questions.`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a section within a page</li>
-              <li>
-                Usually followed by text to provide additional instructions
-              </li>
-              <li>Helps visually group related questions together</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>##</code> to create a section heading within a page</li>
+              <li>Add optional content after the section title to provide context or instructions</li>
+              <li>Section content supports Markdown formatting</li>
+              <li>Sections can include tooltips with additional information</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`# Contact Information
+            {renderExample(`# Employee Survey
 
-Q: Are you interested in receiving updates?
+## Work Environment
+Please rate the following aspects of your work environment. Your feedback helps us improve our workplace.
+
+Q: How satisfied are you with your workspace?
+- Very satisfied
+- Satisfied
+- Neutral
+- Dissatisfied
+
+Q: Do you have the tools you need?
 - Yes
 - No
 
-## Personal Details
-Q: What is your name?
-TEXT
+## Team Collaboration
+The next questions focus on how well your team works together.
 
-Q: What is your email?
-TEXT
+Q: How often does your team meet?
+- Daily
+- Weekly
+- Monthly
+- Rarely
 
-## Preferences
-Q: How would you like to be contacted?
-- Email
-- Phone
-- Mail`)}
+Q: Rate team communication
+RANGE: 1-5`)}
           </div>
         </div>
       )
@@ -232,59 +243,43 @@ Q: How would you like to be contacted?
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Blocks</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Blocks</h2>
+            <p className="text-muted-foreground mt-1">
               Group multiple pages together for conditional logic.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`BLOCK: Demographics
-SHOW_IF: participate == Yes
-
-# Age
-Q: How old are you?
-NUMBER
-
-# Location
-Q: Where do you live?
-TEXT`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Groups multiple pages together for conditional logic</li>
-              <li>All pages until the next BLOCK belong to this block</li>
-              <li>
-                Can be used with SHOW_IF to hide/show multiple pages at once
-              </li>
-              <li>
-                <strong>Note:</strong> BLOCKs are for logic only - use NAV for
-                respondent navigation
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>BLOCK:</code> to group multiple pages together</li>
+              <li>All pages following a BLOCK declaration belong to that block until the next BLOCK</li>
+              <li>Combine blocks with <code>SHOW_IF</code> to conditionally show/hide multiple pages</li>
+              <li><strong>Note:</strong> BLOCKs are for logic only - use NAVIGATION for respondent navigation</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`# Consent
-Q: Would you like to participate?
+            {renderExample(`# Screening
+Q: Would you like to participate in our survey?
 - Yes
 - No
 VARIABLE: participate
 
-BLOCK: Survey Questions
+BLOCK: Main Survey
 SHOW_IF: participate == Yes
 
-# Question 1
+# Demographics
+Q: What is your age?
+NUMBER
+
+# Feedback
 Q: How satisfied are you?
 - Very satisfied
 - Satisfied
 - Neutral
-- Dissatisfied
-
-# Question 2
-Q: Would you recommend us?
-- Yes
-- No`)}
+- Dissatisfied`)}
           </div>
         </div>
       )
@@ -293,8 +288,8 @@ Q: Would you recommend us?
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Navigation</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Navigation</h2>
+            <p className="text-muted-foreground mt-1">
               Create navigation items in the survey sidebar for easier
               navigation.
             </p>
@@ -302,42 +297,47 @@ Q: Would you recommend us?
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`NAV: Introduction
-# Welcome
-
-NAV: Demographics
-LEVEL: 2
-# Basic Info
-
-NAV: Contact
-LEVEL: 2
-# Contact Details`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a navigation item in the survey sidebar</li>
-              <li>All pages until the next NAV belong to this item</li>
-              <li>Defaults to level 1 (top-level) navigation</li>
-              <li>
-                Appears as clickable item in navigation for respondents to jump
-                to sections
-              </li>
-              <li>
-                Shows completion status (visited/current/upcoming) automatically
-              </li>
-              <li>
-                <strong>LEVEL:</strong> Must come immediately after NAV
-                declaration
-                <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>
-                    Level 1 = top-level navigation (default, can be omitted)
-                  </li>
-                  <li>Level 2 = nested under the previous level 1 item</li>
-                  <li>
-                    Level 1 items with level 2 children become collapsible
-                    sections
-                  </li>
-                </ul>
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Add <code>NAVIGATION:</code> after a page title to include it in the survey sidebar</li>
+              <li>Use <code>NAVIGATION: 1</code> for top-level items</li>
+              <li>Use <code>NAVIGATION: 2</code> for nested items under the previous level 1</li>
+              <li>The page title becomes the navigation label</li>
+              <li>Sidebar shows completion status (visited/current/upcoming) automatically</li>
+              <li>Level 1 items with level 2 children become collapsible sections</li>
             </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold">Example</h3>
+            {renderExample(`# Welcome
+NAVIGATION: 1
+
+Q: What is your name?
+TEXT
+
+# Demographics
+NAVIGATION: 1
+
+# Age
+NAVIGATION: 2
+
+Q: What is your age?
+NUMBER
+
+# Location
+NAVIGATION: 2
+
+Q: Where do you live?
+TEXT
+
+# Feedback
+NAVIGATION: 1
+
+Q: How was your experience?
+- Excellent
+- Good
+- Fair
+- Poor`)}
           </div>
         </div>
       )
@@ -346,21 +346,22 @@ LEVEL: 2
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Questions</h2>
-            <p className="text-muted-foreground mt-2">
-              Questions are the core of your survey.
+            <h2 className="text-2xl font-semibold">Questions</h2>
+            <p className="text-muted-foreground mt-1">
+              Define questions of various types.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-or
-Q1: What is your name?
-
-Both formats work. Use numbers when you want to reference questions explicitly.`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a question</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>
+                Questions start with <code>Q:</code> or <code>Q1:</code>,{" "}
+                <code>Q2:</code>, etc.
+              </li>
+              <li>
+                Use numbers when you want to reference questions explicitly
+              </li>
               <li>Content on following lines gets appended to question text</li>
               <li>
                 By default, a question is a multiple choice question (unless you
@@ -371,8 +372,7 @@ Both formats work. Use numbers when you want to reference questions explicitly.`
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite color?
+            {renderExample(`Q: What is your favorite color?
 - Red
 - Blue
 - Green`)}
@@ -384,20 +384,15 @@ Q: What is your favorite color?
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Text Input</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Text Input</h2>
+            <p className="text-muted-foreground mt-1">
               Single-line text input (TEXT) or multi-line text area (ESSAY).
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-TEXT
-
-Q: Tell us about yourself
-ESSAY`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>TEXT creates a single-line text input field</li>
               <li>ESSAY creates a multi-line text area for longer responses</li>
               <li>Place TEXT or ESSAY immediately after the question line</li>
@@ -406,8 +401,7 @@ ESSAY`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your name?
+            {renderExample(`Q: What is your name?
 TEXT
 
 Q: Tell us about yourself
@@ -420,17 +414,15 @@ ESSAY`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Number Input</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Number Input</h2>
+            <p className="text-muted-foreground mt-1">
               Numeric input with validation.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: How old are you?
-NUMBER`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>NUMBER creates a numeric input field</li>
               <li>Only accepts numeric values</li>
               <li>Place NUMBER immediately after the question line</li>
@@ -439,8 +431,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: How old are you?
+            {renderExample(`Q: How old are you?
 NUMBER`)}
           </div>
         </div>
@@ -450,19 +441,15 @@ NUMBER`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Multiple Choice</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Multiple Choice</h2>
+            <p className="text-muted-foreground mt-1">
               Radio button selection - choose one option.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your favorite color?
-- Red
-- Blue
-- Green`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>
                 Creates radio button options where only one can be selected
               </li>
@@ -475,8 +462,7 @@ NUMBER`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite color?
+            {renderExample(`Q: What is your favorite color?
 - Red
 - Blue
 - Green`)}
@@ -488,20 +474,15 @@ Q: What is your favorite color?
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Checkbox</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Checkbox</h2>
+            <p className="text-muted-foreground mt-1">
               Multiple selection - choose multiple options.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Which languages do you speak?
-- English
-- Spanish
-- French
-CHECKBOX`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>Creates checkbox options where multiple can be selected</li>
               <li>Add CHECKBOX after the last option</li>
               <li>Each option starts with a dash (-) and space</li>
@@ -510,8 +491,7 @@ CHECKBOX`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: Which languages do you speak?
+            {renderExample(`Q: Which languages do you speak?
 - English
 - Spanish
 - French
@@ -524,9 +504,10 @@ CHECKBOX`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Breakdown Questions</h2>
-            <p className="text-muted-foreground mt-2">
-              Display options in a table with number inputs for each row, automatically calculating totals.
+            <h2 className="text-2xl font-semibold">Breakdown Questions</h2>
+            <p className="text-muted-foreground mt-1">
+              Display options in a table with number inputs for each row,
+              automatically calculating totals.
             </p>
           </div>
 
@@ -547,8 +528,7 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Basic Example</h3>
-            {renderExample(`#
-Q: How many hours per week do you spend on each activity?
+            {renderExample(`Q: How many hours per week do you spend on each activity?
 - Work
 - Exercise
 - Hobbies
@@ -558,8 +538,9 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Multi-Column Layout</h3>
-            <p className="text-muted-foreground text-sm">
-              Use <code>COLUMN:</code> to organize breakdown options into multiple value columns:
+            <p className="text-sm">
+              Use <code>COLUMN:</code> to organize breakdown options into
+              multiple value columns:
             </p>
             {renderCodeBlock(`Q: Revenue breakdown (in thousands)
 COLUMN: 1
@@ -569,16 +550,22 @@ COLUMN: 2
 - Industrial
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li><code>COLUMN: N</code> creates column N (must come before options)</li>
+              <li>
+                <code>COLUMN: N</code> creates column N (must come before
+                options)
+              </li>
               <li>Each option gets an input field in each column</li>
               <li>The total is displayed in the last column</li>
-              <li>Use <code>EXCLUDE</code> on specific rows to exclude them from the total</li>
+              <li>
+                Use <code>EXCLUDE</code> on specific rows to exclude them from
+                the total
+              </li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Calculated Values</h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm">
               Use <code>VALUE:</code> to create read-only calculated rows:
             </p>
             {renderCodeBlock(`Q: Financial breakdown
@@ -588,7 +575,10 @@ BREAKDOWN`)}
   VALUE: revenue - costs
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Rows with <code>VALUE:</code> display calculated results (not editable)</li>
+              <li>
+                Rows with <code>VALUE:</code> display calculated results (not
+                editable)
+              </li>
               <li>Supports arithmetic expressions using other variables</li>
               <li>Calculated values are included in totals by default</li>
             </ul>
@@ -596,8 +586,9 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Excluding from Totals</h3>
-            <p className="text-muted-foreground text-sm">
-              Use <code>EXCLUDE</code> to display a row without including it in the total:
+            <p className="text-sm">
+              Use <code>EXCLUDE</code> to display a row without including it in
+              the total:
             </p>
             {renderCodeBlock(`Q: Budget allocation
 - Department A
@@ -606,14 +597,17 @@ BREAKDOWN`)}
   EXCLUDE
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Options with <code>EXCLUDE</code> appear in the table but don't affect totals</li>
+              <li>
+                Options with <code>EXCLUDE</code> appear in the table but don't
+                affect totals
+              </li>
               <li>Useful for reference values or context information</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Option-Level Variables</h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm">
               Assign variables to individual option values:
             </p>
             {renderCodeBlock(`Q: Project hours
@@ -626,16 +620,22 @@ BREAKDOWN`)}
 VARIABLE: total_hours
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Option-level <code>VARIABLE:</code> stores the specific option's value</li>
-              <li>Question-level <code>VARIABLE:</code> stores the total</li>
+              <li>
+                Option-level <code>VARIABLE:</code> stores the specific option's
+                value
+              </li>
+              <li>
+                Question-level <code>VARIABLE:</code> stores the total
+              </li>
               <li>Use these variables in calculations and conditional logic</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Subtotals</h3>
-            <p className="text-muted-foreground text-sm">
-              Use <code>SUBTOTAL:</code> to display intermediate sums within the table:
+            <p className="text-sm">
+              Use <code>SUBTOTAL:</code> to display intermediate sums within the
+              table:
             </p>
             {renderCodeBlock(`Q: Department expenses
 - Salaries
@@ -646,16 +646,23 @@ BREAKDOWN`)}
 - SUBTOTAL: Materials
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Subtotal rows sum all previous options since the last subtotal</li>
-              <li>Subtotals are displayed but not included in the final total</li>
-              <li>Use Markdown for formatting (e.g., <code>**Bold text**</code>)</li>
+              <li>
+                Subtotal rows sum all previous options since the last subtotal
+              </li>
+              <li>
+                Subtotals are displayed but not included in the final total
+              </li>
+              <li>
+                Use Markdown for formatting (e.g., <code>**Bold text**</code>)
+              </li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Subtracting Values</h3>
-            <p className="text-muted-foreground text-sm">
-              Use <code>SUBTRACT</code> to subtract a value from the total instead of adding:
+            <p className="text-sm">
+              Use <code>SUBTRACT</code> to subtract a value from the total
+              instead of adding:
             </p>
             {renderCodeBlock(`Q: Cash flow
 - Income
@@ -663,7 +670,9 @@ BREAKDOWN`)}
   SUBTRACT
 BREAKDOWN`)}
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Options with <code>SUBTRACT</code> are subtracted from the total</li>
+              <li>
+                Options with <code>SUBTRACT</code> are subtracted from the total
+              </li>
               <li>Useful for calculating net values or differences</li>
             </ul>
           </div>
@@ -674,8 +683,8 @@ BREAKDOWN`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Matrix</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Matrix</h2>
+            <p className="text-muted-foreground mt-1">
               Table layout with rows and columns where each cell is a radio
               button.
             </p>
@@ -683,15 +692,10 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Rate the following
-- Q: Product quality
-- Q: Customer service
-- Poor
-- Fair
-- Good
-- Excellent`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Creates a matrix question row (sub-question)</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>
+                Sub-questions start with <code>- Q:</code> within a question
+              </li>
               <li>
                 Multiple <code>- Q:</code> lines create multiple rows sharing
                 the same options
@@ -713,8 +717,7 @@ BREAKDOWN`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: Rate the following
+            {renderExample(`Q: Rate the following
 - Q: Product quality
 - Q: Customer service
 - Q: Value for money
@@ -730,8 +733,8 @@ Q: Rate the following
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Variables</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Variables</h2>
+            <p className="text-muted-foreground mt-1">
               Assign variable names to questions to reference their answers
               later.
             </p>
@@ -739,14 +742,10 @@ Q: Rate the following
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your name?
-TEXT
-VARIABLE: name
-
-# Welcome
-Hello {name}!`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Stores the response to the question into a variable</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>
+                Use <code>VARIABLE: name</code> to store the question's response
+              </li>
               <li>
                 Can be used to insert the response into texts later in the
                 survey or for use in conditions
@@ -782,33 +781,18 @@ Welcome {name}! You are {age} years old.`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Arithmetic Expressions</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Arithmetic Expressions</h2>
+            <p className="text-muted-foreground mt-1">
               Perform calculations using variables.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: How many apples?
-NUMBER
-VARIABLE: apples
-
-Q: How many oranges?
-NUMBER
-VARIABLE: oranges
-
-# Summary
-You have {apples + oranges} fruits total.`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>
-                Use <code>{"{var1 + var2}"}</code> to add, subtract, multiply,
-                divide variables
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>{"{var1 + var2}"}</code> to add, subtract, multiply, or divide variables</li>
               <li>Supports parentheses for complex operations</li>
-              <li>
-                Can be used in question text, page text, or computed variables
-              </li>
+              <li>Can be used in question text, page text, or computed variables</li>
             </ul>
           </div>
 
@@ -841,28 +825,18 @@ Your monthly expenses:
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Computed Variables</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Computed Variables</h2>
+            <p className="text-muted-foreground mt-1">
               Create calculated variables based on other answers.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`BLOCK: Budget
-COMPUTE: total = rent + food + transport
-
-# Monthly Expenses
-Q: Monthly rent
-NUMBER
-VARIABLE: rent
-
-# Summary
-Total: {total}`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Calculates a variable based on an expression</li>
-              <li>Can be block-level or page-level</li>
-              <li>Uses arithmetic expressions and conditions</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>COMPUTE: variable = expression</code> to calculate a variable</li>
+              <li>Can be placed at block-level or page-level</li>
+              <li>Supports arithmetic expressions and conditions</li>
               <li>Evaluated dynamically as user answers questions</li>
             </ul>
           </div>
@@ -895,46 +869,20 @@ Your total monthly expenses: **{total}**`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">List Formatting</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">List Formatting</h2>
+            <p className="text-muted-foreground mt-1">
               Format checkbox variables as bullet lists or inline text.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Select interests
-CHECKBOX
-- Sports
-- Music
-- Technology
-VARIABLE: interests
-
-# Summary
-Your interests: {interests AS LIST}
-You selected {interests AS INLINE_LIST}.`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>
-                <code>{"{interests AS LIST}"}</code> - Formats checkbox
-                variables as bullet lists
-                <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>
-                    Without AS LIST, checkbox variables display as bullet lists
-                    by default
-                  </li>
-                </ul>
-              </li>
-              <li>
-                <code>{"{interests AS INLINE_LIST}"}</code> - Formats checkbox
-                variables as comma-separated inline text
-                <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                  <li>
-                    Automatically lowercases items for natural sentence flow
-                  </li>
-                  <li>Uses Oxford commas: "sports, music, and technology"</li>
-                  <li>Perfect for inserting lists within question text</li>
-                </ul>
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li><code>{"{variable AS LIST}"}</code> - Formats checkbox variables as bullet lists (default behavior)</li>
+              <li><code>{"{variable AS INLINE_LIST}"}</code> - Formats checkbox variables as comma-separated inline text</li>
+              <li>INLINE_LIST automatically lowercases items for natural sentence flow</li>
+              <li>Uses Oxford commas (e.g., "sports, music, and technology")</li>
+              <li>Perfect for inserting lists within question text or page content</li>
             </ul>
           </div>
 
@@ -963,8 +911,8 @@ You selected {interests AS INLINE_LIST} as your interests.`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Conditionals</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Conditionals</h2>
+            <p className="text-muted-foreground mt-1">
               Control what content appears based on user responses.
             </p>
           </div>
@@ -974,43 +922,21 @@ You selected {interests AS INLINE_LIST} as your interests.`)}
               <h3 className="text-2xl font-semibold">
                 Conditional Logic (SHOW_IF)
               </h3>
-              <p className="text-muted-foreground">
-                Show or hide questions based on previous answers.
-              </p>
+              <p>Show or hide questions based on previous answers.</p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
-                {renderCodeBlock(`Q: Do you have pets?
-- Yes
-- No
-VARIABLE: has_pets
-
-Q: What kind of pet?
-SHOW_IF: has_pets == Yes
-- Dog
-- Cat
-- Other`)}
-                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Hides/shows questions conditionally</li>
-                  <li>
-                    Should be placed below a question or below the question
-                    options to apply to the question
-                  </li>
-                  <li>
-                    Can also be placed after blocks, pages, or individual
-                    question options
-                  </li>
-                  <li>
-                    Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND,
-                    OR, NOT
-                  </li>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Use <code>SHOW_IF: condition</code> to conditionally hide/show questions</li>
+                  <li>Place below a question or after question options to apply to that question</li>
+                  <li>Can also be placed after blocks, pages, or individual question options</li>
+                  <li>Supports operators: ==, !=, &gt;, &lt;, &gt;=, &lt;=, AND, OR, NOT</li>
                 </ul>
               </div>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Do you have pets?
+                {renderExample(`Q: Do you have pets?
 - Yes
 - No
 VARIABLE: has_pets
@@ -1026,35 +952,21 @@ SHOW_IF: has_pets == Yes
 
             <div className="space-y-3">
               <h3 className="text-2xl font-semibold">Conditional Text</h3>
-              <p className="text-muted-foreground">
-                Display dynamic text based on variables and conditions.
-              </p>
+              <p>Display dynamic text based on variables and conditions.</p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
-                {renderCodeBlock(`Q: Are you a student?
-- Yes
-- No
-VARIABLE: student
-
-Q: {{IF student == Yes THEN What is your major? ELSE What is your occupation?}}
-TEXT`)}
-                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>
-                    Inserts conditional text within question text or page text
-                  </li>
-                  <li>
-                    Can be used to dynamically change question wording based on
-                    previous responses
-                  </li>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Use <code>{"{IF condition THEN text ELSE text}"}</code> syntax for conditional text</li>
+                  <li>Inserts conditional text within question text or page text</li>
+                  <li>Dynamically changes question wording based on previous responses</li>
                   <li>ELSE part is optional</li>
                 </ul>
               </div>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Are you a student?
+                {renderExample(`Q: Are you a student?
 - Yes
 - No
 VARIABLE: student
@@ -1066,49 +978,22 @@ TEXT`)}
 
             <div className="space-y-3">
               <h3 className="text-2xl font-semibold">STARTS_WITH Operator</h3>
-              <p className="text-muted-foreground">
-                Test multiple variables with a common prefix at once.
-              </p>
+              <p>Test multiple variables with a common prefix at once.</p>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Usage</h4>
-                {renderCodeBlock(`Q: Did you witness fraud?
-- Yes
-- No
-VARIABLE: fraud_witnessed
-
-Q: Did you witness theft?
-- Yes
-- No
-VARIABLE: fraud_theft
-
-# Follow-up
-SHOW_IF: STARTS_WITH fraud == Yes
-
-Q: Provide details
-ESSAY`)}
-                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Tests multiple variables with a common prefix at once</li>
-                  <li>
-                    <code>STARTS_WITH fraud == Yes</code>: Any variable starting
-                    with "fraud" equals "Yes"
-                  </li>
-                  <li>
-                    <code>STARTS_WITH fraud != No</code>: Any variable starting
-                    with "fraud" doesn't equal "No"
-                  </li>
-                  <li>
-                    Uses OR logic: true if ANY matching variable meets the
-                    condition
-                  </li>
-                  <li>Useful for grouped questions with common prefixes</li>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Use <code>STARTS_WITH prefix == value</code> to test multiple variables with a common prefix</li>
+                  <li>Tests if ANY variable starting with the prefix meets the condition</li>
+                  <li>Uses OR logic: true if at least one matching variable satisfies the condition</li>
+                  <li>Example: <code>STARTS_WITH fraud == Yes</code> checks all variables starting with "fraud"</li>
+                  <li>Useful for grouped questions with common variable naming patterns</li>
                 </ul>
               </div>
 
               <div className="space-y-3">
                 <h4 className="text-xl font-semibold">Example</h4>
-                {renderExample(`#
-Q: Did you witness fraud?
+                {renderExample(`Q: Did you witness fraud?
 - Yes
 - No
 VARIABLE: crime_fraud
@@ -1133,25 +1018,17 @@ ESSAY`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Hints</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Hints</h2>
+            <p className="text-muted-foreground mt-1">
               Add helpful subtext to questions for additional context.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Enter your email
-HINT: We'll never share your email
-TEXT`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>
-                Adds muted text below question for additional instructions
-              </li>
-              <li>
-                Place immediately after the question line; before question
-                options
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>HINT: text</code> to add muted subtext below a question</li>
+              <li>Place immediately after the question line; before question options</li>
               <li>Content on following lines gets appended to the hint text</li>
               <li>Supports Markdown formatting</li>
             </ul>
@@ -1159,8 +1036,7 @@ TEXT`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your email address?
+            {renderExample(`Q: What is your email address?
 HINT: We'll only use this to send you survey results
 TEXT
 
@@ -1178,38 +1054,27 @@ CHECKBOX`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Tooltips</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Tooltips</h2>
+            <p className="text-muted-foreground mt-1">
               Add collapsible information icons next to questions.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your income?
-TOOLTIP: This information is confidential
-* All responses are anonymized
-* Data is encrypted
-NUMBER`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Adds collapsible information icon next to question text</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>TOOLTIP: text</code> to add a collapsible information icon</li>
               <li>Tooltip content is hidden by default and shown on click</li>
               <li>Place after HINT (if present); before question options</li>
-              <li>
-                Content on following lines gets appended to the tooltip text
-              </li>
+              <li>Content on following lines gets appended to the tooltip text</li>
               <li>Supports Markdown formatting (bold, italic, links, etc.)</li>
-              <li>
-                <strong>Note:</strong> Use <code>*</code> or numbered lists for
-                bullets, not <code>-</code> (which starts options)
-              </li>
+              <li><strong>Note:</strong> Use <code>*</code> or numbered lists for bullets, not <code>-</code> (which starts options)</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your annual income?
+            {renderExample(`Q: What is your annual income?
 HINT: Please provide your gross income
 TOOLTIP: Why we ask this
 * This helps us understand our user demographics
@@ -1224,36 +1089,25 @@ NUMBER`)}
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Text Inputs on Options</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Text Inputs on Options</h2>
+            <p className="text-muted-foreground mt-1">
               Add text input to specific options.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: What is your favorite hobby?
-- Sports
-- Reading
-- Other
-  - TEXT`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Adds text input to a question option</li>
-              <li>Shows up when the question option is selected</li>
-              <li>
-                Useful to allow respondents to elaborate on a question option
-              </li>
-              <li>
-                Should be placed directly under the option with two indented
-                spaces
-              </li>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Adds text input to a specific question option</li>
+              <li>Shows when the option is selected</li>
+              <li>Use <code>- TEXT</code> or <code>- ESSAY</code> indented under an option</li>
+              <li>Useful to allow respondents to elaborate on their selection</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example</h3>
-            {renderExample(`#
-Q: What is your favorite hobby?
+            {renderExample(`Q: What is your favorite hobby?
 - Sports
 - Reading
 - Gaming
@@ -1263,7 +1117,7 @@ Q: What is your favorite hobby?
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Conditional Options</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground">
               Options can be conditionally shown using <code>- SHOW_IF:</code>.
               See the{" "}
               <button
@@ -1282,21 +1136,17 @@ Q: What is your favorite hobby?
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Numeric Ranges</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Numeric Ranges</h2>
+            <p className="text-muted-foreground mt-1">
               Generate numeric options using shorthand syntax for rating scales.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`Q: Rate your satisfaction
-RANGE: 1-10`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
+              <li>Use <code>RANGE: start-end</code> to generate numeric options (e.g., <code>RANGE: 1-10</code>)</li>
               <li>Generates numeric options from start to end (inclusive)</li>
-              <li>
-                Format: <code>RANGE: start-end</code> (e.g., <code>RANGE: 1-10</code>)
-              </li>
               <li>Works with multiple choice, checkbox, and matrix questions</li>
               <li>Supports negative numbers (e.g., <code>RANGE: -5-5</code>)</li>
               <li>Can be mixed with manual options</li>
@@ -1305,16 +1155,16 @@ RANGE: 1-10`)}
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Example: Rating Scale</h3>
-            {renderExample(`#
-Q: How satisfied are you with our service?
+            {renderExample(`Q: How satisfied are you with our service?
 RANGE: 1-10
 VARIABLE: satisfaction`)}
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold">Example: Matrix with Range</h3>
-            {renderExample(`#
-Q: Please rate the following aspects:
+            <h3 className="text-xl font-semibold">
+              Example: Matrix with Range
+            </h3>
+            {renderExample(`Q: Please rate the following aspects:
 - Q: Quality
 - Q: Service
 - Q: Value
@@ -1322,9 +1172,10 @@ RANGE: 1-7`)}
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold">Example: Net Promoter Score</h3>
-            {renderExample(`#
-Q: How likely are you to recommend us?
+            <h3 className="text-xl font-semibold">
+              Example: Net Promoter Score
+            </h3>
+            {renderExample(`Q: How likely are you to recommend us?
 RANGE: 0-10
 VARIABLE: nps_score`)}
           </div>
@@ -1335,14 +1186,12 @@ VARIABLE: nps_score`)}
 - Low
 RANGE: 1-3
 - High`)}
-            <p className="text-sm text-muted-foreground">
-              This creates options: Low, 1, 2, 3, High
-            </p>
+            <p className="text-sm">This creates options: Low, 1, 2, 3, High</p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Conditional Options</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground">
               Options can be conditionally shown using <code>- SHOW_IF:</code>.
               See the{" "}
               <button
@@ -1361,29 +1210,19 @@ RANGE: 1-3
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-3xl font-bold">Markdown Formatting</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-semibold">Markdown Formatting</h2>
+            <p className="text-muted-foreground mt-1">
               All text supports Markdown formatting.
             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Usage</h3>
-            {renderCodeBlock(`## Instructions
-Please answer **honestly** and *thoughtfully*.
-
-Q: Do you agree with the **terms**?
-- Yes
-- No`)}
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <ul className="list-disc list-inside space-y-2">
               <li>All text supports Markdown formatting</li>
-              <li>
-                <code>**bold text**</code> for emphasis
-              </li>
-              <li>
-                <code>*italic text*</code> for subtle emphasis
-              </li>
-              <li>Bullet points and other formatting</li>
+              <li>Use <code>**bold text**</code> for emphasis</li>
+              <li>Use <code>*italic text*</code> for subtle emphasis</li>
+              <li>Supports bullet points, links, and other formatting</li>
             </ul>
           </div>
 

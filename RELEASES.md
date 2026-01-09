@@ -1,5 +1,159 @@
 # Release Notes
 
+## Version 0.3.0
+
+Released December 2025
+
+### Major Changes
+
+- **Parser refactor**: Complete rewrite using chunk-based hierarchical architecture
+  - Reduced parser code from ~2600 lines to ~1100 lines (60% reduction)
+  - Hierarchical parsing: Questionnaire → Blocks/NavItems → Pages → Sections → Questions
+  - Type-specific parsers for all 7 question types
+  - Eliminated indentation-based parsing - dash markers now identify metadata
+  - Improved maintainability and extensibility
+
+- **Single-pass parsing architecture**: Refactored `parseSection`, `parsePage`, and `parseBlock` to use state machines
+  - Fixed bug where multi-line delimited tooltip content was rendered twice (as metadata and as content)
+  - Each parser uses specific state names describing exactly what's being parsed (e.g., `'tooltip' | 'showif' | 'content'` instead of vague `'normal'`)
+  - Structural markers (`#`, `##`, `BLOCK:`) extracted immediately before entering state machine
+  - `parseSection`: Single-pass state machine extracts section metadata (TOOLTIP, SHOW_IF) and builds content/questions in one loop
+  - `parsePage`: Single-pass state machine extracts page metadata (NAVIGATION, TOOLTIP, COMPUTE) before building sections inline
+  - `parseBlock`: Single-pass state machine extracts block metadata (SHOW_IF, COMPUTE) before building pages inline
+  - Removed unused helper functions: `identifySections`, `identifyPages`, `parseComputedVariables`
+  - Benefits: No duplicate content bugs, no keyword leakage between levels, more efficient parsing, explicit state-driven logic
+
+- **Multi-line hints and tooltips for options**: Fixed option-level delimited content parsing
+  - `parseOptions` and `parseBreakdownOptions` now handle multi-line HINT/TOOLTIP content correctly
+  - Delimited content collection moved outside the `- ` prefix check to capture all lines
+  - Supports option-level syntax: `- HINT: """` followed by multi-line content then `"""`
+  - `identifyQuestions` updated to skip delimited keyword blocks when identifying question boundaries
+
+- **CUSTOM keyword support**: Added missing parser support for custom subtotal calculations
+  - `CUSTOM:` keyword now recognized as breakdown option metadata
+  - Enables custom expressions for SUBTOTAL calculations: `CUSTOM: {{salary + bonus}}`
+  - Previously treated as separate option row; now correctly parsed as SUBTOTAL metadata
+
+- **Consistent TOTAL styling**: Removed hardcoded styling from TOTAL rows
+  - Removed `font-bold`/`font-semibold` classes from TOTAL row rendering
+  - Added Markdown rendering to TOTAL labels for user-controlled styling
+  - TOTAL labels now support Markdown formatting like SUBTOTAL labels: `**Total Revenue**`
+  - Removed redundant `hover:bg-transparent` classes from all TableRow elements
+
+### Breaking Changes
+
+- **Delimiter syntax change**: Replaced triple dashes (`---`) with triple quotes (`"""`) for multi-line content
+  - **Reason**: Triple dashes conflict with Markdown setext heading syntax, causing Prettier to corrupt survey files
+  - **Old syntax**: `HINT: ---` followed by content then `---`
+  - **New syntax**: `HINT: """` followed by content then `"""`
+  - **Impact**: All multi-line HINT and TOOLTIP blocks must be updated
+  - **Migration**: Use find-and-replace to change `---` on delimiter lines to `"""`
+  - **Benefit**: Survey `.md` files can now be safely formatted with Prettier without corruption
+
+- **Navigation syntax change**: Replaced `NAV:` + `LEVEL:` with single `NAVIGATION:` keyword
+  - Old syntax: `NAV: Section Name` followed by `LEVEL: 1`
+  - New syntax: `NAVIGATION: 1` placed after page title (page title becomes navigation label)
+  - Navigation is now page-based metadata instead of separate structure
+  - Pages have unique IDs for reliable navigation highlighting
+  - Single source of truth - no page duplication between BLOCKS and navigation
+
+### New Features
+
+- **Navigation settings**: Added setting to control whether respondents can jump to unvisited pages
+  - New toggle in Settings: "Allow Navigation to Unvisited Pages"
+  - Default behavior: respondents can only navigate to visited or current pages
+  - When enabled: respondents can jump to any page in the navigation sidebar
+  - Setting persists in localStorage across sessions
+
+- **SEPARATOR support for breakdown questions**: Added missing parser support for separator rows
+  - `- SEPARATOR` keyword now recognized in breakdown questions
+  - Creates empty rows for visual organization between option groups
+  - Example: Place separator between different cost categories
+  - Separator rows are excluded from calculations automatically
+
+- **Improved computed value display in breakdown questions**: Placeholder shown when values aren't available
+  - When CUSTOM calculations reference unavailable variables, shows `–` instead of `€\{variable\}.000,-`
+  - When VALUE (prefillValue) uses unavailable variables, shows `–` instead of escaped placeholders
+  - Once variables become available, calculated values display normally with proper formatting
+  - Applies to both SUBTOTAL rows with CUSTOM and regular options with VALUE
+
+- **Interleaved text and questions**: Text can now appear between questions in natural flow
+  - Questions end at blank lines, allowing content to be interspersed with questions
+  - Section structure changed to ordered `items` array (content and question items)
+  - Example:
+
+    ```text
+    Q: First question?
+    TEXT
+
+    Here's some explanatory text between questions.
+
+    Q: Second question?
+    NUMBER
+    ```
+
+### Improvements
+
+- **Parser maintainability**: Extracted helper functions to reduce duplication
+  - Added `parseComputedVariables()` helper - eliminated duplication between `parsePage()` and `parseBlock()`
+  - Added `createOption()` helper - reduced boilerplate in option creation across 4 locations
+  - Reduced parser by 28+ lines while maintaining readability
+
+- **Type system cleanup**: Removed redundant and confusing types
+  - Removed `VisiblePageContent` wrapper type - now use `Section[]` directly
+  - Removed `MatrixOption` type - matrix questions now use standard `Option` type
+  - Removed unused `Subquestion` fields: `subtract`, `subtotalLabel`, `value`
+  - Renamed `ComputedVariables` → `ComputedValues` for clarity (map of values, not array of definitions)
+  - Removed `ParsedQuestion` type that duplicated the `Question` discriminated union
+
+- **Simplified parser data structures**: Removed unnecessary object wrappers and dead code
+  - Eliminated `Chunk` wrapper type - chunks are now just `string[]` instead of `{ lines: string[] }`
+  - Removed `Line` wrapper type - lines are now plain strings instead of `{ line: string, index: number }`
+  - Removed unused `index`, `startIndex`, and `endIndex` fields that were assigned but never read
+  - Eliminated `shouldParse` flag that was tracked throughout the entire parsing pipeline
+  - Reduced parser complexity by ~60 lines of unnecessary object creation and field tracking
+  - Code fences in section content are preserved naturally for markdown rendering
+  - No functional changes - parser works exactly the same way with simpler data structures
+
+- **Section titles now display**: Section headings (after `##`) are now rendered as visible h2 elements
+  - Section `content` field is now optional (no empty strings stored)
+  - Updated documentation examples to demonstrate section usage
+  - Fixed section content rendering bug where page titles appeared as section content
+
+### Documentation
+
+- **Improved documentation page design and readability**:
+  - Simplified Overview example to showcase markdown-like text format without BLOCKS or NAVIGATION
+  - Unified navbar component across all pages with proper width matching
+  - Improved typography: larger font sizes for primary content, muted colors reserved for secondary content only
+  - Consistent Usage section styling: all sections now use bullet points instead of mixed patterns
+  - Added visual styling for inline code elements (monospace, background, padding, rounded corners)
+  - Removed "Documentation" header from sidebar for cleaner design
+  - Fixed Overview item styling in sidebar to match other items
+  - Updated Questions section description to be more concrete
+  - Added comprehensive documentation system guidelines to CLAUDE.md
+
+- **Improved documentation UX**:
+  - Reversed example order: code appears first, then rendered result (follows standard technical documentation pattern)
+  - Fixed auto-scroll bug: documentation examples no longer cause page to scroll to top when navigating between survey pages
+  - Removed outdated text-format-guide component reference from CLAUDE.md
+
+- Added 7 standard example files demonstrating text format features:
+  - basic-survey.md - Common question types
+  - conditional-logic.md - SHOW_IF demonstrations
+  - matrix-questions.md - Matrix question variations
+  - multi-page.md - Multi-page survey with sections
+  - breakdown-budget.md - Basic breakdown with computed variables
+  - breakdown-advanced.md - Advanced breakdown features
+  - range-syntax.md - RANGE syntax examples
+
+### Testing
+
+- All 36 parser tests passing after refactor
+- Expanded test coverage for RANGE syntax and breakdown features
+
+---
+
 ## Version 0.2.2
 
 Released December 2025

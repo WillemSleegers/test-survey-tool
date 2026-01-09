@@ -4,8 +4,11 @@ import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
-import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedVariables } from "@/lib/types"
+import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
+
+// Placeholder shown when computed values aren't available yet
+const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
 
 interface BreakdownQuestionProps {
   /** The question configuration */
@@ -19,7 +22,7 @@ interface BreakdownQuestionProps {
   /** Starting tab index for accessibility */
   startTabIndex: number
   /** Computed variables from the current section */
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 }
 
 /**
@@ -192,7 +195,7 @@ export function BreakdownQuestion({
     // If this is a header row, render it without an input field
     if (option.header) {
       return (
-        <TableRow key={index} className="font-bold hover:bg-transparent">
+        <TableRow key={index} className="font-bold">
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
             <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
@@ -203,7 +206,7 @@ export function BreakdownQuestion({
     // If this is a separator row, render a blank row
     if (option.separator) {
       return (
-        <TableRow key={index} className="hover:bg-transparent border-b-0!">
+        <TableRow key={index} className="border-b-0!">
           <TableCell className="h-12 pl-0" colSpan={2}>
             {/* Blank row for spacing */}
           </TableCell>
@@ -213,12 +216,14 @@ export function BreakdownQuestion({
 
     // If this is a subtotal row, calculate and render the subtotal
     if (option.subtotalLabel) {
-      let subtotal: number
+      let subtotal: number | null
 
       // If custom calculation is provided, use it; otherwise auto-calculate
       if (option.custom) {
         const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
-        subtotal = parseFloat(customValue) || 0
+        const parsed = parseFloat(customValue)
+        // If parsing fails (NaN) or result contains escaped placeholders, variables aren't available yet
+        subtotal = (isNaN(parsed) || customValue.includes('\\{')) ? null : parsed
       } else {
         // Calculate subtotal from the last subtotal/header (or start) to current position
         const optionIndex = question.options.indexOf(option)
@@ -237,7 +242,7 @@ export function BreakdownQuestion({
       }
 
       // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
-      if (option.variable) {
+      if (option.variable && subtotal !== null) {
         localVariables[option.variable] = subtotal
       }
 
@@ -246,7 +251,7 @@ export function BreakdownQuestion({
       const suffix = option.suffix ?? questionSuffix
 
       return (
-        <TableRow key={index} className="hover:bg-transparent">
+        <TableRow key={index}>
           <TableCell className="align-middle whitespace-normal text-base pl-0">
             <div className="relative">
               {option.tooltip && (
@@ -277,7 +282,7 @@ export function BreakdownQuestion({
             </div>
           </TableCell>
           <TableCell className="text-right py-1">
-            {prefix}{subtotal}{suffix}
+            {subtotal !== null ? `${prefix}${subtotal}${suffix}` : UNAVAILABLE_VALUE_PLACEHOLDER}
           </TableCell>
         </TableRow>
       )
@@ -288,8 +293,11 @@ export function BreakdownQuestion({
 
     // Use prefillValue if present (replaces placeholders on every render)
     let value = currentValues[key] || ""
+    let hasUnresolvedPlaceholders = false
     if (isReadOnly) {
       value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+      // Check if value contains escaped placeholders (meaning variables aren't available yet)
+      hasUnresolvedPlaceholders = value.includes('\\{')
     }
 
     const isTooltipVisible = visibleTooltips.has(option.value)
@@ -297,7 +305,7 @@ export function BreakdownQuestion({
     const suffix = option.suffix ?? questionSuffix
 
     return (
-      <TableRow key={index} className="hover:bg-transparent">
+      <TableRow key={index}>
         <TableCell className="align-middle whitespace-normal pl-0">
           <div className="relative">
             {option.tooltip && (
@@ -330,7 +338,7 @@ export function BreakdownQuestion({
         <TableCell className="text-right align-middle">
           {isReadOnly ? (
             <div className="flex items-center justify-end text-muted-foreground">
-              {prefix}{value}{suffix}
+              {hasUnresolvedPlaceholders ? UNAVAILABLE_VALUE_PLACEHOLDER : `${prefix}${value}${suffix}`}
             </div>
           ) : (
             <div className="flex items-center justify-end gap-1">
@@ -366,7 +374,7 @@ export function BreakdownQuestion({
               // If this is a header row, render it without input fields
               if (option.header) {
                 return (
-                  <TableRow key={index} className="font-bold hover:bg-transparent">
+                  <TableRow key={index} className="font-bold">
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
                       <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                     </TableCell>
@@ -377,7 +385,7 @@ export function BreakdownQuestion({
               // If this is a separator row, render a blank row
               if (option.separator) {
                 return (
-                  <TableRow key={index} className="hover:bg-transparent border-b-0!">
+                  <TableRow key={index} className="border-b-0!">
                     <TableCell className="h-12 pl-0" colSpan={numColumns + 1}>
                       {/* Blank row for spacing */}
                     </TableCell>
@@ -387,12 +395,14 @@ export function BreakdownQuestion({
 
               // If this is a subtotal row, calculate and render the subtotal
               if (option.subtotalLabel) {
-                let subtotal: number
+                let subtotal: number | null
 
                 // If custom calculation is provided, use it; otherwise auto-calculate
                 if (option.custom) {
                   const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
-                  subtotal = parseFloat(customValue) || 0
+                  const parsed = parseFloat(customValue)
+                  // If parsing fails (NaN) or result contains escaped placeholders, variables aren't available yet
+                  subtotal = (isNaN(parsed) || customValue.includes('\\{')) ? null : parsed
                 } else {
                   // Calculate subtotal from the last subtotal/header (or start) to current position
                   let startIndex = 0
@@ -408,7 +418,7 @@ export function BreakdownQuestion({
                 }
 
                 // Store subtotal variable in localVariables for use by subsequent CUSTOM calculations
-                if (option.variable) {
+                if (option.variable && subtotal !== null) {
                   localVariables[option.variable] = subtotal
                 }
 
@@ -419,7 +429,7 @@ export function BreakdownQuestion({
                 const suffix = option.suffix ?? questionSuffix
 
                 return (
-                  <TableRow key={index} className="hover:bg-transparent">
+                  <TableRow key={index}>
                     <TableCell className="align-middle whitespace-normal text-base pl-0">
                       <div className="relative">
                         {option.tooltip && (
@@ -451,7 +461,7 @@ export function BreakdownQuestion({
                     </TableCell>
                     {columnNumbers.map((colNum) => (
                       <TableCell key={colNum} className="text-right py-1">
-                        {colNum === subtotalCol ? `${prefix}${subtotal}${suffix}` : null}
+                        {colNum === subtotalCol ? (subtotal !== null ? `${prefix}${subtotal}${suffix}` : UNAVAILABLE_VALUE_PLACEHOLDER) : null}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -461,8 +471,11 @@ export function BreakdownQuestion({
               const key = optionToKey(index)
               const isReadOnly = !!option.prefillValue
               let value = currentValues[key] || ""
+              let hasUnresolvedPlaceholders = false
               if (isReadOnly) {
                 value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+                // Check if value contains escaped placeholders (meaning variables aren't available yet)
+                hasUnresolvedPlaceholders = value.includes('\\{')
               }
               const isTooltipVisible = visibleTooltips.has(option.value)
               const optionColumn = option.column ?? 1
@@ -470,7 +483,7 @@ export function BreakdownQuestion({
               const suffix = option.suffix ?? questionSuffix
 
               return (
-                <TableRow key={index} className="hover:bg-transparent">
+                <TableRow key={index}>
                   {/* Label column (always shown) */}
                   <TableCell className="align-middle whitespace-normal pl-0">
                     <div className="relative">
@@ -508,7 +521,7 @@ export function BreakdownQuestion({
                       {optionColumn === colNum ? (
                         isReadOnly ? (
                           <div className="flex items-center justify-end text-muted-foreground">
-                            {prefix}{value}{suffix}
+                            {hasUnresolvedPlaceholders ? UNAVAILABLE_VALUE_PLACEHOLDER : `${prefix}${value}${suffix}`}
                           </div>
                         ) : (
                           <div className="flex items-center justify-end gap-1">
@@ -533,9 +546,9 @@ export function BreakdownQuestion({
 
             {/* Total row */}
             {totalLabel && (
-              <TableRow className="font-bold border-t border-border">
+              <TableRow className="border-t border-border">
                 <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                  {replacePlaceholders(totalLabel, variables, computedVariables)}
+                  <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
@@ -565,9 +578,9 @@ export function BreakdownQuestion({
 
               {/* Total row */}
               {totalLabel && (
-                <TableRow className="font-semibold border-t border-border">
+                <TableRow className="border-t border-border">
                   <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                    {replacePlaceholders(totalLabel, variables, computedVariables)}
+                    <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
                     {questionPrefix}{total}{questionSuffix}

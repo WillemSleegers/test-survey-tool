@@ -1,15 +1,15 @@
 import { useState } from "react"
-import { Block, Page, Variables, ComputedVariables } from "@/lib/types"
-import { evaluateComputedVariables } from "@/lib/conditions/computed-variables"
+import { Block, Page, Variables, ComputedValues } from "@/lib/types"
+import { evaluateComputedValues } from "@/lib/conditions/computed-variables"
 
 /**
  * Manages computed variables with lazy evaluation
  * Variables are only calculated when their scope (block/page) is entered
  */
-export function useLazyComputedVariables(questionnaire: Block[], variables: Variables) {
+export function useLazyComputedValues(questionnaire: Block[], variables: Variables) {
   // Store computed variables by scope identifier
   const [computedCache, setComputedCache] = useState<{
-    [scopeId: string]: ComputedVariables
+    [scopeId: string]: ComputedValues
   }>({})
 
   /**
@@ -43,8 +43,8 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
   const computeForScope = (
     scope: Block | Page,
     type: 'block' | 'page',
-    existingComputedVars: ComputedVariables = {}
-  ): ComputedVariables => {
+    existingComputedVars: ComputedValues = {}
+  ): ComputedValues => {
     const scopeId = getScopeId(scope, type)
 
     // Check if already computed
@@ -52,23 +52,24 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
       return computedCache[scopeId]
     }
 
-    let computedVars: ComputedVariables = {}
+    let computedVars: ComputedValues = {}
 
     if (type === 'block') {
       const block = scope as Block
       if (block.computedVariables.length > 0) {
         // Create a mock page to evaluate block-level computed variables
         const mockPage: Page = {
+          id: 0,
           title: "",
           sections: [],
           computedVariables: block.computedVariables
         }
-        computedVars = evaluateComputedVariables(mockPage, variables, existingComputedVars)
+        computedVars = evaluateComputedValues(mockPage, variables, existingComputedVars)
       }
     } else {
       const page = scope as Page
       if (page.computedVariables.length > 0) {
-        computedVars = evaluateComputedVariables(page, variables, existingComputedVars)
+        computedVars = evaluateComputedValues(page, variables, existingComputedVars)
       }
     }
 
@@ -84,7 +85,7 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
   /**
    * Get computed variables for a specific block (compute if not cached)
    */
-  const getBlockComputedVariables = (block: Block): ComputedVariables => {
+  const getBlockComputedValues = (block: Block): ComputedValues => {
     return computeForScope(block, 'block')
   }
 
@@ -92,12 +93,12 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
    * Get computed variables for a specific page (compute if not cached)
    * Includes block-level computed variables as dependencies
    */
-  const getPageComputedVariables = (page: Page): ComputedVariables => {
+  const getPageComputedValues = (page: Page): ComputedValues => {
     // Find the block containing this page
     const containingBlock = questionnaire.find(block => block.pages.includes(page))
 
     // Get block-level computed variables first
-    const blockComputedVars = containingBlock ? getBlockComputedVariables(containingBlock) : {}
+    const blockComputedVars = containingBlock ? getBlockComputedValues(containingBlock) : {}
 
     // Then get page-level computed variables
     const pageComputedVars = computeForScope(page, 'page', blockComputedVars)
@@ -126,8 +127,8 @@ export function useLazyComputedVariables(questionnaire: Block[], variables: Vari
   }
 
   return {
-    getBlockComputedVariables,
-    getPageComputedVariables,
+    getBlockComputedValues,
+    getPageComputedValues,
     invalidateCache,
     invalidateScopeCache
   }

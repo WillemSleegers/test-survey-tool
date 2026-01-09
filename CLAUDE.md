@@ -34,11 +34,56 @@ Test Survey Tool (TST) is a Next.js React application that converts structured t
 
 ### Core Data Types (`lib/types.ts`)
 
-- `Block`: Top-level container with pages and computed variables
-- `Page`: Contains questions, sections, and content
+The questionnaire data follows a four-level hierarchy:
+
+```
+Block (id, name, showIf?)
+└── Page[] (id, title, showIf?, computedVariables)
+    └── Section[] (id, title?, showIf?)
+        └── SectionItem[] (Text | Question)
+```
+
+**Detailed structure:**
+
+- `Block`: Top-level container
+
+  - `id` (number): Unique block identifier
+  - `name` (string): Block name/label
+  - `pages` (Page[]): Array of pages in this block
+  - `computedVariables` (ComputedVariable[]): Block-level calculations
+  - `showIf` (string, optional): Conditional visibility expression
+
+- `Page`: Second-level container (defined with `#` or `# Title`)
+
+  - `id` (number): Unique page identifier (for navigation and comparison)
+  - `title` (string): Page title
+  - `sections` (Section[]): Array of sections on this page
+  - `computedVariables` (ComputedVariable[]): Page-level calculations
+  - `tooltip`, `showIf`, `navLevel` (optional): Additional metadata
+
+- `Section`: Third-level container (defined with `##` or `## Title`)
+
+  - `id` (number): Unique section identifier (within the page)
+  - `items` (SectionItem[]): Array of content items (Text or Question). Use type guard functions `isText(item)` or `isQuestion(item)` to discriminate
+  - `title` (string, optional): Section title (undefined for implicit default section)
+  - `tooltip`, `showIf` (optional): Additional metadata
+  - Sections can be explicit (has `##` marker) or implicit (default section for content before first `##`)
+
+- `Text`: Plain text/markdown content
+
+  - `value` (string): The text content (markdown supported)
+  - No `type` property (discriminated from Question using `isText()` type guard)
+
 - `Question`: Individual survey questions with various types
-- `Section`: Groups questions within pages
+
+  - All questions share base fields: `type`, `id`, `text`, `subtext?`, `tooltip?`, `variable?`, `showIf?`
+  - `type` discriminates the question variant: `"text"`, `"number"`, `"essay"`, `"multiple_choice"`, `"checkbox"`, `"matrix"`, `"breakdown"`
+  - Type-specific fields vary by question type
+
 - `ComputedVariable`: Dynamic calculations based on responses
+  - `name` (string): Variable identifier
+  - `expression` (string): Calculation expression
+  - `value` (boolean | string | number, optional): Computed result
 
 ### Text Format Parser (`lib/parser.ts`)
 
@@ -93,6 +138,7 @@ Custom hooks manage questionnaire state:
 Strong TypeScript usage throughout:
 
 - Discriminated unions for parser types
+- Type guard functions (`isText()`, `isQuestion()`) for SectionItem discrimination
 - Comprehensive type definitions in `lib/types.ts`
 - Strict compiler settings in `tsconfig.json`
 
@@ -108,21 +154,21 @@ Strong TypeScript usage throughout:
 
 **IMPORTANT**: This project uses React 19 with React Compiler. Follow these guidelines:
 
-### ❌ DO NOT USE:
+### ❌ DO NOT USE
 
 - `useMemo()` - React Compiler handles memoization automatically
 - `useCallback()` - React Compiler optimizes function references
 - `React.memo()` - Compiler optimizes component re-renders
 - Manual optimization patterns that interfere with compiler analysis
 
-### ✅ DO USE:
+### ✅ DO USE
 
 - Simple, clean component code - let the compiler optimize
 - Standard React hooks (`useState`, `useEffect`, etc.)
 - Pure functions and predictable state updates
 - Avoid side effects during render (compiler expects pure render functions)
 
-### Key Principles:
+### Key Principles
 
 - Write code as if there's no performance optimization needed
 - React Compiler will handle memoization and re-render optimization
@@ -131,33 +177,37 @@ Strong TypeScript usage throughout:
 
 ## Code Style Guidelines
 
-### Comments:
+### Comments
 
 - Keep comments concise and factual
 - Avoid referential comments that mention previous versions or changes
 - Comments should describe current behavior, not historical context
 - Example: Use "Add slots for text inputs" not "Add slots for text inputs (now always visible)"
 
-### Code Cleanliness:
+### Code Cleanliness
+
 - Prefer a clean codebase over maintaining backwards compatibility
 - Avoid legacy aliases or deprecated exports
 - Remove unused code rather than commenting it out
 - Refactor directly rather than adding workarounds
 
-### Linting and Code Quality:
+### Linting and Code Quality
+
 - **Never use ESLint disable comments** (`// eslint-disable`, `/* eslint-disable */`)
 - **Never use TypeScript suppressions** (`@ts-ignore`, `@ts-expect-error`)
 - Fix underlying issues instead of suppressing warnings
 - For intentionally unused parameters, use `void parameterName` or proper underscore naming
 - Maintain zero build warnings without rule suppressions
 
-### Documentation and Examples:
+### Documentation and Examples
+
 - Keep survey examples realistic and purposeful - avoid forced feature demonstrations
 - Use progressive examples that build naturally (Basic → Intermediate → Advanced)
 - Centralize reusable content in constants.ts rather than duplicating
 - Maintain consistent terminology ("survey" vs "questionnaire") throughout user-facing text
 
-### Development Workflow:
+### Development Workflow
+
 - Always build (`npm run build`) after significant changes to catch TypeScript errors
 - Check TODO.md for prioritized development items
 - Test core functionality after parser or component changes
@@ -170,6 +220,7 @@ Strong TypeScript usage throughout:
 **Common patterns that require coordinated updates:**
 
 1. **Question response storage format changes**:
+
    - Component that renders the question (e.g., `breakdown-question.tsx`)
    - Hook that extracts variables from responses (e.g., `use-questionnaire-responses.ts`)
    - Any utility functions that calculate values (e.g., `calculateBreakdownTotal`)
@@ -200,7 +251,7 @@ Strong TypeScript usage throughout:
 - "Variables stopped working after my change"
 - "The calculation logic uses a different key format than the storage"
 
-### Communication Guidelines:
+### Communication Guidelines
 
 - **Never agree with or validate user statements before verifying them**
 - If a user claims something exists in the codebase, search for it first before responding
@@ -251,17 +302,136 @@ This applies to:
 
 ### Documentation Guidelines
 
-#### Text Format Guide Organization (`components/text-format-guide.tsx`)
+When documenting new features, carefully consider the learning progression and prerequisite knowledge required.
 
-When adding new features to the text format guide, carefully consider the learning progression:
+## Documentation System
 
-- **Basic**: Fundamental concepts that users need first (pages, sections, simple questions, basic options, input types)
-- **Intermediate**: Features that build on basics (variables, hints, conditional logic, matrix questions, text inputs on options)
-- **Advanced**: Complex features requiring deep understanding (blocks, computed variables, conditional text, arithmetic expressions, complex conditions)
+This application includes an integrated documentation page at `/docs` that teaches users the text format syntax through interactive examples.
 
-**Before adding documentation:**
+### Documentation Architecture
 
-1. Consider what prerequisite knowledge the feature requires
-2. Ask: "What would a user need to understand before learning this?"
-3. Place features alongside others of similar complexity
-4. Matrix questions, for example, require understanding questions, options, AND table layouts - this belongs in Intermediate, not Basic
+**File locations:**
+
+- Main documentation page: `app/docs/page.tsx`
+- Navigation sidebar: `components/app-sidebar.tsx`
+- Reusable examples: `lib/constants.ts` (for examples used in multiple places)
+
+**How it works:**
+
+1. User selects a topic from the sidebar (`AppSidebar` component)
+2. `DocumentationContent` component renders the appropriate section based on `activeSection` state
+3. Examples are rendered using `renderExample()` which:
+   - Parses the text format using `parseQuestionnaire()`
+   - Displays the raw text in a code block
+   - Renders the live interactive result using `QuestionnaireViewer`
+   - Shows parse errors if the example is invalid
+
+**Section types:**
+
+- Each documentation section is defined in the `Section` union type in `app/docs/page.tsx`
+- Sections are organized into groups in `navMain` array in `components/app-sidebar.tsx`
+- Each section case in the switch statement renders its own content
+
+### Adding New Documentation
+
+**To document a new feature:**
+
+1. **Add the section type** to the `Section` union in `app/docs/page.tsx`:
+
+   ```typescript
+   export type Section =
+     | "overview"
+     | "pages"
+     // ... existing sections
+     | "your-new-section" // Add here
+   ```
+
+2. **Add navigation item** in `components/app-sidebar.tsx`:
+
+   ```typescript
+   const navMain = [
+     {
+       title: "Appropriate Group",
+       items: [
+         // ... existing items
+         { title: "Your Feature Name", section: "your-new-section" as Section },
+       ],
+     },
+   ]
+   ```
+
+3. **Add section content** in the switch statement in `app/docs/page.tsx`:
+
+   ```typescript
+   case "your-new-section":
+     return (
+       <div className="space-y-6">
+         <div>
+           <h2 className="text-2xl font-semibold">Feature Name</h2>
+           <p className="text-muted-foreground mt-1">
+             Brief description of what this feature does.
+           </p>
+         </div>
+
+         <div className="space-y-3">
+           <h3 className="text-xl font-semibold">Usage</h3>
+           {renderCodeBlock(`Syntax example here`)}
+           <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+             <li>Key point about usage</li>
+             <li>Another important detail</li>
+           </ul>
+         </div>
+
+         <div className="space-y-3">
+           <h3 className="text-xl font-semibold">Example</h3>
+           {renderExample(`Complete working example here`)}
+         </div>
+       </div>
+     )
+   ```
+
+### Documentation Best Practices
+
+**Writing examples:**
+
+- Keep examples focused on demonstrating ONE feature clearly
+- Use realistic survey scenarios, not contrived demonstrations
+- Start with the simplest possible example, then show advanced usage
+- Every example must be valid text format that parses correctly
+- Test examples by viewing them in the docs page before committing
+
+**Section organization:**
+
+- Group related features together in the navigation sidebar
+- Order sections from basic to advanced within each group
+- Cross-reference related features when helpful (see "option-text" and "conditionals" sections)
+- Use consistent heading hierarchy: `h2` for page title, `h3` for major subsections, `h4` for minor subsections
+
+**Content guidelines:**
+
+- Start with a brief description of what the feature does
+- Show syntax in a code block using `renderCodeBlock()`
+- Provide bullet points explaining key behaviors
+- Include at least one complete working example using `renderExample()`
+- Use consistent terminology matching the parser keywords
+- Keep explanations concise - the live examples teach best
+
+**Styling patterns:**
+
+- Page titles: `h1` or `h2` with `text-2xl font-semibold`
+- Subsection titles: `h3` with `text-xl font-semibold`
+- Minor subsections: `h4` with `text-lg font-semibold`
+- Descriptions under page titles: `text-muted-foreground mt-1` (truly secondary context)
+- Instructional text and explanations: Use default text color (not muted - this is primary content)
+- Introductory paragraphs before examples: `text-sm` with default color
+- Cross-references and "see also" notes: `text-muted-foreground` (truly secondary)
+- Bullet points: `text-sm text-muted-foreground` (can be smaller as they're typically concise)
+- Use inline `<code>` tags for keywords and syntax references
+- Use `space-y-6` between major sections, `space-y-3` between subsections
+
+**Common pitfalls:**
+
+- Don't use `-` for bullet points in examples (conflicts with option syntax)
+- Don't forget to add the section to both the type union AND the switch statement
+- Don't create examples that depend on features not yet explained
+- Don't duplicate example text - use `lib/constants.ts` for reusable examples

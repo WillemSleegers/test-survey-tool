@@ -71,35 +71,33 @@ export function FileUpload({ onFileLoaded, onError }: FileUploadProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-          isDragOver
-            ? "border-primary bg-accent"
-            : "border-muted-foreground/60 hover:border-muted-foreground hover:bg-muted"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={handleAreaClick}
-      >
-        <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <div>
-          <p className="text-base text-foreground font-medium mb-1">
-            Click to upload or drag & drop
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Supports .txt and .md files
-          </p>
-        </div>
-        <Input
-          id="file-upload"
-          type="file"
-          accept=".txt,.md"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
+    <div
+      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+        isDragOver
+          ? "border-primary bg-accent"
+          : "border-muted-foreground/60 hover:border-muted-foreground hover:bg-muted"
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onClick={handleAreaClick}
+    >
+      <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+      <div>
+        <p className="text-base text-foreground font-medium mb-1">
+          Click to upload or drag & drop
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Supports .txt and .md files
+        </p>
       </div>
+      <Input
+        id="file-upload"
+        type="file"
+        accept=".txt,.md"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
     </div>
   )
 }

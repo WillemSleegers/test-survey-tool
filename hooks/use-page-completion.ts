@@ -1,4 +1,4 @@
-import { VisiblePageContent, Variables } from "@/lib/types"
+import { Section, Variables, isQuestion } from "@/lib/types"
 
 /**
  * Hook for checking page completion status
@@ -9,17 +9,19 @@ import { VisiblePageContent, Variables } from "@/lib/types"
  * - Checkbox: Must have at least one selected option
  * - Radio: Must have selected value
  *
- * @param pageContent - Visible content of current page
+ * @param sections - Visible sections of current page
  * @param variables - Current user variables
  * @returns Whether all questions are answered
  */
 export function usePageCompletion(
-  pageContent: VisiblePageContent | null,
+  sections: Section[] | null,
   variables: Variables
 ): boolean {
-  if (!pageContent) return false
+  if (!sections) return false
 
-  const allQuestions = pageContent.sections.flatMap(sub => sub.questions)
+  const allQuestions = sections.flatMap(section =>
+    section.items.filter(isQuestion)
+  )
 
   return allQuestions.every(question => {
     if (!question.variable) return true // Skip questions without variables

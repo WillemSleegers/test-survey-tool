@@ -1,4 +1,4 @@
-import { Block, Page, NavItem } from "@/lib/types"
+import { Block, Page, NavItem, isQuestion } from "@/lib/types"
 import { normalizeOperators } from "@/lib/conditions/condition-parser"
 
 /**
@@ -23,12 +23,14 @@ export function validateVariableNames(blocks: Block[]): void {
 
   for (const page of allPages) {
     for (const section of page.sections) {
-      for (const question of section.questions) {
-        if (question.variable) {
-          if (variableNames.has(question.variable)) {
-            duplicates.push(question.variable)
-          } else {
-            variableNames.add(question.variable)
+      for (const item of section.items) {
+        if (isQuestion(item)) {
+          if (item.variable) {
+            if (variableNames.has(item.variable)) {
+              duplicates.push(item.variable)
+            } else {
+              variableNames.add(item.variable)
+            }
           }
         }
       }
@@ -64,15 +66,17 @@ export function validateConditionReferences(blocks: Block[]): void {
 
     // Add section question variables
     for (const section of page.sections) {
-      for (const question of section.questions) {
-        if (question.variable) {
-          definedVariables.add(question.variable)
-        }
-        // Add subquestion variables (only for matrix questions)
-        if (question.type === 'matrix' && question.subquestions) {
-          for (const subquestion of question.subquestions) {
-            if (subquestion.variable) {
-              definedVariables.add(subquestion.variable)
+      for (const item of section.items) {
+        if (isQuestion(item)) {
+          if (item.variable) {
+            definedVariables.add(item.variable)
+          }
+          // Add subquestion variables (only for matrix questions)
+          if (item.type === 'matrix' && item.subquestions) {
+            for (const subquestion of item.subquestions) {
+              if (subquestion.variable) {
+                definedVariables.add(subquestion.variable)
+              }
             }
           }
         }
@@ -111,21 +115,23 @@ export function validateConditionReferences(blocks: Block[]): void {
 
     // Check section questions
     for (const section of page.sections) {
-      for (const question of section.questions) {
-        if (question.showIf) {
-          const missingVars = findUndefinedVariables(question.showIf, definedVariables)
-          if (missingVars.length > 0) {
-            errors.push(`Question "${question.id}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+      for (const item of section.items) {
+        if (isQuestion(item)) {
+          if (item.showIf) {
+            const missingVars = findUndefinedVariables(item.showIf, definedVariables)
+            if (missingVars.length > 0) {
+              errors.push(`Question "${item.id}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+            }
           }
-        }
 
-        // Check options (only for questions that have options)
-        if ('options' in question && question.options) {
-          for (const option of question.options) {
-            if (option.showIf) {
-              const missingVars = findUndefinedVariables(option.showIf, definedVariables)
-              if (missingVars.length > 0) {
-                errors.push(`Question "${question.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+          // Check options (only for questions that have options)
+          if ('options' in item && item.options) {
+            for (const option of item.options) {
+              if (option.showIf) {
+                const missingVars = findUndefinedVariables(option.showIf, definedVariables)
+                if (missingVars.length > 0) {
+                  errors.push(`Question "${item.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+                }
               }
             }
           }
@@ -152,15 +158,17 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
   // Add section question variables first
   for (const page of allPages) {
     for (const section of page.sections) {
-      for (const question of section.questions) {
-        if (question.variable) {
-          definedVariables.add(question.variable)
-        }
-        // Add subquestion variables (only for matrix questions)
-        if (question.type === 'matrix' && question.subquestions) {
-          for (const subquestion of question.subquestions) {
-            if (subquestion.variable) {
-              definedVariables.add(subquestion.variable)
+      for (const item of section.items) {
+        if (isQuestion(item)) {
+          if (item.variable) {
+            definedVariables.add(item.variable)
+          }
+          // Add subquestion variables (only for matrix questions)
+          if (item.type === 'matrix' && item.subquestions) {
+            for (const subquestion of item.subquestions) {
+              if (subquestion.variable) {
+                definedVariables.add(subquestion.variable)
+              }
             }
           }
         }

@@ -1,4 +1,4 @@
-import { Variables, ComputedVariables } from "@/lib/types"
+import { Variables, ComputedValues } from "@/lib/types"
 import { 
   parseCondition, 
   isSimpleBooleanTest, 
@@ -51,7 +51,7 @@ import { convertValueToNumber } from "./value-converter"
 export function evaluateCondition(
   condition: string, 
   variables: Variables, 
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 ): boolean {
   // Empty condition always passes
   if (!condition) return true
@@ -122,7 +122,7 @@ export function evaluateCondition(
  */
 function createExtendedResponses(
   variables: Variables,
-  computedVariables?: ComputedVariables
+  computedVariables?: ComputedValues
 ): Variables {
   if (!computedVariables) {
     return variables

@@ -1,109 +1,7 @@
-export const BASIC_SAMPLE_TEXT = `# **Survey Tool Evaluation**
-
-## About This Survey
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How long have you been using this survey tool?
-- Just started today
-- A few days
-- About a week
-- Several weeks or more
-
-Q: How many surveys have you created so far?
-NUMBER
-
-#
-
-Q: Which types of questions do you use in your surveys?
-HINT: Select all that apply
-- Multiple choice questions
-- Checkbox questions
-- Text/essay questions
-- Number questions
-- Matrix questions
-CHECKBOX`
-
-export const INTERMEDIATE_SAMPLE_TEXT = `# **Survey Tool Evaluation**
-
-## About This Survey
-Help us improve our survey creation tool by sharing your experience using it.
-
-Q: How long have you been using this survey tool?
-- Just started today
-- A few days
-- About a week
-- Several weeks or more
-VARIABLE: usage_time
-
-Q: How many surveys have you created so far?
-NUMBER
-VARIABLE: surveys_created
-
-#
-
-Q: Which types of questions do you use in your surveys?
-HINT: Select all that apply
-- Multiple choice questions
-- Checkbox questions
-- Text/essay questions
-- Number questions
-- Matrix questions
-CHECKBOX
-
-Q: Which features have you tried so far?
-HINT: Select all that apply
-- Creating basic surveys
-- Using conditional logic (SHOW_IF)
-- Adding computed variables
-- Variable interpolation in text
-- Other advanced features
-  - TEXT
-CHECKBOX
-VARIABLE: features_tried
-
-Q: How would you rate each aspect of the survey tool?
-- Q: Ease of use
-- Q: Documentation quality
-- Q: Feature completeness
-- Excellent
-- Good
-- Fair
-- Poor
-
-Q: How many hours per month do you spend using different features?
-HINT: Enter estimated hours for each feature
-- Q: Creating surveys
-- Q: Testing surveys
-- Q: Analyzing results
-- Hours
-NUMBER
-TOTAL_LABEL: Total Hours
-
-#
-SHOW_IF: features_tried IS Using conditional logic (SHOW_IF)
-
-Since you've tried conditional logic, we'd love your specific feedback.
-
-Q: You've created {surveys_created} surveys so far. What would help you most?
-- Better documentation
-- More examples
-- Video tutorials
-- Simplified syntax
-
-#
-
-Q: Overall, how would you rate the learning curve?
-- Very easy to learn
-- Somewhat easy
-- Moderate difficulty
-- Quite difficult
-- Very difficult`
-
-export const ADVANCED_SAMPLE_TEXT = `BLOCK: User Background
-NAV: Background & Experience
-LEVEL: 1
+export const SAMPLE_SURVEY = `BLOCK: User Background
 
 # **Survey Tool Evaluation**
+NAVIGATION: 1
 
 ## About This Survey
 Help us improve our survey creation tool by sharing your experience using it.
@@ -119,7 +17,14 @@ Q: How many surveys have you created so far?
 NUMBER
 VARIABLE: surveys_created
 
-#
+Q: What is your role or job title?
+TEXT
+VARIABLE: job_title
+
+# Getting Started
+NAVIGATION: 2
+
+Now let's explore the features you're using and how they're working for you.
 
 Q: Which types of questions do you use in your surveys?
 HINT: Select all that apply
@@ -139,8 +44,10 @@ HINT: Select all that apply
 CHECKBOX
 VARIABLE: features_tried
 
-NAV: Getting Started
-LEVEL: 2
+Great! Now let's get your feedback on those features.
+
+#
+NAVIGATION: 2
 
 Q: How would you rate each aspect of the survey tool?
 - Q: Ease of use
@@ -151,14 +58,12 @@ Q: How would you rate each aspect of the survey tool?
 - Fair
 - Poor
 
-COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
-
 BLOCK: Feature Feedback
+COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
 SHOW_IF: features_tried
-NAV: Detailed Feedback
-LEVEL: 1
 
-#
+# Detailed Feedback
+NAVIGATION: 1
 
 We'd like detailed feedback on the features you've used.
 
@@ -170,10 +75,9 @@ Q: {{IF experienced_user THEN As an experienced user ELSE As someone still learn
 
 BLOCK: Overall Assessment
 SHOW_IF: experienced_user
-NAV: Advanced Users
-LEVEL: 2
 
 # **Advanced User Feedback**
+NAVIGATION: 2
 
 Q: Would you recommend this tool to others?
 - Yes
@@ -184,10 +88,9 @@ Q: You've created {surveys_created} surveys so far. {{IF recommend IS Yes THEN T
 ESSAY
 
 BLOCK: Final Page
-NAV: Completion
-LEVEL: 1
 
 # **Thank You**
+NAVIGATION: 1
 
 Thank you for taking the time to complete our survey! Your feedback helps us improve the survey creation tool and make it better for everyone.
 

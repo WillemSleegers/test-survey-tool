@@ -30,10 +30,10 @@ export default function ReleasesPage() {
                 <h4 className="font-semibold mt-4 mb-2">{children}</h4>
               ),
               p: ({ children }) => (
-                <p className="text-sm text-muted-foreground my-2">{children}</p>
+                <p className="my-2">{children}</p>
               ),
               ul: ({ children }) => (
-                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-4 my-2">
+                <ul className="list-disc list-inside space-y-1 ml-4 my-2">
                   {children}
                 </ul>
               ),

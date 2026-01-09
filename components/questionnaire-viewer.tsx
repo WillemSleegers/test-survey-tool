@@ -7,7 +7,7 @@ import { useNavigation } from "@/contexts/navigation-context"
 
 import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation"
 import { useVisiblePages } from "@/hooks/use-visible-pages"
-import { useLazyComputedVariables } from "@/hooks/use-lazy-computed-variables"
+import { useLazyComputedValues } from "@/hooks/use-lazy-computed-variables"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
 import { usePageCompletion } from "@/hooks/use-page-completion"
@@ -18,13 +18,14 @@ import { PageNavigator } from "@/components/questionnaire/page-navigator"
 import { RespondentNavigator } from "@/components/questionnaire/respondent-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
-import { Block, Page, NavItem, ComputedVariables } from "@/lib/types"
+import { Block, Page, NavItem, ComputedValues } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Block[]
   navItems: NavItem[]
   onResetToUpload: () => void
   hidePageNavigator?: boolean
+  disableAutoScroll?: boolean
 }
 
 export function QuestionnaireViewer({
@@ -32,6 +33,7 @@ export function QuestionnaireViewer({
   navItems,
   onResetToUpload,
   hidePageNavigator = false,
+  disableAutoScroll = false,
 }: QuestionnaireViewerProps) {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const { t } = useLanguage()
@@ -43,10 +45,10 @@ export function QuestionnaireViewer({
 
   // Initialize lazy computed variables system
   const {
-    getBlockComputedVariables,
-    getPageComputedVariables,
+    getBlockComputedValues,
+    getPageComputedValues,
     invalidateCache
-  } = useLazyComputedVariables(questionnaire, variables)
+  } = useLazyComputedValues(questionnaire, variables)
 
   // Filter blocks by visibility, then flatten to pages
   const visibleBlockPages = useMemo(() => {
@@ -54,7 +56,7 @@ export function QuestionnaireViewer({
     
     questionnaire.forEach(block => {
       // Get block-level computed variables (lazy evaluation)
-      const currentBlockComputedVars = getBlockComputedVariables(block)
+      const currentBlockComputedVars = getBlockComputedValues(block)
       
       const blockVisible = evaluateCondition(
         block.showIf || "",
@@ -69,7 +71,7 @@ export function QuestionnaireViewer({
     })
     
     return visiblePages
-  }, [questionnaire, variables, getBlockComputedVariables])
+  }, [questionnaire, variables, getBlockComputedValues])
   
   // Invalidate computed variable cache when variables change
   useEffect(() => {
@@ -81,7 +83,7 @@ export function QuestionnaireViewer({
     visibleBlockPages, 
     variables, 
     {}, 
-    getPageComputedVariables
+    getPageComputedValues
   )
   
   // Navigation state and actions
@@ -90,7 +92,7 @@ export function QuestionnaireViewer({
     nextPage,
     prevPage,
     jumpToPage,
-  } = useQuestionnaireNavigation(visiblePages.length)
+  } = useQuestionnaireNavigation(visiblePages.length, disableAutoScroll)
 
   // Navigation: jump to first visible page of a nav item
   const handleJumpToNavItem = (navItem: NavItem): void => {
@@ -109,23 +111,23 @@ export function QuestionnaireViewer({
   const pageContent = currentPage ? getVisiblePageContent(currentPage) : null
   
   // Get current block and page computed variables using lazy evaluation
-  const currentBlockComputedVars: ComputedVariables = useMemo(() => {
+  const currentBlockComputedVars: ComputedValues = useMemo(() => {
     if (!currentPage) return {}
     
     // Find which block contains the current page
     const containingBlock = questionnaire.find(block => block.pages.includes(currentPage))
-    return containingBlock ? getBlockComputedVariables(containingBlock) : {}
-  }, [currentPage, questionnaire, getBlockComputedVariables])
+    return containingBlock ? getBlockComputedValues(containingBlock) : {}
+  }, [currentPage, questionnaire, getBlockComputedValues])
   
   // Get page-level computed variables
-  const currentPageComputedVars: ComputedVariables = useMemo(() => {
+  const currentPageComputedVars: ComputedValues = useMemo(() => {
     if (!currentPage) return {}
     
     // Get all computed variables for this page (includes block-level variables)
-    const allPageVars = getPageComputedVariables(currentPage)
+    const allPageVars = getPageComputedValues(currentPage)
     
     // Extract only the page-level ones
-    const pageOnlyVars: ComputedVariables = {}
+    const pageOnlyVars: ComputedValues = {}
     currentPage.computedVariables.forEach(computedVar => {
       if (computedVar.name in allPageVars) {
         pageOnlyVars[computedVar.name] = allPageVars[computedVar.name]
@@ -133,7 +135,7 @@ export function QuestionnaireViewer({
     })
     
     return pageOnlyVars
-  }, [currentPage, getPageComputedVariables])
+  }, [currentPage, getPageComputedValues])
   
   // Check completion status
   const allQuestionsAnswered = usePageCompletion(pageContent, variables)
@@ -168,7 +170,7 @@ export function QuestionnaireViewer({
     <>
       <div className="flex justify-center px-6 py-6">
         <div className="flex gap-16 items-start w-full justify-center">
-          {/* Respondent Navigator - NAV-based navigation for survey takers */}
+          {/* Respondent Navigator - NAVIGATION-based navigation for survey takers */}
           {isNavVisible && navPosition === 'left' && navItems.length > 0 && (
             <RespondentNavigator
               navItems={navItems}
