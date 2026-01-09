@@ -466,9 +466,9 @@ const parseNumberQuestion = (lines: string[], questionCounter: { count: number }
  * Generate options from RANGE syntax
  */
 const generateRangeOptions = (rangeStr: string): Option[] => {
-  const match = rangeStr.match(/^(-?\d+)-(-?\d+)$/)
+  const match = rangeStr.match(/^(-?\d+)\s*-\s*(-?\d+)$/)
   if (!match) {
-    throw new Error(`Invalid RANGE syntax: "${rangeStr}". Expected format: "start-end" (e.g., "1-10")`)
+    throw new Error(`Invalid RANGE syntax: "${rangeStr}". Expected format: "start-end" (e.g., "1-10" or "1 - 10")`)
   }
 
   const start = parseInt(match[1], 10)
@@ -563,6 +563,8 @@ const parseOptions = (lines: string[]): Option[] => {
       // Check if this is option metadata or a new option
       const isOptionMetadata =
         content === "OTHER" ||
+        content === "TEXT" ||
+        content === "ESSAY" ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
         startsWith(content, "TOOLTIP:") ||
@@ -570,7 +572,7 @@ const parseOptions = (lines: string[]): Option[] => {
 
       if (isOptionMetadata && currentOption) {
         // This is metadata for the current option
-        if (content === "OTHER") {
+        if (content === "OTHER" || content === "TEXT" || content === "ESSAY") {
           currentOption.allowsOtherText = true
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
@@ -1115,6 +1117,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
   // State for parsing
   let tooltip: string | undefined
+  let showIf: string | undefined
   let navLevel: number | undefined
   const computedVariables: ComputedVariable[] = []
   const sectionLines: string[][] = []
@@ -1196,6 +1199,12 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
         continue
       }
 
+      // Extract SHOW_IF
+      if (trimmed.startsWith('SHOW_IF:')) {
+        showIf = extractAfterKeyword(trimmed, 'SHOW_IF:')
+        continue
+      }
+
       // If we hit anything that's not a page-level keyword, transition to sections
       if (trimmed) {
         state = 'sections'
@@ -1234,6 +1243,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
     title,
     tooltip,
     sections,
+    showIf,
     computedVariables,
     navLevel,
   }

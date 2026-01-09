@@ -1,0 +1,817 @@
+# **Omgaan met maatschappelijke kwesties - Belevingen 2026**
+
+Voor u ligt de testversie van de vragenlijst Belevingen 2026. Het CBS voert dit onderzoek jaarlijks uit en ieder jaar worden een aantal actuele onderwerpen gekozen, waar vragen over worden gesteld. Dit jaar gaat het over hoe u omgaat met maatschappelijke kwesties.
+
+We nodigen u uit om de vragenlijst in te vullen en daarbij, als u dat wilt, zoveel mogelijk opmerkingen te plaatsen. Met uw opmerkingen kunnen we de vragenlijst en het onderzoek verbeteren. We willen hierbij nogmaals benadrukken dat de vragenlijst nog in ontwikkeling is. Er kunnen dus nog fouten in staan. Geef dit gerust aan.
+
+## **Het invullen van de vragen**
+
+-   Er zijn geen goede of foute antwoorden of opmerkingen. Met uw
+    opmerkingen kunnen we de vragenlijst en het onderzoek verbeteren.
+-   Uw gegevens en antwoorden worden anoniem en vertrouwelijk verwerkt.
+-   Het interview kan op elk moment gepauzeerd of gestopt worden.
+
+*Alvast bedankt voor uw medewerking!*
+
+# **Achtergrondkenmerken**
+
+Allereerst zouden we graag een aantal algemene gegevens van u willen weten.
+
+Q: Wat is uw geslacht?
+-   Man
+-   Vrouw
+-   Overig
+
+Q: Wat is uw leeftijd?
+NUMBER
+
+# **Achtergrondkenmerken**
+
+Q: Heeft u op dit moment een relatie of partner?
+-   Ja
+-   Nee
+VARIABLE: partner
+
+Q: Heeft u kinderen?
+HINT: Tel alle biologische, adoptie-, pleeg- en stiefkinderen mee.
+-   Ja
+-   Nee
+VARIABLE: kinderen
+
+# **Achtergrondkenmerken**
+
+Q: Wat is uw hoogst behaalde opleidingsniveau?
+-   Geen opleiding
+-   Lagere school / basisschool
+-   Praktijkonderwijs
+-   Vmbo / mavo
+-   Havo, vwo, atheneum, gymnasium
+-   Mbo
+-   Hbo
+-   Universitaire opleiding (inclusief promotieonderzoek)
+-   Andere opleiding, namelijk:
+    - TEXT
+-   Weet ik niet / geen antwoord
+
+# **Gezondheid**
+
+De volgende vragen gaan over uw gezondheid en welzijn.
+
+# **Gezondheid**
+
+Q: Kunt u op een schaal van 1 tot en met 10 aangeven in welke mate u zichzelf een gelukkig mens vindt?
+HINT: Een 1 staat voor 'volledig ongelukkig' en een 10 voor 'volledig gelukkig'.
+RANGE: 1 - 10
+
+# **Gezondheid**
+
+Q: Kunt u op een schaal van 1 tot en met 10 aangeven in welke mate u tevreden bent met het leven dat u nu leidt?
+HINT: Een 1 staat voor 'volledig ontevreden' en een 10 voor 'volledig tevreden'.
+RANGE: 1 - 10
+
+# **Gezondheid**
+
+Q: Hoe is in het algemeen uw gezondheid?
+-   Zeer goed
+-   Goed
+-   Gaat wel
+-   Slecht
+-   Zeer slecht
+
+# **Gezondheid**
+
+Q: De volgende vragen gaan over hoe u zich voelde in de afgelopen 4 weken.
+-   Q: Ik voelde me vrolijk en opgewekt.
+-   Q: Ik voelde me rustig en ontspannen.
+-   Q: Ik voelde me actief en energiek.
+-   Q: Ik voelde me fris en uitgerust wanneer ik wakker werd.
+-   Q: Er gebeurden in mijn dagelijks leven interessante dingen.
+-   Altijd
+-   Meestal
+-   Soms
+-   Af en toe
+-   Nooit
+
+# **Zorgen**
+
+Q: Heeft u zich in de afgelopen 4 weken ergens zorgen over gemaakt?
+HINT: Bijvoorbeeld over werk, studie, gezin, gezondheid, mantelzorg, geldzaken of sociale media.
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+VARIABLE: zorgen
+
+*Concept: zorgen/stress*
+
+# **Zorgen**
+SHOW_IF: zorgen != Nee, geen zorgen
+
+Q: Waarover had u deze zorgen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Werk
+-   School of studie
+-   Relatie of partner
+-   Opvoeding of kinderen
+    -   SHOW_IF: kinderen == Ja
+-   Familie of vrienden
+-   Wonen
+-   Gezondheid
+-   Mantelzorg
+-   Geldzaken
+-   Sociale media
+-   Anders
+CHECKBOX
+VARIABLE: zorgen_persoonlijk
+
+# **Zorgen**
+
+Q: Waar heeft u in het algemeen last van als u zich zorgen maakt? 
+HINT: U kunt meerdere antwoorden kiezen.
+-   Slecht slapen
+-   Piekeren, er constant aan denken
+-   Onrustig voelen
+-   Boos, chagrijnig of geïrriteerd voelen
+-   Angstig voelen of paniekaanvallen
+-   Verdrietig voelen of huilen
+-   Moeite met concentreren
+-   Hoofdpijn, buikpijn of spierpijn
+-   Anders, namelijk:
+    - TEXT
+-   Geen van bovenstaande
+-   Ik maak me nooit zorgen
+    -   SHOW_IF: zorgen == Nee, geen zorgen
+CHECKBOX
+VARIABLE: zorgen_last
+
+# **Zorgen**
+SHOW_IF: zorgen_last != Ik maak me nooit zorgen
+
+Q: Wat doet u normaal als u zich ergens zorgen over maakt?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Ik praat erover met anderen
+-   Ik zoek er informatie over op
+-   Ik ga iets doen, bijv. wandelen, sporten, lezen, tv-kijken of gamen
+-   Ik ga veel eten of alcohol drinken
+-   Ik probeer de zorgen op te lossen
+-   Ik schrijf gedachten of gevoelens van me af
+-   Ik negeer de zorgen en probeer er niet aan te denken
+-   Ik trek me terug of ga anderen uit de weg
+-   Ik doe iets anders
+-   Ik doe niets
+CHECKBOX
+
+# **Netwerk**
+
+Q: Stel, u heeft persoonlijke problemen en wilt daar met iemand over praten.
+Bij wie zou u hiervoor zonder te betalen terecht kunnen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Mijn partner
+    -   SHOW_IF: partner == Ja
+-   Mijn kind(eren)
+    -   SHOW_IF: kinderen == Ja
+-   Een familielid
+    -   SHOW_IF: partner == Nee && kinderen == Nee
+-   Een ander familielid
+    -   SHOW_IF: partner == Ja || kinderen == Ja
+-   Een vriend of vriendin
+-   Een kennis
+-   Iemand uit de buurt
+-   Iemand anders
+-   Niemand
+-   Ik zou hiervoor nooit om hulp vragen
+CHECKBOX
+
+# **Veerkracht**
+
+De volgende vragen gaan over hoe u in het leven staat.
+
+Q: In hoeverre bent u het eens of oneens met de volgende uitspraken?
+-   Q: Ik kan goed omgaan met tegenslagen.
+-   Q: Ik kan goed oplossingen vinden in moeilijke situaties.
+-   Q: Na een moeilijke periode ben ik snel weer de oude.
+-   Q: Door mijn ervaring voel ik mij sterker in moeilijke tijden.
+-   Q: Elke ervaring in het leven maakt mij sterker.
+-   Helemaal eens
+-   Eens
+-   Niet eens, niet oneens
+-   Oneens
+-   Helemaal oneens
+
+# **Veerkracht**
+
+Q: Hoe vaak heeft u het gevoel dat u zelf bepaalt hoe uw leven gaat?
+-   Altijd
+-   Meestal
+-   Soms
+-   Af en toe
+-   Nooit
+
+# **Maatschappelijke thema's**
+
+Dan volgen nu vragen over een aantal maatschappelijke thema's.
+
+Q: Hoe vaak volgt u het nieuws over wat er in de wereld gebeurt?
+HINT: Denk hierbij aan nieuws op radio en televisie, in kranten, en op internet of sociale media.
+-   Dagelijks
+-   Wekelijks
+-   Maandelijks
+-   Bijna nooit
+-   Nooit
+VARIABLE: nieuws
+
+# **Maatschappelijke thema's**
+SHOW_IF: nieuws != Nooit
+
+Q: Op welke manier volgt u meestal het nieuws?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Radio of televisie
+-   Kranten of tijdschriften (ook digitaal)
+-   Nieuwswebsites of nieuwsapps
+-   Sociale media, zoals Facebook, Instagram of LinkedIn
+-   Anders
+CHECKBOX
+
+## *Volledigheid*
+
+# **Klimaat**
+
+De volgende vragen gaan over het klimaat.
+
+**Klimaat**
+
+Q: Denkt u dat het klimaat wel of niet aan het veranderen is?
+-   Ja, zeker wel
+-   Ja, waarschijnlijk wel
+-   Nee, waarschijnlijk niet
+-   Nee, zeker niet
+-   Weet ik niet
+VARIABLE: klimaatverandering
+
+# **Klimaatverandering**
+SHOW_IF: klimaatverandering != Nee, zeker niet
+
+Q: Zoekt u weleens informatie op over klimaatverandering?
+-   Ja, vaak
+-   Ja, soms
+-   Nee, nooit
+
+## *Duidelijkheid*
+
+# **Klimaatverandering**
+SHOW_IF: klimaatverandering != Nee, zeker niet
+
+Q: Kunt u aangeven of u het volgende doet? Zo ja, wat is hiervoor de belangrijkste reden?
+-   Q: Minder vlees eten
+-   Q: Vaker duurzame producten kopen
+-   Q: Vaker seizoens- of lokale producten kopen
+-   Q: Minder voedsel weggooien
+-   Q: Minder of tweedehands spullen kopen
+-   Q: Kapotte spullen repareren
+-   Q: Minder met het vliegtuig reizen
+-   Q: Vaker het openbaar vervoer of de fiets gebruiken
+-   Q: De verwarming lager zetten
+-   Q: Minder vaak of minder ver op vakantie gaan
+-   Ja, om klimaatverandering tegen te gaan
+-   Ja, om geld te besparen
+-   Ja, om een andere reden
+-   Nee
+
+# **Klimaatverandering - Zorgen**
+SHOW_IF: klimaatverandering != Nee, zeker niet
+
+Q: Maakt u zich zorgen over klimaatverandering?
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+VARIABLE: klimaat_zorgen
+
+# **Klimaatverandering - Zorgen**
+SHOW_IF: klimaatverandering != Nee, zeker niet && klimaat_zorgen != Nee, geen zorgen
+
+Q: Maakt u zich hier nu meer, evenveel of minder zorgen over dan 5 jaar geleden?
+-   Veel meer zorgen
+-   Meer zorgen
+-   Evenveel zorgen
+-   Minder zorgen
+-   Veel minder zorgen
+
+Q: Voor wie maakt u zich vooral zorgen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Mezelf
+-   Mijn partner
+    -   SHOW_IF: partner == Ja
+-   Mijn kind(eren) of kleinkind(eren)
+    -   SHOW_IF: kinderen == Ja
+-   Familie, vrienden of kennissen
+-   Andere mensen in Nederland
+-   Mensen in andere landen
+-   Volgende generaties
+-   Geen van bovenstaande
+CHECKBOX
+
+# **Klimaatverandering - Zorgen**
+SHOW_IF: klimaatverandering != Nee, zeker niet
+
+Q: Maakt u zich zorgen over de volgende mogelijke gevolgen van klimaatverandering?
+-   Q: Hogere temperaturen, zoals hete zomers
+-   Q: Langdurige droogte
+-   Q: Watertekort
+-   Q: Voedseltekort, bijvoorbeeld door tegenvallende oogsten
+-   Q: Zware stormen, regen- en hagelbuien
+-   Q: Overstromingen
+-   Q: Natuurbranden
+-   Q: Uitsterven van plant- en diersoorten
+-   Q: Onbewoonbaar worden van de aarde
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+
+# **Pandemieën**
+
+De volgende vragen gaan over pandemieën.
+
+Bij een pandemie is er een besmettelijke ziekte die zich snel over de wereld verspreidt. Meestal gaat het dan om een ernstige ziekte.
+
+Q: Denkt u dat het coronavirus een pandemie veroorzaakt heeft?
+-   Ja
+-   Nee
+-   Weet ik niet
+VARIABLE: coronavirus
+
+# **Pandemieën**
+SHOW_IF: coronavirus != Nee
+
+Q: Als er een pandemie uitbreekt, zoekt u dan informatie hierover op?
+-   Ja, zeker
+-   Ja, misschien
+-   Nee, zeker niet
+
+# **Pandemieën**
+SHOW_IF: coronavirus != Nee
+
+Q: Doet u het volgende om te voorkomen dat u of anderen ziek worden?
+-   Q: Handen wassen
+-   Q: Papieren zakdoekjes gebruiken in plaats van stoffen
+-   Q: In de elleboog hoesten en niezen
+-   Q: Mondkapje dragen
+-   Q: Bij klachten thuisblijven
+-   Q: Wegblijven van grote mensenmassa's
+-   Q: Wegblijven van niet of slecht geventileerde ruimtes
+-   Ja
+-   Nee
+
+# **Pandemieën - Zorgen**
+SHOW_IF: coronavirus != Nee
+
+Q: Maakt u zich zorgen over een toekomstige pandemie?
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+VARIABLE: pandemie_zorgen
+
+# **Pandemieën**
+SHOW_IF: coronavirus != Nee && pandemie_zorgen != Nee, geen zorgen
+
+Q: Voor wie maakt u zich vooral zorgen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Mezelf
+-   Mijn partner
+    -   SHOW_IF: partner == Ja
+-   Mijn kind(eren) of kleinkind(eren)
+    -   SHOW_IF: kinderen == Ja
+-   Familie, vrienden of kennissen
+-   Andere mensen in Nederland
+-   Mensen in andere landen
+-   Volgende generaties
+-   Geen van bovenstaande
+CHECKBOX
+
+# **Technologische ontwikkelingen**
+
+De volgende vragen gaan over technologische ontwikkelingen.
+
+Technologie maakt steeds meer deel uit van ons dagelijks leven. Denk bijvoorbeeld aan technologische ontwikkelingen zoals kunstmatige intelligentie, robots en slimme apparaten.
+
+Q: Hoe digitaal vaardig vindt u zichzelf?
+-   Heel vaardig
+-   Vaardig
+-   Niet zo vaardig
+-   Helemaal niet vaardig
+
+## *Digitale vaardigheid*
+
+# **Technologische ontwikkelingen**
+
+Q: Zoekt u weleens informatie op over technologische ontwikkelingen?
+-   Ja, vaak
+-   Ja, soms
+-   Nee, nooit
+
+Q: Wat doet u als u zelf (nieuwe) technologieën moet gebruiken?
+HINT: Bijvoorbeeld de installatie van een nieuw apparaat, online dingen regelen of het gebruik van computerprogramma's of apps. U kunt meerdere antwoorden kiezen.
+-   Ik zoek het zelf uit
+-   Ik vraag familie of vrienden om hulp
+-   Ik neem contact op met een klantenservice of helpdesk
+-   Ik ga naar een steunpunt (bijvoorbeeld in een bibliotheek)
+-   Ik volg een (online) cursus
+-   Ik doe iets anders
+-   Ik gebruik (bijna) geen technologie, dat vind ik te moeilijk
+-   Ik gebruik (bijna) geen technologie, dat vind ik niet nodig
+CHECKBOX
+
+# **Technologische ontwikkelingen**
+
+Q: Wat vindt u ervan dat technologie een steeds grotere rol speelt in ons dagelijks leven?
+-   Heel goed
+-   Goed
+-   Niet goed, niet slecht
+-   Slecht
+-   Heel slecht
+
+# **Technologische ontwikkelingen**
+
+Q: Hieronder staan enkele technologische ontwikkelingen. Wat vindt u hiervan?
+-   Q: Slimme apparaten in huis zoals een schoonmaakrobot, robotmaaier, slimme deurbel of slimme thermostaat
+-   Q: Chatbots zoals ChatGPT (een chatbot is een geautomatiseerde gesprekspartner)
+-   Q: Online bankzaken regelen
+-   Q: Gebruik van biometrische gegevens, bijv. inloggen met een vingerafdruk of gezichtsherkenning
+-   Q: Zelfrijdende auto's
+-   Q: Betalingsverkeer met bitcoins
+-   Q: Biotechnologische ontwikkelingen, zoals nieuwe medicijnen/therapieën, kweekvlees en bioplastics
+-   Heel goed
+-   Goed
+-   Niet goed, niet slecht
+-   Slecht
+-   Heel slecht
+
+# **Technologische ontwikkelingen - Zorgen**
+
+Q: Maakt u zich zorgen over technologische ontwikkelingen?
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+VARIABLE: tech_zorgen
+
+# **Technologische ontwikkelingen - Zorgen**
+SHOW_IF: tech_zorgen != Nee, geen zorgen
+
+Q: Maakt u zich hier nu meer, evenveel of minder zorgen over dan 5 jaar geleden?
+-   Veel meer zorgen
+-   Meer zorgen
+-   Evenveel zorgen
+-   Minder zorgen
+-   Veel minder zorgen
+
+Q: Voor wie maakt u zich dan vooral zorgen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Mezelf
+-   Mijn partner
+    -   SHOW_IF: partner == Ja
+-   Mijn kind(eren) of kleinkind(eren)
+    -   SHOW_IF: kinderen == Ja
+-   Familie, vrienden of kennissen
+-   Andere mensen in Nederland
+-   Mensen in andere landen
+-   Volgende generaties
+-   Geen van bovenstaande
+CHECKBOX
+
+# **Technologische ontwikkelingen - Zorgen**
+
+Q: Maakt u zich zorgen over de volgende mogelijke gevolgen van technologische ontwikkelingen?
+-   Q: Dat sommige mensen niet goed mee kunnen doen, omdat ze bijv. geen computer, internet of digitale kennis hebben (digitale uitsluiting)
+-   Q: Dat mensen heel veel tijd op hun smartphone doorbrengen
+-   Q: Verspreiding van desinformatie en nepnieuws
+-   Q: Misbruik van persoonlijke gegevens
+-   Q: Afhankelijkheid van technologie, bijv. bij uitval van stroom, internet of betaalsystemen
+-   Q: Cybercriminaliteit, zoals hacken en phishing
+-   Q: Milieuvervuiling door steeds meer verbruik van elektriciteit of afval van oude of kapotte elektronische apparaten
+-   Q: Invloed van grote technologiebedrijven, zoals Facebook en Google
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+
+# **Technologische ontwikkelingen - Gezondheidszorg**
+
+De volgende vraag gaat over technologische ontwikkelingen in de gezondheidszorg.
+
+Q: Wat vindt u van de volgende ontwikkelingen?
+-   Q: Opzoeken van gezondheidsklachten op bijv. Thuisarts.nl
+-   Q: Bespreken van gezondheidsklachten met een chatbot (een chatbot is een geautomatiseerde gesprekspartner)
+-   Q: Online een afspraak *maken* met een huisarts of specialist
+-   Q: Online een afspraak *hebben* met een huisarts of specialist
+-   Q: Artsen die een diagnose stellen met behulp van kunstmatige intelligentie (een diagnose is het vaststellen van de ziekte of aandoening die iemand heeft)
+-   Q: Elektronisch Patiëntendossier (een digitaal systeem waarin zorgverleners medische gegevens van patiënten opslaan en onderling delen)
+-   Q: Gezondheidsapps, bijv. calorieëntrackers, stappentellers of medicatieherinneringen
+-   Heel goed
+-   Goed
+-   Niet goed, niet slecht
+-   Slecht
+-   Heel slecht
+
+# **Oorlogen en conflicten**
+
+De volgende vragen gaan over oorlog en conflicten.
+
+Q: Heeft u het gevoel dat oorlogen en conflicten steeds dichterbij komen?
+-   Ja, zeker
+-   Ja, misschien
+-   Nee, zeker niet
+
+# **Oorlogen en conflicten**
+
+Q: Zoekt u weleens informatie op over oorlogen en conflicten in de wereld?
+-   Ja, vaak
+-   Ja, soms
+-   Nee, nooit
+
+# **Oorlogen en conflicten - Zorgen**
+
+Q: Maakt u zich zorgen over oorlogen en conflicten in de wereld?
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+VARIABLE: oorlog_zorgen
+
+# **Oorlogen en conflicten - Zorgen** 
+SHOW_IF: oorlog_zorgen != Nee, geen zorgen
+
+Q: Maakt u zich hier nu meer, evenveel of minder zorgen over dan 5 jaar geleden?
+-   Veel meer zorgen
+-   Meer zorgen
+-   Evenveel zorgen
+-   Minder zorgen
+-   Veel minder zorgen
+
+Q: Voor wie maakt u zich vooral zorgen?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Mezelf
+-   Mijn partner
+    -   SHOW_IF: partner == Ja
+-   Mijn kind(eren) of kleinkind(eren)
+    -   SHOW_IF: kinderen == Ja
+-   Familie, vrienden of kennissen
+-   Andere mensen in Nederland
+-   Mensen in andere landen
+-   Volgende generaties
+-   Geen van bovenstaande 
+CHECKBOX
+
+# **Oorlogen en conflicten - Zorgen**
+
+Q: Maakt u zich zorgen over de volgende mogelijke gevolgen van oorlogen en conflicten?
+-   Q: Minder verdraagzaamheid tussen mensen in Nederland
+-   Q: Nederland raakt actief betrokken bij oorlog
+-   Q: Invoeren van de dienstplicht in Nederland
+-   Q: Terrorisme en aanslagen
+-   Q: Inzet van atoomwapens
+-   Q: Reizen naar het buitenland wordt minder veilig
+-   Q: Verstoren van elektriciteitsnet, internet of logistieke systemen
+-   Q: Meer vluchtelingen in Nederland
+-   Ja, veel zorgen
+-   Ja, een beetje zorgen
+-   Nee, geen zorgen
+
+# **Noodpakket**
+
+De overheid raadt mensen aan om voorbereid te zijn op noodsituaties door een noodpakket in huis te hebben. Het pakket moet bestaan uit onder meer water, voedsel dat lang houdbaar is, dekens, een zaklamp, contant geld en een radio op batterijen.
+
+Q: Heeft u zelf een noodpakket in huis?
+-   Ja, ik heb alles wat nodig is in huis
+-   Ja, ik heb het deels in huis
+-   Nee
+VARIABLE: noodpakket
+
+# **Noodpakket**
+SHOW_IF: noodpakket != Nee
+
+Q: Om welke reden(en) heeft u dit noodpakket aangeschaft?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Als voorbereiding op een mogelijke klimaatramp 
+-   Als voorbereiding op een mogelijke pandemie
+-   Als voorbereiding op een mogelijke technologische noodsituatie
+-   Als voorbereiding op een mogelijke oorlog
+-   Vanwege het advies van de overheid
+-   Om een andere reden
+CHECKBOX
+
+Q: Voor welke situaties heeft u een noodpakket in huis?
+HINT: U kunt meerdere antwoorden kiezen.
+-   Voor een mogelijke klimaatramp
+-   Voor als er een pandemie uitbreekt
+-   Voor een mogelijke technologische noodsituatie of ramp
+-   Voor als er een oorlog uitbreekt
+-   Voor een andere situatie
+-   Geen specifieke situatie
+CHECKBOX
+
+# **Noodpakket**
+SHOW_IF: noodpakket == Nee
+
+Q: Waarom heeft u geen noodpakket in huis?
+-   Ik denk niet dat dit nodig is
+-   Ik heb er nog geen tijd voor gehad
+-   Ik heb er geen geld voor
+-   Ik wist niet van dit advies
+-   Andere reden
+
+# **Afsluiting**
+
+Eerder in de vragenlijst heeft u aangegeven dat u zich zorgen maakt over de volgende thema’s. Kunt u op een schaal van 1 tot en met 10 voor elk thema aangeven in welke mate het u bezighoudt?
+## *Een 1 staat voor 'Heel weinig' en een 10 voor 'Heel veel'.*
+
+Q:
+- Q: Klimaatverandering
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: klimaat_zorgen != Nee, geen zorgen
+
+Q:
+- Q: Pandemieën
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: pandemie_zorgen != Nee, geen zorgen
+
+Q:
+- Q: Technologische ontwikkelingen
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: tech_zorgen != Nee, geen zorgen
+
+Q:
+- Q: Oorlogen en conflicten
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: oorlog_zorgen != Nee, geen zorgen
+
+Q:
+- Q: Werk
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Werk
+
+Q:
+- Q: School of studie
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == School of studie
+
+Q:
+- Q: Relatie of partner
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Relatie of partner
+
+Q:
+- Q: Opvoeding of kinderen
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Opvoeding of kinderen
+
+Q:
+- Q: Familie of vrienden
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Familie of vrienden
+
+Q:
+- Q: Wonen
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Wonen
+
+Q:
+- Q: Gezondheid
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Gezondheid
+
+Q:
+- Q: Mantelzorg
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Mantelzorg
+
+Q:
+- Q: Geldzaken
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Geldzaken
+
+Q:
+- Q: Sociale media
+-   1
+-   2
+-   3
+-   4
+-   5
+-   6
+-   7
+-   8
+-   9
+-   10
+SHOW_IF: zorgen_persoonlijk == Sociale media
