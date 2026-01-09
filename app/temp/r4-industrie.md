@@ -78,9 +78,9 @@ NIET meetellen:
 
 """
 
-Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
-
 Let op: De definitie van omzet is vanaf dit jaar aangepast. Klik op het i-teken voor meer informatie over de posten die tot de omzet worden gerekend.
+
+Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
