@@ -70,7 +70,7 @@ WEL meetellen:
 NIET meetellen:
 
 - Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
-- Doorberekende, aan derden betaalde, vrachtkosten. Deze opnemen in de rubriek 'Overige bedrijfslasten' als minpost op aldaar gerapporteerde vrachtkosten.
+- Doorberekende, aan derden betaalde, vrachtkosten.
 - Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
 - Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
 - Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
