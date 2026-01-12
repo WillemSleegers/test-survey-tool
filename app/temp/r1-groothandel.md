@@ -342,6 +342,7 @@ Q:
 - COLUMN: 2
 - Waarvan reclame-, beurs-, advertentie- en representatiekosten
 - COLUMN: 1
+- EXCLUDE
 - **Communicatie**
 - HINT: Zoals porto, telefoon, fax, mobiele telefoon, e-mail, internet
 - COLUMN: 2
