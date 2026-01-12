@@ -120,12 +120,21 @@
     @apply bg-background text-foreground;
   }
 
-  ul {
-    @apply list-disc list-outside ms-6 whitespace-normal;
+  ul, ol {
+    @apply list-outside ms-6 whitespace-normal mb-3 last:mb-0;
   }
 
-  li > ul {
-    @apply ms-4;
+  ul {
+    @apply list-disc;
+  }
+
+  ol {
+    @apply list-decimal;
+  }
+
+  li > ul,
+  li > ol {
+    @apply ms-4 mb-0;
   }
 
   code {
@@ -133,10 +142,6 @@
   }
 
   p {
-    @apply mb-4;
-  }
-
-  p:last-child {
-    @apply mb-0;
+    @apply mb-3 last:mb-0;
   }
 }

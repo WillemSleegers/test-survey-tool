@@ -35,7 +35,7 @@ Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
 NAVIGATION: 1
 
 **Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
-Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
+Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2025. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2025 en vóór 1-4-2026?
 
 Q: **Begindatum**
 TEXT

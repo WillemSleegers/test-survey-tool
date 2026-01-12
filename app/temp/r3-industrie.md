@@ -54,27 +54,24 @@ Onderstaande toelichting geldt voor alle omzetvragen in dit blok.
 Omzet: de waarde (excl. btw) van álle door de onderneming geleverde goederen en diensten in het genoemde boekjaar, zowel in het kader van de hoofdactiviteiten van de onderneming als eventuele nevenactiviteiten, zowel buiten het concern als binnen het concern (d.w.z. aan eventuele andere groepsmaatschappijen, niet genoemd aan het begin van het formulier),
 
 onder aftrek van:
-
-- Kortingen en bonussen op verkopen;
-- Retouren en retouremballage.
+ - Kortingen en bonussen op verkopen;
+ - Retouren en retouremballage.
 
 WEL meetellen:
-
-- Doorberekende kosten voor installatie, assemblage en eigen vervoer;
-- Doorberekende vracht-/transportkosten voor eigen vervoer
-- Opbrengsten uit royalty's en licenties
-- Vergoedingen voor uitleen van personeel, ook als dit niet uw hoofdactiviteit is;
-- Bouwsector: omzet uit tijdelijke bouwcombinaties
-- Apotheken: honorarium en andere vergoedingen ontvangen van zorginstellingen en -verzekeraars.
+ - Doorberekende kosten voor installatie, assemblage en eigen vervoer;
+ - Doorberekende vracht-/transportkosten voor eigen vervoer
+ - Opbrengsten uit royalty's en licenties
+ - Vergoedingen voor uitleen van personeel, ook als dit niet uw hoofdactiviteit is;
+ - Bouwsector: omzet uit tijdelijke bouwcombinaties
+ - Apotheken: honorarium en andere vergoedingen ontvangen van zorginstellingen en -verzekeraars.
 
 NIET meetellen:
-
-- Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
-- Doorberekende, aan derden betaalde, vrachtkosten.
-- Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
-- Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
-- Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
-- Opbrengsten uit verkoop van (im)materiële vaste activa. Deze opnemen onder de post 'Saldo Boekwinsten/-verliezen' in de rubriek 'Resultatenrekening'.
+ - Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
+ - Doorberekende, aan derden betaalde, vrachtkosten
+ - Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
+ - Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
+ - Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
+ - Opbrengsten uit verkoop van (im)materiële vaste activa. Deze opnemen onder de post 'Saldo Boekwinsten/-verliezen' in de rubriek 'Resultatenrekening'.
 
 """
 
@@ -149,6 +146,14 @@ Q:
   SUFFIX: .000,-
   TOTAL: **Totaal, moet gelijk zijn aan 'Omzet industriële activiteiten'**
 
+Q: Bent u eigenaar van de grond- en hulpstoffen die gebruikt worden in het productieproces in het buitenland?
+- Ja
+- Nee
+
+Q: Zijn de in het buitenland zelfvervaardigde producten gemaakt met behulp van uw intellectueel eigendom?
+- Ja
+- Nee
+
 # **Overige bedrijfsopbrengsten**
 
 NAVIGATION: 1
@@ -171,8 +176,8 @@ Q:
 - HINT: Met uitzondering van loon(kosten)subsidies, zie daarvoor rubriek Personele kosten, vraag 'Loon(kosten)subsidies en afdrachtverminderingen'
 - TOOLTIP: """
   Hieronder vallen:
-- exportsubsidies van nationale overheden en de EU;
-- andere EU-subsidies en -restituties;
+  - exportsubsidies van nationale overheden en de EU;
+  - andere EU-subsidies en -restituties;
   - overige prijsverlagende subsidies en restituties.
     """
 - COLUMN: 2
@@ -339,30 +344,59 @@ Q:
 - HINT: Energiekosten, inclusief netdiensten. Géén brandstofkosten externe vervoermiddelen, deze opnemen bij 'Vervoermiddelen'
 - TOOLTIP: Inclusief vloeibare en vaste brandstoffen, stadsverwarming, brandstoffen voor machines en dergelijke, warm water en stoom voor verwarmingsdoeleinden.
 - COLUMN: 2
+- Q: ***Energiekosten: Waarvan aardgas***
+- COLUMN: 1
+- Q: ***Energiekosten: Waarvan elektriciteit***
+- COLUMN: 1
+- Q: ***Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)***
+- COLUMN: 1
 - **Huisvesting**
-- HINT: Huur / lease, onderhoud / reparatie en schoonmaak van gebouwen en terreinen, verzekeringspremies opstal en inboedel, milieuheffingen en zuiveringslasten, onroerendezaakbelasting (ozb), waterverbruik, inrichtingen
+- HINT: Betreft huur / lease gebouwen en terreinen
 - COLUMN: 2
-- **Apparatuur / inventaris**
-- HINT: Huur / lease, onderhoud / reparatie, verzekering van inventaris, machines, installaties, interne transportmiddelen en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar. Afdracht softwarelicenties hier niet opgeven, zie daarvoor 'Overige algemene kosten'
+- **Milieuheffingen en zuiveringslasten**
+- HINT: Zoals rioolrechten en waterschapslasten
+- COLUMN: 2
+- **Onroerendezaakbelasting**
+- COLUMN: 2
+- **Overige huisvesting**
+- HINT: Schoonmaak, onderhoud / reparatie van gebouwen en terreinen, verzekeringspremies opstal en inboedel, inrichtingen, waterverbruik.
+- COLUMN: 2
+- **Huur en operationele lease van machines**
+- HINT: Huur / lease van inventaris, machines, installaties, interne transportmiddelen en computers (exclusief software, deze vermelden bij 'Licenties e.d.')
+- COLUMN: 1
+- **Overige machine- en inventariskosten**
+- HINT: Zoals onderhoud / reparatie, verzekering van inventaris, machines, installaties en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar
 - TOOLTIP: Wanneer de aankopen wel worden geactiveerd, dan de bijbehorende afschrijvingen meetellen in de afschrijvingen in de Resultatenrekening
 - COLUMN: 2
-- **Vervoermiddelen**
-- HINT: Huur / lease, onderhoud / reparatie, verzekering, houderschapsbelasting en brandstofkosten externe vervoermiddelen (exclusief interne transportmiddelen, zie daarvoor 'Apparatuur / inventaris' en 'Energiekosten')
-- TOOLTIP: Met externe vervoermiddelen worden de vervoermiddelen bedoeld die buiten het eigen terrein worden gebruikt.
+- **Huur en operationele lease externe vervoermiddelen**
+- HINT: Exclusief interne transportmiddelen, zie daarvoor 'Huur en operationele lease van machines'
+- COLUMN: 2
+- **Houderschapsbelasting**
+- HINT: Motorrijtuigenbelasting
+- COLUMN: 2
+- **Overige kosten vervoermiddelen**
+- HINT: Niet eerder genoemde kosten externe vervoermiddelen
 - COLUMN: 2
 - **Verkoopkosten**
 - HINT: Zoals reclame-, beurs-, advertentiekosten, provisies, reis-, verblijfs- en representatiekosten
 - COLUMN: 2
-- Waarvan reclame-, beurs-, advertentie- en representatiekosten
-- COLUMN: 1
 - **Communicatie**
 - HINT: Zoals porto, telefoon, fax, mobiele telefoon, e-mail, internet
 - COLUMN: 2
-- **Diensten door derden**
-- HINT: Zoals research & development door derden, automatiserings-, bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking, betaalde (niet aan afnemers doorberekende) vrachtkosten op verkopen
+- **Automatisering**
+- HINT: Kosten automatiseringsdiensten verricht door derden. In deze post ook opgeven de niet-geactiveerde aankopen van maatwerksoftware in verslagjaar en de kosten van nieuwe releases. Afdracht softwarelicenties hier niet opgeven, zie daarvoor 'Licenties e.d.'
 - COLUMN: 2
+- **Research & development**
+- HINT: Onderzoek & ontwikkeling verricht door derden
+- **Andere diensten door derden**
+- HINT: Zoals bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking
+- **Licenties e.d.**
+- HINT: Betreft afdracht van software- en andere licenties, zoals royalty's en auteursrechten
 - **Beheerskosten**
 - HINT: Kosten diensten algemeen beheer in rekening gebracht door moeder-, dochter- en/of zusterondernemingen, waaronder management fees
+- COLUMN: 2
+- **Overige huur en operationele lease**
+- HINT: Zoals antiquiteiten, kunstobjecten en overige kostbaarheden, kleding, tenten voor incidentele gelegenheden (bijv. recepties), meermaals te gebruiken emballage
 - COLUMN: 2
 - **Overige kostprijsverhogende belastingen**
 - HINT: """
@@ -373,18 +407,12 @@ NIET meetellen:
 - aan afnemers in rekening gebrachte belastingen, zoals accijnzen, BPM, afvalstoffenheffing (geïnd door stortplaatsexploitanten) en toeristenbelasting.
   """
 - COLUMN: 2
+- **Hulpmaterialen**
+- HINT: Materialen die niet opgaan in het eindproduct, zoals koel- en smeermiddelen die tijdens het productieproces constant worden toegevoegd
+- **Hand- en machinegereedschappen**
+- HINT: Aanschaf van kleine werktuigen en gereedschap die direct ten laste van de exploitatierekening wordt gebracht
 - **Overige algemene kosten**
 - HINT: Alle overige kosten niet eerder genoemd, behalve afschrijvingen. Deze vermelden in de Resultatenrekening
-- TOOLTIP: """
-  Voorbeelden van overige algemene kosten:
-- niet-reguliere grond- en hulpstoffen;
-- kantoorbehoeften, contributies, abonnementen,
-  vakliteratuur;
-- overige huur / lease niet elders genoemd;
-- overig onderhoud / reparatie niet elders genoemd;
-- software en andere licenties;
-- royalty's, auteursrechten.
-  """
 - COLUMN: 2
   BREAKDOWN
   PREFIX: €

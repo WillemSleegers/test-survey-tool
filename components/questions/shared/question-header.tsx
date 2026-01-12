@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
@@ -59,7 +59,7 @@ export function QuestionHeader({ text, subtext, tooltip, variables, computedVari
         </div>
       </div>
       {processedSubtext && (
-        <div className="text-base text-muted-foreground whitespace-pre-wrap">
+        <div className="text-base text-muted-foreground">
           <Markdown>{processedSubtext}</Markdown>
         </div>
       )}
