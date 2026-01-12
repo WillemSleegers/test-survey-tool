@@ -350,7 +350,7 @@ Q:
 - COLUMN: 1
 - ***Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)***
 - COLUMN: 1
-- **Huisvesting**
+- **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
 - COLUMN: 2
 - **Milieuheffingen en zuiveringslasten**
@@ -363,7 +363,7 @@ Q:
 - COLUMN: 2
 - **Huur en operationele lease van machines**
 - HINT: Huur / lease van inventaris, machines, installaties, interne transportmiddelen en computers (exclusief software, deze vermelden bij 'Licenties e.d.')
-- COLUMN: 1
+- COLUMN: 2
 - **Overige machine- en inventariskosten**
 - HINT: Zoals onderhoud / reparatie, verzekering van inventaris, machines, installaties en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar
 - TOOLTIP: Wanneer de aankopen wel worden geactiveerd, dan de bijbehorende afschrijvingen meetellen in de afschrijvingen in de Resultatenrekening
