@@ -35,7 +35,7 @@ Q: Maakt u voor uw boekhouding gebruik van deze IFRS-16-standaard?
 NAVIGATION: 1
 
 **Verslagjaar, gebroken boekjaar (dd-mm-jjjj)**
-Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2024. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2024 en vóór 1-4-2025?
+Noteer de begin- en einddatum van het verslagjaar waarover u rapporteert. In de meeste gevallen is dat het kalenderjaar 2025. Als uw bedrijf een boekjaar heeft dat niet samenvalt met het kalenderjaar, wilt u dan rapporteren over het boekjaar dat eindigt op een datum na 31-3-2025 en vóór 1-4-2026?
 
 Q: **Begindatum**
 TEXT
@@ -70,13 +70,15 @@ WEL meetellen:
 NIET meetellen:
 
 - Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
-- Doorberekende, aan derden betaalde, vrachtkosten. Deze opnemen in de rubriek 'Overige bedrijfslasten' als minpost op aldaar gerapporteerde vrachtkosten.
+- Doorberekende, aan derden betaalde, vrachtkosten.
 - Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
 - Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
 - Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
 - Opbrengsten uit verkoop van (im)materiële vaste activa. Deze opnemen onder de post 'Saldo Boekwinsten/-verliezen' in de rubriek 'Resultatenrekening'.
 
 """
+
+**Let op**: De definitie van omzet is vanaf dit jaar aangepast. Klik op het i-teken hierboven voor meer informatie over de posten die tot de omzet worden gerekend.
 
 Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
