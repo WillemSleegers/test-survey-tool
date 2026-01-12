@@ -54,24 +54,27 @@ Onderstaande toelichting geldt voor alle omzetvragen in dit blok.
 Omzet: de waarde (excl. btw) van álle door de onderneming geleverde goederen en diensten in het genoemde boekjaar, zowel in het kader van de hoofdactiviteiten van de onderneming als eventuele nevenactiviteiten, zowel buiten het concern als binnen het concern (d.w.z. aan eventuele andere groepsmaatschappijen, niet genoemd aan het begin van het formulier),
 
 onder aftrek van:
- - Kortingen en bonussen op verkopen;
- - Retouren en retouremballage.
+
+- Kortingen en bonussen op verkopen;
+- Retouren en retouremballage.
 
 WEL meetellen:
- - Doorberekende kosten voor installatie, assemblage en eigen vervoer;
- - Doorberekende vracht-/transportkosten voor eigen vervoer
- - Opbrengsten uit royalty's en licenties
- - Vergoedingen voor uitleen van personeel, ook als dit niet uw hoofdactiviteit is;
- - Bouwsector: omzet uit tijdelijke bouwcombinaties
- - Apotheken: honorarium en andere vergoedingen ontvangen van zorginstellingen en -verzekeraars.
+
+- Doorberekende kosten voor installatie, assemblage en eigen vervoer;
+- Doorberekende vracht-/transportkosten voor eigen vervoer
+- Opbrengsten uit royalty's en licenties
+- Vergoedingen voor uitleen van personeel, ook als dit niet uw hoofdactiviteit is;
+- Bouwsector: omzet uit tijdelijke bouwcombinaties
+- Apotheken: honorarium en andere vergoedingen ontvangen van zorginstellingen en -verzekeraars.
 
 NIET meetellen:
- - Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
- - Doorberekende, aan derden betaalde, vrachtkosten
- - Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
- - Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
- - Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
- - Opbrengsten uit verkoop van (im)materiële vaste activa. Deze opnemen onder de post 'Saldo Boekwinsten/-verliezen' in de rubriek 'Resultatenrekening'.
+
+- Doorberekende belastingen die een-op-een samenhangen met de verkoop van het product of de dienst, zoals bpm, accijnzen, toeristenbelasting, etc.
+- Doorberekende, aan derden betaalde, vrachtkosten
+- Mutatie onderhanden werk en/of gereed product (verderop afzonderlijk rapporteren)
+- Ontvangen restituties, zoals exportrestituties, en subsidies. Deze, behalve loonkostensubsidies, opnemen in de rubriek 'Overige bedrijfsopbrengsten'. Loonkostensubsidies opnemen in de rubriek 'Personele kosten';
+- Ontvangen schade-uitkeringen. Deze opnemen in de rubriek 'Overige bedrijfsopbrengsten';
+- Opbrengsten uit verkoop van (im)materiële vaste activa. Deze opnemen onder de post 'Saldo Boekwinsten/-verliezen' in de rubriek 'Resultatenrekening'.
 
 """
 
@@ -147,10 +150,12 @@ Q:
   TOTAL: **Totaal, moet gelijk zijn aan 'Omzet industriële activiteiten'**
 
 Q: Bent u eigenaar van de grond- en hulpstoffen die gebruikt worden in het productieproces in het buitenland?
+
 - Ja
 - Nee
 
 Q: Zijn de in het buitenland zelfvervaardigde producten gemaakt met behulp van uw intellectueel eigendom?
+
 - Ja
 - Nee
 
@@ -344,12 +349,15 @@ Q:
 - HINT: Energiekosten, inclusief netdiensten. Géén brandstofkosten externe vervoermiddelen, deze opnemen bij 'Vervoermiddelen'
 - TOOLTIP: Inclusief vloeibare en vaste brandstoffen, stadsverwarming, brandstoffen voor machines en dergelijke, warm water en stoom voor verwarmingsdoeleinden.
 - COLUMN: 2
-- ***Energiekosten: Waarvan aardgas***
+- **_Energiekosten: Waarvan aardgas_**
 - COLUMN: 1
-- ***Energiekosten: Waarvan elektriciteit***
+- EXCLUDE
+- **_Energiekosten: Waarvan elektriciteit_**
 - COLUMN: 1
-- ***Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)***
+- EXCLUDE
+- **_Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)_**
 - COLUMN: 1
+- EXCLUDE
 - **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
 - COLUMN: 2
