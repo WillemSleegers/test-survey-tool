@@ -3,12 +3,25 @@
 import { QuestionnaireViewer } from "@/components/questionnaire-viewer"
 import { parseQuestionnaire } from "@/lib/parser"
 import { useEffect, useState } from "react"
+import { useLanguage } from "@/contexts/language-context"
+import { useNavigation } from "@/contexts/navigation-context"
 
 export default function R1GroothandelPage() {
-  const [surveyData, setSurveyData] = useState<ReturnType<typeof parseQuestionnaire> | null>(null)
+  const [surveyData, setSurveyData] = useState<ReturnType<
+    typeof parseQuestionnaire
+  > | null>(null)
   const [error, setError] = useState<string>("")
+  const { setLanguage } = useLanguage()
+  const { setIsVisible, setPosition, setAllowUnvisitedNavigation } =
+    useNavigation()
 
   useEffect(() => {
+    // Configure survey settings
+    setLanguage("nl")
+    setIsVisible(true)
+    setPosition("left")
+    setAllowUnvisitedNavigation(true)
+
     // Fetch and parse the survey file
     fetch("/api/surveys/r1-groothandel")
       .then((res) => {
@@ -22,7 +35,7 @@ export default function R1GroothandelPage() {
       .catch((err) => {
         setError(err.message)
       })
-  }, [])
+  }, [setLanguage, setIsVisible, setPosition, setAllowUnvisitedNavigation])
 
   if (error) {
     return (
