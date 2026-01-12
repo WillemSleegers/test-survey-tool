@@ -388,10 +388,13 @@ Q:
 - COLUMN: 2
 - **Research & development**
 - HINT: Onderzoek & ontwikkeling verricht door derden
+- COLUMN: 2
 - **Andere diensten door derden**
 - HINT: Zoals bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking
+- COLUMN: 2
 - **Licenties e.d.**
 - HINT: Betreft afdracht van software- en andere licenties, zoals royalty's en auteursrechten
+- COLUMN: 2
 - **Beheerskosten**
 - HINT: Kosten diensten algemeen beheer in rekening gebracht door moeder-, dochter- en/of zusterondernemingen, waaronder management fees
 - COLUMN: 2
