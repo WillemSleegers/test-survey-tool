@@ -344,11 +344,11 @@ Q:
 - HINT: Energiekosten, inclusief netdiensten. Géén brandstofkosten externe vervoermiddelen, deze opnemen bij 'Vervoermiddelen'
 - TOOLTIP: Inclusief vloeibare en vaste brandstoffen, stadsverwarming, brandstoffen voor machines en dergelijke, warm water en stoom voor verwarmingsdoeleinden.
 - COLUMN: 2
-- Q: ***Energiekosten: Waarvan aardgas***
+- ***Energiekosten: Waarvan aardgas***
 - COLUMN: 1
-- Q: ***Energiekosten: Waarvan elektriciteit***
+- ***Energiekosten: Waarvan elektriciteit***
 - COLUMN: 1
-- Q: ***Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)***
+- ***Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)***
 - COLUMN: 1
 - **Huisvesting**
 - HINT: Betreft huur / lease gebouwen en terreinen
