@@ -94,6 +94,13 @@ Released December 2025
 
 ### Improvements
 
+- **Markdown-based text formatting**: Removed `whitespace-pre-wrap` CSS and let Markdown handle paragraph breaks naturally
+  - Removed `whitespace-pre-wrap` from all text rendering components (section text, question hints/tooltips, page headers)
+  - Added global CSS rules for paragraph and list spacing (`mb-3` with `last:mb-0`)
+  - Content now uses standard Markdown convention: double newlines create separate paragraphs with proper spacing
+  - Benefits: cleaner code, consistent spacing, proper semantic HTML, no CSS overrides needed
+  - Removed redundant wrapper divs that only held the CSS class
+
 - **Parser maintainability**: Extracted helper functions to reduce duplication
   - Added `parseComputedVariables()` helper - eliminated duplication between `parsePage()` and `parseBlock()`
   - Added `createOption()` helper - reduced boilerplate in option creation across 4 locations
