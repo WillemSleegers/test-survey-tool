@@ -48,7 +48,6 @@ TEXT
 NAVIGATION: 1
 
 TOOLTIP: """
-
 Onderstaande toelichting geldt voor alle omzetvragen in dit blok.
 
 Omzet: de waarde (excl. btw) van álle door de onderneming geleverde goederen en diensten in het genoemde boekjaar, zowel in het kader van de hoofdactiviteiten van de onderneming als eventuele nevenactiviteiten, zowel buiten het concern als binnen het concern (d.w.z. aan eventuele andere groepsmaatschappijen, niet genoemd aan het begin van het formulier),
@@ -84,9 +83,16 @@ Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
-- **Omzet industriële activiteiten**
+- **Omzet bouwactiviteiten binnenland**
 - HINT: """
-  Omzet uit geleverde zelfvervaardigde producten en industriële diensten.
+  Omzet uit bouw- en bouwinstallatie-activiteiten en verhuur van machines met bedienend personeel binnen Nederland.
+
+Excl. eventuele vergoedingen i.v.m. uitleen van personeel (verderop afzonderlijk rapporteren).
+"""
+
+- **Omzet bouwactiviteiten buitenland**
+- HINT: """
+  Omzet uit bouw- en bouwinstallatie-activiteiten en verhuur van machines met bedienend personeel buiten Nederland.
 
 Excl. eventuele vergoedingen i.v.m. uitleen van personeel (verderop afzonderlijk rapporteren).
 """
@@ -98,12 +104,7 @@ Excl. eventuele vergoedingen i.v.m. uitleen van personeel (verderop afzonderlijk
 Vergoedingen voor uitleen van personeel aan een moeder-, zuster- of dochterbedrijf hier alleen meetellen indien dit kortdurend is.
 """
 
-- TOOLTIP: """
-  In geval van langdurige uitleen van personeel aan moeder-, zuster- of dochterbedrijven, hier GEEN vergoeding opvoeren. De kosten voor dit personeel dienen in dat geval ook NIET meegeteld te worden bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten' in rubriek ‘Personele kosten’.
-
-Als grens tussen kort- en langdurige uitleen kan de periode van een jaar worden aangehouden.
-"""
-
+- TOOLTIP: In geval van langdurige uitleen van personeel aan moeder-, zuster- of dochterbedrijven, hier GEEN vergoeding opvoeren. De kosten voor dit personeel dienen in dat geval ook NIET meegeteld te worden bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten' in het blok ‘Personele kosten’. Als grens tussen kort- en langdurige uitleen kan de periode van een jaar worden aangehouden.
 - **Handelsomzet**
 - HINT: Betreft omzet uit de levering van niet zelfvervaardigde producten, waarop u niet het intellectueel eigendom heeft, die u koopt en zonder verdere bewerking doorverkoopt.
 - **Overige omzet**
@@ -121,60 +122,75 @@ Hieronder vallen in elk geval uitdrukkelijk o.a.:
   TOTAL: **Totaal netto omzet**
   VARIABLE: totaal_netto_omzet
 
-# **Specificatie Omzet industriële activiteiten**
+# **Specificatie Omzet bouwactiviteiten binnenland**
 
 NAVIGATION: 2
 
-Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
+Q: **Aanleg, nieuwbouw, herbouw en uitbreiding van CV- en luchtbehandelingsinstallaties, klimaatbeheersing, sprinklerinstallaties en overige installaties m.b.t.:**
 
-Q:
-
-- **Omzet uit in het binnenland zelfvervaardigde producten**
-- HINT: In uw eigendom of onder uw regie in Nederland vervaardigde producten. Is onderdeel van 'Omzet industriële activiteiten'.
-- COLUMN: 1
-- **Omzet uit in het buitenland zelfvervaardigde producten**
-- HINT: In uw eigendom of onder uw regie in het buitenland vervaardigde producten. Is onderdeel van 'Omzet industriële activiteiten'.
-- COLUMN: 1
-- SUBTOTAL: **Subtotaal zelfvervaardigde producten**
-- COLUMN: 2
-- **Omzet industriële diensten binnenland**
-- HINT: Aan binnenlandse afnemers geleverde industriële diensten. Is onderdeel van 'Omzet industriële activiteiten'.
-- COLUMN: 1
-- **Omzet industriële diensten buitenland**
-- HINT: Aan buitenlandse afnemers geleverde industriële diensten. Is onderdeel van 'Omzet industriële activiteiten'.
-- SUBTOTAL: **Subtotaal industriële diensten**
-- COLUMN: 2
+- Omzet woongebouwen als hoofd-/nevenaannemer
+- Omzet woongebouwen als onderaannemer
+- Omzet utiliteitsgebouwen (en industrie) als hoofd-/nevenaannemer
+- Omzet utiliteitsgebouwen (en industrie) als onderaannemer
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
-  TOTAL: **Totaal, moet gelijk zijn aan 'Omzet industriële activiteiten'**
 
-Q: Bent u eigenaar van de grond- en hulpstoffen die gebruikt worden in het productieproces in het buitenland?
+Q: **Reparatie, revisie-, herbouw en uitbreiding van CV- en luchtbehandelingsinstallaties, klimaatbeheersing, sprinklerinstallaties en overige installaties m.b.t.:**
 
-- Ja
-- Nee
-
-Q: Zijn de in het buitenland zelfvervaardigde producten gemaakt met behulp van uw intellectueel eigendom?
-
-- Ja
-- Nee
-
-# **Gefactureerde termijnen**
-
-NAVIGATION: 2
-
-Q:
-
-- **Termijnen einde boekjaar**
-- HINT: Betreft gefactureerde termijnen voorraad gereed product en onderhanden werk per einde boekjaar
-- VARIABLE: einde_boekjaar
-- **Termijnen begin boekjaar**
-- HINT: Betreft gefactureerde termijnen voorraad gereed product en onderhanden werk per begin boekjaar
-- SUBTRACT
+- Omzet woongebouwen als hoofd-/nevenaannemer
+- Omzet woongebouwen als onderaannemer
+- Omzet utiliteitsgebouwen (en industrie) als hoofd-/nevenaannemer
+- Omzet utiliteitsgebouwen (en industrie) als onderaannemer
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
-  TOTAL: **Mutatie gefactureerde termijnen**
+
+Q: **Aanleg, nieuwbouw, herbouw, uitbreiding van loodgieters-, fitters- en sanitairinstallatiewerk voor:**
+
+- Omzet woongebouwen als hoofd-/nevenaannemer
+- Omzet woongebouwen als onderaannemer
+- Omzet utiliteitsgebouwen (en industrie) als hoofd-/nevenaannemer
+- Omzet utiliteitsgebouwen (en industrie) als onderaannemer
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+
+Q: **Reparatie, revisie en onderhoud van loodgieters-, fitters- en sanitairinstallatiewerk voor:**
+
+- Omzet woongebouwen als hoofd-/nevenaannemer
+- Omzet woongebouwen als onderaannemer
+- Omzet utiliteitsgebouwen (en industrie) als hoofd-/nevenaannemer
+- Omzet utiliteitsgebouwen (en industrie) als onderaannemer
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+
+Q: **Reparatie, revisie en onderhoudsdiensten m.b.t.:**
+
+- Omzet gaswacht-activiteiten als hoofd-/nevenaannemer
+- Omzet gaswacht-activiteiten als onderaannemer
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+
+Q: **Aanleg, nieuwbouw, herbouw, uitbreiding, reparatie en onderhoudsdiensten t.b.v.:**
+
+- Omzet elektrotechnische installatiewerkzaamheden in de B&U-bouw als hoofd-/nevenaannemer
+- Omzet elektrotechnische installatiewerkzaamheden in de B&U-bouw als onderaannemer
+- Omzet elektrotechnische installatiewerkzaamheden van industriële projecten als hoofd-/nevenaannemer
+- Omzet elektrotechnische installatiewerkzaamheden van industriële projecten als onderaannemer
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
+
+Q: **Overige werkzaamheden**
+
+- Omzet als hoofd-/nevenaannemer
+- Omzet als onderaannemer
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
 
 # **Overige bedrijfsopbrengsten**
 
@@ -186,22 +202,19 @@ Q:
 
 - **Eindvoorraad onderhanden werk en/of gereed product**
 - COLUMN: 1
-- VARIABLE: eindvoorraad
 - **Beginvoorraad onderhanden werk en/of gereed product**
-- COLUMN: 1
-- VARIABLE: beginvoorraad
 - SUBTRACT
+- COLUMN: 1
 - SUBTOTAL: **Mutatie voorraad onderhanden werk en/of gereed product**
-- CUSTOM: {{eindvoorraad - beginvoorraad}}
 - COLUMN: 2
 - **Subsidies en restituties**
 - HINT: Met uitzondering van loon(kosten)subsidies, zie daarvoor rubriek Personele kosten, vraag 'Loon(kosten)subsidies en afdrachtverminderingen'
 - TOOLTIP: """
   Hieronder vallen:
-  - exportsubsidies van nationale overheden en de EU;
-  - andere EU-subsidies en -restituties;
-  - overige prijsverlagende subsidies en restituties.
-    """
+- exportsubsidies van nationale overheden en de EU;
+- andere EU-subsidies en -restituties;
+- overige prijsverlagende subsidies en restituties.
+  """
 - COLUMN: 2
 - **Geactiveerde productie**
 - HINT: Waarde zelfvervaardigde productie voor eigen bedrijf
@@ -230,61 +243,40 @@ Rond alle bedragen af op 1000-tallen. Noteer € 23.669,- als 24
 
 Q:
 
-- **Inkoopwaarde grond- en hulpstoffen binnenland**
-- HINT: Alle grond-, hulpstoffen en materialen die direct nodig zijn voor het productieproces van in uw eigendom of onder uw regie in Nederland vervaardigde producten
-- TOOLTIP: """
-  Grond- en hulpstoffen zijn alle goederen en materialen die direct in het productieproces opgaan.
-  Opgeven de gefactureerde waarde van de door derden geleverde grond- en hulpstoffen,
-  onder AFTREK van:
-- kortingen, bonussen op de inkopen;
-- retouremballage en de factuurwaarde van retourzendingen;
-- terugontvangen invoerrechten, accijnzen en heffingen.
-  WEL meetellen:
-- kosten eenmalige verpakkingsmiddelen;
-- invoerrechten en inklaringskosten;
-- invoerheffingen EU;
-- kosten van tijdelijke voorraadopslag;
-- kosten van transport en transportverzekering.
-
-  De inkopen van handelsgoederen hier niet opnemen, maar bij 'Inkoopwaarde handelsgoederen'.
-
-  LET OP: Alleen als u rubriek Overige bedrijfsopbrengsten, vraag 'Geactiveerde productie' heeft ingevuld, het volgende lezen: indien uw bedrijf voor zelfvervaardigde activa grond- en hulpstoffen gebruikt die ook in het reguliere productieproces worden toegepast, dan de daarvoor benodigde inkopen verantwoorden bij 'Inkoopwaarde grond- en hulpstoffen binnenland' en 'Inkoopwaarde grond- en hulpstoffen buitenland'. Zijn daarentegen andere (niet-reguliere) grond- en hulpstoffen gebruikt, dan de bijbehorende kosten vermelden bij rubriek Overige bedrijfslasten, vraag 'Overige algemene kosten'.
-  """
-
-- **Inkoopwaarde grond- en hulpstoffen buitenland**
-- HINT: Alle grond-, hulpstoffen en materialen die direct nodig zijn voor het productieproces van in uw eigendom of onder uw regie in het buitenland vervaardigde producten
-- TOOLTIP: """
-  Grond- en hulpstoffen zijn alle goederen en materialen die direct in het productieproces opgaan.
-  Opgeven de gefactureerde waarde van de door derden geleverde grond- en hulpstoffen,
-  onder AFTREK van:
-- kortingen, bonussen op de inkopen;
-- retouremballage en de factuurwaarde van retourzendingen;
-- terugontvangen invoerrechten, accijnzen en heffingen.
-  WEL meetellen:
-- kosten eenmalige verpakkingsmiddelen;
-- invoerrechten en inklaringskosten;
-- invoerheffingen EU;
-- kosten van tijdelijke voorraadopslag;
-- kosten van transport en transportverzekering.
-
-  De inkopen van handelsgoederen hier niet opnemen, maar bij 'Inkoopwaarde handelsgoederen'.
-
-  LET OP: Alleen als u rubriek Overige bedrijfsopbrengsten, vraag 'Geactiveerde productie' heeft ingevuld, het volgende lezen: indien uw bedrijf voor zelfvervaardigde activa grond- en hulpstoffen gebruikt die ook in het reguliere productieproces worden toegepast, dan de daarvoor benodigde inkopen verantwoorden bij 'Inkoopwaarde grond- en hulpstoffen binnenland' en 'Inkoopwaarde grond- en hulpstoffen buitenland'. Zijn daarentegen andere (niet-reguliere) grond- en hulpstoffen gebruikt, dan de bijbehorende kosten vermelden bij rubriek Overige bedrijfslasten, vraag 'Overige algemene kosten'.
-  """
-
+- **Inkoopwaarde grond- en hulpstoffen**
+- HINT: Inclusief eenmalige emballage en/of verpakkingsmiddelen
+- TOOLTIP: Kosten direct samenhangend met de door uw bedrijf vervaardigde en geleverde producten en diensten. Denk bijvoorbeeld aan inkoopwaarde (incl. in rekening gebracht transport) van materialen, hulpmiddelen en andere inkopen die direct nodig zijn voor de voortbrenging van bedoelde producten en diensten, inclusief eenmalige emballage en/of verpakkingsmiddelen. Ook meetellen kosten van garantie- en serviceverlening.
 - **Inkoopwaarde handelsgoederen**
 - HINT: Inkoopwaarde verhandelde goederen, die zonder verdere bewerking zijn doorverkocht
 - TOOLTIP: Opgeven de gefactureerde waarde van de door derden geleverde handelsgoederen, inclusief kosten eenmalige verpakkingsmiddelen, tijdelijke opslag, transport, transportverzekering, invoerrechten e.d. en onder aftrek van kortingen, bonussen
 - **Uitbesteed werk en loondiensten**
-- HINT: Bedrag in rekening gebracht door derden voor uitbesteed werk en loondiensten, exclusief kosten uitzendkrachten en ingeleend personeel (zie daarvoor rubriek Personele kosten, vragen 'Kosten uitzendkrachten' en 'Kosten overige inleen').
-- TOOLTIP: Het betreft hier de factuurwaarde voor werk verricht door derden, zoals industriële diensten en loondiensten, bijvoorbeeld op het gebied van veredeling, onderhoud, reparatie en installatie. Hieronder wordt niet verstaan de betaalde vrachtkosten op inkopen.
+- HINT: Bedrag in rekening gebracht door onderaannemers (inclusief zzp'ers), exclusief kosten uitzendkrachten en ingeleend personeel (zie daarvoor rubriek Personele kosten, vragen 'Kosten uitzendkrachten' en 'Kosten overige inleen').
+- TOOLTIP: Het betreft hier de factuurwaarde voor loondiensten die direct met uw omzet te maken hebben, eventueel vermeerderd met de door de onderaannemer geleverde materialen. Hieronder wordt niet verstaan de betaalde vrachtkosten op inkopen (deze bij de inkoopwaarde tellen) en de betaalde vrachtkosten op verkopen (deze opnemen bij rubriek Overige bedrijfslasten, vraag 'Diensten door derden').
 - **Overige inkoopwaarde**
-- HINT: Inkoopwaarde niet eerder genoemd, zoals ingezette brandstof bij doorverkochte, zelfgeproduceerde elektriciteit of stoom.
+- HINT: Inkoopwaarde niet eerder genoemd
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
   TOTAL: **Totaal inkoopwaarde**
   VARIABLE: totaal_inkoopwaarde
+
+# **Specificatie Betaling aan onderaannemers**
+
+NAVIGATION: 2
+
+Q:
+
+- Constructiewerkplaatsen
+- Loodgietersbedrijven
+- Elektrotechnische installatiebedrijven
+- Centrale verwarmingsbedrijven
+- Timmer-, schilders-, glaszetters- en behangersbedrijven
+- Steengaas, muurbewerkingsbedrijven e.d.
+- Overige onderaannemers niet eerder genoemd
+  TOTAL: Totaal, moet overeenkomen met 'Uitbesteed werk en loondiensten'
+  BREAKDOWN
+  PREFIX: €
+  SUFFIX: .000,-
 
 # **Balanswaarde voorraden**
 
@@ -345,8 +337,11 @@ Q:
 - HINT: Kosten van ingeleend personeel van andere bedrijven, waarbij u het gezag over de werkzaamheden overneemt. Kosten van ingeleend personeel van een moeder-, zuster- of dochterbedrijf alleen meetellen indien dit kortdurend is.
 - TOOLTIP: Langdurige inleen van personeel van moeder-, zuster- of dochterbedrijven meetellen bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten'. Als grens tussen kort- en langdurige uitleen kan de periode van een jaar worden aangehouden.
 - COLUMN: 2
+- **Opleidingskosten**
+- HINT: Voor opleidingen verzorgd door derden
+- COLUMN: 2
 - **Overige personeelskosten**
-- HINT: Zoals kosten van kantine, arbodiensten, opleidingen, wervingsacties, commissarissenbeloning
+- HINT: Zoals kosten van kantine, arbodiensten, wervingsacties, commissarissenbeloning
 - COLUMN: 2
   BREAKDOWN
   PREFIX: €
@@ -375,6 +370,9 @@ Q:
 - **_Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)_**
 - COLUMN: 1
 - EXCLUDE
+- **_Energiekosten: Waarvan gas en dieselolie ten behoeve van (land)bouwmachines_**
+- COLUMN: 1
+- EXCLUDE
 - **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
 - COLUMN: 2
@@ -389,11 +387,19 @@ Q:
 - **Huur en operationele lease van machines**
 - HINT: Huur / lease van inventaris, machines, installaties, interne transportmiddelen en computers (exclusief software, deze vermelden bij 'Licenties e.d.')
 - COLUMN: 2
+- **Overige machine- en inventariskosten**
+- HINT: Zoals onderhoud / reparatie, verzekering van inventaris, machines, installaties en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar
+- TOOLTIP: Wanneer de aankopen wel worden geactiveerd, dan de bijbehorende afschrijvingen meetellen in de afschrijvingen in de Resultatenrekening
+- COLUMN: 2
+- **Huur en operationele lease externe vervoermiddelen**
+- HINT: Exclusief interne transportmiddelen, zie daarvoor 'Huur en operationele lease van machines'
+- COLUMN: 2
 - **Houderschapsbelasting**
-- HINT: Motorrijtuigenbelasting
+- COLUMN: 2
+- **Motorrijtuigenbelasting**
 - COLUMN: 2
 - **Overige kosten vervoermiddelen**
-- HINT: Niet eerder genoemde kosten externe vervoermiddelen
+- HINT: Zoals onderhoud / reparatie, verzekering en brandstofkosten vervoermiddelen (exclusief interne transportmiddelen, zie daarvoor 'Overige machine- en inventariskosten' en 'Energiekosten')
 - COLUMN: 2
 - **Verkoopkosten**
 - HINT: Zoals reclame-, beurs-, advertentiekosten, provisies, reis-, verblijfs- en representatiekosten
@@ -430,8 +436,10 @@ NIET meetellen:
 - COLUMN: 2
 - **Hulpmaterialen**
 - HINT: Materialen die niet opgaan in het eindproduct, zoals koel- en smeermiddelen die tijdens het productieproces constant worden toegevoegd
+- COLUMN: 2
 - **Hand- en machinegereedschappen**
 - HINT: Aanschaf van kleine werktuigen en gereedschap die direct ten laste van de exploitatierekening wordt gebracht
+- COLUMN: 2
 - **Overige algemene kosten**
 - HINT: Alle overige kosten niet eerder genoemd, behalve afschrijvingen. Deze vermelden in de Resultatenrekening
 - COLUMN: 2
@@ -456,7 +464,7 @@ Q:
 - **Overige bedrijfsopbrengsten**
 - HINT: Overgenomen van vraag 'Totaal overige bedrijfsopbrengsten'
 - VALUE: {{totaal_overige_bedrijfsopbrengsten}}
-- COLUMN: 1e
+- COLUMN: 1
 - SUBTOTAL: **Bedrijfsopbrengsten totaal**
 - VARIABLE: bedrijfsopbrengsten_totaal
 - COLUMN: 2
