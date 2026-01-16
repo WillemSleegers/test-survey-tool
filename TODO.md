@@ -2,6 +2,13 @@
 
 ## High Priority
 
+- [ ] Fix page-navigator block visibility inconsistency
+  - **Bug**: `page-navigator.tsx` evaluates block visibility differently than `questionnaire-viewer.tsx`
+  - **Issue 1**: page-navigator calls `evaluateComputedValues(mockPage, variables)` without the third parameter (`existingComputedVars`)
+  - **Issue 2**: page-navigator creates its own mockPage instead of using shared `getBlockComputedValues` from lazy computed variables hook
+  - **Result**: Debug panel may show different visibility states than actual navigation
+  - **Fix**: Make page-navigator use the same `getBlockComputedValues` function passed from questionnaire-viewer
+
 - [x] Fix React key uniqueness issue with duplicate option values
   - ✅ Fixed in all question components (matrix, checkbox, radio, breakdown)
   - ✅ Changed from `option.value` to array index for stable, unique keys

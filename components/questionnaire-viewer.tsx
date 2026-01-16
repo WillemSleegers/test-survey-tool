@@ -53,23 +53,23 @@ export function QuestionnaireViewer({
   // Filter blocks by visibility, then flatten to pages
   const visibleBlockPages = useMemo(() => {
     const visiblePages: Page[] = []
-    
+
     questionnaire.forEach(block => {
       // Get block-level computed variables (lazy evaluation)
       const currentBlockComputedVars = getBlockComputedValues(block)
-      
+
       const blockVisible = evaluateCondition(
         block.showIf || "",
         variables,
         currentBlockComputedVars
       )
-      
+
       if (blockVisible) {
         // If block is visible, add all its pages
         visiblePages.push(...block.pages)
       }
     })
-    
+
     return visiblePages
   }, [questionnaire, variables, getBlockComputedValues])
   

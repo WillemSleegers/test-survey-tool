@@ -107,6 +107,11 @@ Released December 2025
 
 ### Bug Fixes
 
+- **Fixed duplicate question IDs across blocks**: Question IDs are now unique across all blocks
+  - Bug introduced in 0.3.0 parser refactor: each block reset the question ID counter, causing questions in different blocks to have duplicate IDs (Q1, Q1, Q2 instead of Q1, Q2, Q3)
+  - This caused block-level SHOW_IF conditions to fail because variable derivation would pick up the wrong question's variable
+  - Added test suite to prevent regression
+
 - **Fixed paragraph spacing in text content**: Text with blank lines between paragraphs now renders correctly
   - Fixed parser bug where blank lines between content paragraphs were incorrectly skipped
   - Removed redundant `questionLineSet` check that was marking blank lines as question lines

@@ -1244,9 +1244,8 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
  * Parse a block chunk
  * Single-pass state machine that extracts block metadata and builds page chunks
  */
-const parseBlock = (lines: string[], blockIdCounter: { count: number }, pageIdCounter: { count: number }): Block => {
+const parseBlock = (lines: string[], blockIdCounter: { count: number }, pageIdCounter: { count: number }, questionCounter: { count: number }): Block => {
   const blockId = blockIdCounter.count++
-  const questionCounter = { count: 1 }
 
   // Extract block name immediately
   let name = ''
@@ -1361,9 +1360,10 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
     // Create ID counters for unique identification
     const blockIdCounter = { count: 1 }
     const pageIdCounter = { count: 1 }
+    const questionIdCounter = { count: 1 }
 
     // Parse blocks
-    const blocks = blockChunks.map(chunk => parseBlock(chunk, blockIdCounter, pageIdCounter))
+    const blocks = blockChunks.map(chunk => parseBlock(chunk, blockIdCounter, pageIdCounter, questionIdCounter))
 
     // Derive navigation items from pages with navLevel metadata
     const navItems = deriveNavItemsFromPages(blocks)
