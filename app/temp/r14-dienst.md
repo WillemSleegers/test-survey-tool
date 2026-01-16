@@ -154,12 +154,16 @@ Q:
 - andere EU-subsidies en -restituties;
 - overige prijsverlagende subsidies en restituties.
   """
+- COLUMN: 2
 - **Beheersvergoedingen**
 - HINT: Intraconcernvergoedingen voor diensten van algemeen beheer
+- COLUMN: 2
 - **Ontvangen schade-uitkeringen**
 - HINT: Exclusief ontvangen ziekengeld, zie daarvoor post 'Ontvangen ziekengeld' onder rubriek 'Personele kosten'. Exclusief schade-uitkeringen bestemd voor de vervanging van duurzame activa, zie daarvoor diverse posten onder rubriek 'Overige bedrijfslasten'.
+- COLUMN: 2
 - **Overige bedrijfsopbrengsten**
 - HINT: Niet eerder genoemd
+- COLUMN: 2
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
@@ -366,8 +370,7 @@ Q:
 - SUBTRACT
 - VARIABLE: afschrijvingen
 - **Saldo boekwinsten / verliezen**
-- HINT: Bij verkoop / afstoot van (im)materiële vaste activa.
-  Bij negatief saldo minteken (-) plaatsen in invulvakje
+- HINT: Bij verkoop / afstoot van (im)materiële vaste activa. Bij negatief saldo minteken (-) plaatsen in invulvakje
 - COLUMN: 1
 - SUBTRACT
 - VARIABLE: saldo_boekwinsten_verliezen
