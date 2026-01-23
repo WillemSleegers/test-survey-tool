@@ -334,10 +334,13 @@ Q:
 - COLUMN: 2
 - **_Energiekosten: Waarvan aardgas_**
 - COLUMN: 1
+- EXCLUDE
 - **_Energiekosten: Waarvan elektriciteit_**
 - COLUMN: 1
+- EXCLUDE
 - **_Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)_**
 - COLUMN: 1
+- EXCLUDE
 - **Huisvesting huur / lease**
 - HINT: Betreft huur / lease gebouwen en terreinen
 - COLUMN: 2
@@ -379,6 +382,7 @@ Q:
 - COLUMN: 2
 - **_Vrachtkosten: Waarvan doorberekend aan afnemers_**
 - COLUMN: 1
+- EXCLUDE
 - **Saldo vrachtkosten op verkopen**
 - COLUMN: 2
 - **Research & development**
