@@ -269,7 +269,7 @@ Q:
 - **_Energiekosten: Waarvan elektriciteit_**
 - COLUMN: 1
 - EXCLUDE
-- **_Energiekosten: Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)_**
+- **_Energiekosten: Waarvan netdiensten (onder netdiensten wordt verstaan: vastrecht transport, capaciteitstarief, aansluitvergoeding, meterkosten en systeemdiensten)_**
 - COLUMN: 1
 - EXCLUDE
 - **Huisvesting huur / lease**
