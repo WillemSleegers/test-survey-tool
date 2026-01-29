@@ -100,11 +100,10 @@ Vergoedingen voor uitleen van personeel aan een moeder-, zuster- of dochterbedri
 
 - TOOLTIP: In geval van langdurige uitleen van personeel aan moeder-, zuster- of dochterbedrijven, hier GEEN vergoeding opvoeren. De kosten voor dit personeel dienen in dat geval ook NIET meegeteld te worden bij 'Brutolonen / -salarissen', 'Sociale voorzieningen en overige sociale lasten' en 'Pensioenlasten' in het blok ‘Personele kosten’. Als grens tussen kort- en langdurige uitleen kan de periode van een jaar worden aangehouden.
 - **Handelsomzet**
-- HINT: Betreft omzet uit de levering van niet zelfvervaardigde producten, waarop u niet het intellectueel eigendom heeft, die u koopt en zonder verdere bewerking doorverkoopt. Onder aftrek van kortingen, verstrekte bonussen, retouren, retouremballage en dergelijke.
+- HINT: Betreft omzet uit de levering van niet zelfvervaardigde producten, waarop u niet het intellectueel eigendom heeft, die u koopt en zonder verdere bewerking doorverkoopt.
 - **Omzet industriële activiteiten**
 - HINT: Omzet uit geleverde zelfvervaardigde producten en industriële diensten
 - **Overige omzet**
-- HINT: Omzet uit overige activiteiten. Bedragen m.b.t. ongerealiseerde waardeverandering vastgoed opnemen bij vraag 'Saldo uitzonderlijke baten / lasten' in rubriek 'Resultatenrekening'
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
@@ -188,13 +187,12 @@ Q:
 
 - **Directe kosten van de dienstverlening**
 - HINT: Kosten direct samenhangend met de geleverde diensten en eventueel zelfvervaardigde producten, inclusief eenmalige emballage en/of verpakkingsmiddelen.
-- TOOLTIP: Denk bijvoorbeeld aan inkoopwaarde (incl. in rekening gebracht transport) van materialen, hulpmiddelen en andere inkopen die direct nodig zijn voor de voortbrenging van bedoelde producten en diensten, inclusief eenmalige emballage en/of verpakkingsmiddelen. Ook meetellen kosten van garantie- en serviceverlening.
+- TOOLTIP: Denk bijvoorbeeld aan inkoopwaarde (incl. in rekening gebracht transport) van materialen, hulpmiddelen en andere inkopen welke direct nodig zijn voor de voortbrenging van bedoelde producten en diensten, inclusief eenmalige emballage en/of verpakkingsmiddelen. Ook meetellen kosten van garantie- en serviceverlening.
 - **Inkoopwaarde handelsgoederen**
 - HINT: Inkoopwaarde verhandelde goederen, die zonder verdere bewerking zijn doorverkocht
-- TOOLTIP: Opgeven de gefactureerde waarde van de door derden geleverde handelsgoederen, inclusief kosten eenmalige verpakkingsmiddelen, tijdelijke opslag, transport, transportverzekering, invoerrechten, voorraadmutaties e.d. en onder aftrek van kortingen, bonussen op handelsinkopen, factuurwaarde retourzendingen, retouremballage en terugontvangen invoerrechten, accijnzen en heffingen.
+- TOOLTIP: Opgeven de gefactureerde waarde van de door derden geleverde handelsgoederen, inclusief kosten eenmalige verpakkingsmiddelen, tijdelijke opslag, transport, transportverzekering, invoerrechten, voorraadmutaties e.d. en onder aftrek van kortingen, bonussen
 - **Uitbesteed werk en loondiensten**
-- HINT: (Loon)diensten en werk door derden, exclusief kosten uitzendkrachten en ingeleend personeel (zie daarvoor rubriek Personele kosten, vragen 'Kosten uitzendkrachten' en 'Kosten overige inleen').
-- TOOLTIP: Het betreft hier de factuurwaarde voor loondiensten die direct met uw omzet te maken hebben, eventueel vermeerderd met de door de onderaannemer geleverde materialen. Hieronder wordt niet verstaan de betaalde vrachtkosten op inkopen (deze bij de inkoopwaarde tellen) en de betaalde vrachtkosten op verkopen (deze opnemen bij rubriek Overige bedrijfslasten, vraag '').
+- HINT: (Loon)diensten en werk door derden, exclusief kosten uitzendkrachten en ingeleend personeel (zie daarvoor rubriek Personele kosten, vragen 'Kosten uitzenkrachten' en 'Kosten overige inleen').
 - **Overige inkoopwaarde**
 - HINT: Inkoopwaarde niet eerder genoemd
   BREAKDOWN
@@ -276,11 +274,11 @@ Q:
 - HINT: Huur / lease, onderhoud / reparatie, verzekering van inventaris, machines, installaties, interne transportmiddelen en computers. In deze post ook meenemen de niet-geactiveerde aankopen van genoemde apparatuur in verslagjaar. Afdracht softwarelicenties hier niet opgeven, zie daarvoor 'Licenties e.d.'
 - TOOLTIP: Wanneer de aankopen wel worden geactiveerd, dan de bijbehorende afschrijvingen meetellen in de afschrijvingen in de Resultatenrekening
 - **Huur en operationele lease externe vervoermiddelen**
-- HINT: Exclusief interne transportmiddelen, zie daarvoor 'Apparatuur / inventaris' of 'Huur en operationele lease van machines'
+- HINT: Exclusief interne transportmiddelen, zie daarvoor 'Apparatuur / inventaris'
 - **Houderschapsbelasting**
 - HINT: Motorrijtuigenbelasting
 - **Overige kosten vervoermiddelen**
-- HINT: Zoals onderhoud / reparatie, verzekering en brandstofkosten vervoermiddelen (exclusief interne transportmiddelen, zie daarvoor 'Apparatuur / inventaris' en 'Energiekosten')
+- HINT: Niet eerder genoemde kosten externe vervoermiddelen
 - **Verkoopkosten**
 - HINT: Zoals reclame-, beurs-, advertentiekosten, provisies, reis-, verblijfs- en representatiekosten
 - **Communicatie**
@@ -290,7 +288,7 @@ Q:
 - **Research & development**
 - HINT: Onderzoek & ontwikkeling verricht door derden
 - **Andere diensten door derden**
-- HINT: Zoals bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking, betaalde (niet doorberekende) vrachtkosten op verkopen
+- HINT: Zoals bank- (geen rentelasten), verzekerings-, accountants- en advieskosten, vuilafvoer en -verwerking, betaalde (niet aan afnemers doorberekende) vrachtkosten op verkopen
 - **Licenties e.d.**
 - HINT: Betreft afdracht van software- en andere licenties, zoals royalty's en auteursrechten
 - **Beheerskosten**
