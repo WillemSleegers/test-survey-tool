@@ -303,7 +303,6 @@ NIET meetellen:
   """
 - **Overige algemene kosten**
 - HINT: Alle overige kosten niet eerder genoemd, behalve afschrijvingen. Deze vermelden in de Resultatenrekening
-- COLUMN: 2
   BREAKDOWN
   PREFIX: €
   SUFFIX: .000,-
