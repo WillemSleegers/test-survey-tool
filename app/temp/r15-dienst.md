@@ -150,7 +150,7 @@ Q:
 - COLUMN: 1
 - VARIABLE: beginvoorraad
 - SUBTRACT
-- SUBTOTAL: **Mutatie voorraad onderhanden werk en/of gereed product**
+- SUBTOTAL: **Mutatie balanswaarde onderhanden werk en/of gereed product**
 - CUSTOM: {{eindvoorraad - beginvoorraad}}
 - COLUMN: 2
 - **Subsidies en restituties**
