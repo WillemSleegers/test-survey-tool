@@ -205,7 +205,7 @@ Q:
 - **Balanswaarde onderhanden werk en/of gereed product begin boekjaar**
 - SUBTRACT
 - COLUMN: 1
-- SUBTOTAL: **Mutatie voorraad onderhanden werk en/of gereed product**
+- SUBTOTAL: **Mutatie balanswaarde onderhanden werk en/of gereed product**
 - COLUMN: 2
 - **Subsidies en restituties**
 - HINT: Met uitzondering van loon(kosten)subsidies, zie daarvoor rubriek Personele kosten, vraag 'Loon(kosten)subsidies en afdrachtverminderingen'
