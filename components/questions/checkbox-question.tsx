@@ -7,6 +7,7 @@ import { CheckboxQuestion as CheckboxQuestionType, Responses, Variables, Compute
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
+import { useInstanceId } from "@/contexts/instance-id-context"
 import Markdown from "react-markdown"
 
 interface CheckboxQuestionProps {
@@ -55,7 +56,8 @@ export function CheckboxQuestion({
   computedVariables
 }: CheckboxQuestionProps) {
   const { t } = useLanguage()
-  
+  const instanceId = useInstanceId()
+
   // Get current response value (should be string array)
   const responseValue = responses[question.id]
   const rawCheckboxValues = Array.isArray(responseValue) ? responseValue : []
@@ -189,7 +191,7 @@ export function CheckboxQuestion({
             <div key={optionIndex} className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id={`${question.id}-${optionIndex}`}
+                  id={`${instanceId}${question.id}-${optionIndex}`}
                   checked={selectedBaseValues.includes(option.value)}
                   tabIndex={checkboxTabIndex}
                   onCheckedChange={(checked) => 
@@ -197,7 +199,7 @@ export function CheckboxQuestion({
                   }
                 />
                 <Label
-                  htmlFor={`${question.id}-${optionIndex}`}
+                  htmlFor={`${instanceId}${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
                   <Markdown>

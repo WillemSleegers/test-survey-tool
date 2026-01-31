@@ -20,7 +20,18 @@ Released January 2026
 - **Page Navigator documentation**: Added dedicated documentation page explaining the Page Navigator feature
   - Covers overview, how to open it, and its features (page status indicators, jump-to-page, completion tracking)
 
+### Breaking Changes
+
+- **Removed `- ESSAY` and `- OTHER` option modifiers**: Only `- TEXT` is now supported for adding text inputs to options
+  - `- ESSAY` and `- OTHER` were functionally identical to `- TEXT` and have been removed to simplify the syntax
+  - Surveys using `- ESSAY` or `- OTHER` on options should replace them with `- TEXT`
+
 ### Improvements
+
+- **URL-based documentation routing**: Each documentation section now has its own URL
+  - Refreshing the page stays on the current section instead of resetting to Overview
+  - Sections are bookmarkable and shareable (e.g., `/docs/matrix`, `/docs/conditionals`)
+  - Implemented as static Next.js routes with a shared layout
 
 - **Polished documentation**
 
@@ -167,11 +178,11 @@ Released December 2025
   - Added paragraph spacing CSS (`mb-4`) to properly space separate paragraphs
   - Added test suite for paragraph spacing with 4 test cases
 
-- **Restored `- TEXT` and `- ESSAY` option modifiers**: These option-level modifiers were lost during parser refactor
-  - `- TEXT`, `- ESSAY`, and `- OTHER` now all set `allowsOtherText` flag on options
+- **Restored `- TEXT` option modifier**: This option-level modifier was lost during parser refactor
+  - `- TEXT` sets the `allowsOtherText` flag on options
   - Allows respondents to provide free text input when selecting specific options
   - Works with both multiple choice and checkbox questions
-  - Added comprehensive test suite with 5 test cases
+  - Added test suite for option text inputs
 
 ### Improvements
 

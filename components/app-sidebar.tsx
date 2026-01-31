@@ -1,66 +1,64 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Section } from "@/app/docs/page"
 
 const navMain = [
   {
     title: "Survey Structure",
     items: [
-      { title: "Pages", section: "pages" as Section },
-      { title: "Sections", section: "sections" as Section },
-      { title: "Blocks", section: "blocks" as Section },
-      { title: "Navigation", section: "navigation" as Section },
+      { title: "Pages", section: "pages" },
+      { title: "Sections", section: "sections" },
+      { title: "Blocks", section: "blocks" },
+      { title: "Navigation", section: "navigation" },
     ],
   },
   {
     title: "Question Types",
     items: [
-      { title: "Questions", section: "basic-questions" as Section },
-      { title: "Text Input", section: "text" as Section },
-      { title: "Number", section: "number" as Section },
-      { title: "Multiple Choice", section: "multiple-choice" as Section },
-      { title: "Checkbox", section: "checkbox" as Section },
-      { title: "Matrix", section: "matrix" as Section },
-      { title: "Breakdown", section: "breakdown" as Section },
+      { title: "Questions", section: "basic-questions" },
+      { title: "Text Input", section: "text" },
+      { title: "Number", section: "number" },
+      { title: "Multiple Choice", section: "multiple-choice" },
+      { title: "Checkbox", section: "checkbox" },
+      { title: "Matrix", section: "matrix" },
+      { title: "Breakdown", section: "breakdown" },
     ],
   },
   {
     title: "Question Options",
     items: [
-      { title: "Text on Options", section: "option-text" as Section },
-      { title: "Numeric Ranges", section: "numeric-ranges" as Section },
+      { title: "Text on Options", section: "option-text" },
+      { title: "Numeric Ranges", section: "numeric-ranges" },
     ],
   },
   {
     title: "Dynamic Features",
     items: [
-      { title: "Variables", section: "variables" as Section },
-      { title: "Arithmetic", section: "arithmetic" as Section },
-      { title: "Computed Variables", section: "computed" as Section },
-      { title: "List Formatting", section: "list-formatting" as Section },
-      { title: "Conditionals", section: "conditionals" as Section },
+      { title: "Variables", section: "variables" },
+      { title: "Arithmetic", section: "arithmetic" },
+      { title: "Computed Variables", section: "computed" },
+      { title: "List Formatting", section: "list-formatting" },
+      { title: "Conditionals", section: "conditionals" },
     ],
   },
   {
     title: "Customization",
     items: [
-      { title: "Hints", section: "hints" as Section },
-      { title: "Tooltips", section: "tooltips" as Section },
-      { title: "Markdown", section: "markdown" as Section },
+      { title: "Hints", section: "hints" },
+      { title: "Tooltips", section: "tooltips" },
+      { title: "Markdown", section: "markdown" },
     ],
   },
 ]
 
-export function AppSidebar({
-  activeSection,
-  onSectionChange,
-}: {
-  activeSection: Section
-  onSectionChange: (section: Section) => void
-}) {
+export function AppSidebar() {
+  const pathname = usePathname()
+  const activeSection = pathname.split("/").pop() || "overview"
+
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(navMain.map((g) => g.title))
   )
@@ -80,14 +78,14 @@ export function AppSidebar({
       <div className="sticky top-6">
         <Card className="py-3 shadow-xs">
           <CardContent className="px-4 py-0">
-            <div
-              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted ${
+            <Link
+              href="/docs/overview"
+              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm hover:bg-muted ${
                 activeSection === "overview" ? "bg-muted font-semibold" : "font-medium"
               }`}
-              onClick={() => onSectionChange("overview")}
             >
               Overview
-            </div>
+            </Link>
 
             {navMain.map((group) => {
               const isExpanded = expandedGroups.has(group.title)
@@ -109,17 +107,17 @@ export function AppSidebar({
                   {isExpanded && (
                     <div className="ml-4 space-y-0.5 pl-2">
                       {group.items.map((item) => (
-                        <div
+                        <Link
                           key={item.section}
-                          className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm cursor-pointer hover:bg-muted ${
+                          href={`/docs/${item.section}`}
+                          className={`flex items-center gap-2 py-1 px-1.5 rounded text-sm hover:bg-muted ${
                             activeSection === item.section
                               ? "bg-muted font-semibold"
                               : ""
                           }`}
-                          onClick={() => onSectionChange(item.section)}
                         >
                           {item.title}
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -127,14 +125,14 @@ export function AppSidebar({
               )
             })}
 
-            <div
-              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted mt-2 ${
+            <Link
+              href="/docs/page-navigator"
+              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm hover:bg-muted mt-2 ${
                 activeSection === "page-navigator" ? "bg-muted font-semibold" : "font-medium"
               }`}
-              onClick={() => onSectionChange("page-navigator")}
             >
               Page Navigator
-            </div>
+            </Link>
           </CardContent>
         </Card>
       </div>

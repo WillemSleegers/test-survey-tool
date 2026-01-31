@@ -15,6 +15,7 @@ import { QuestionWrapper } from "./shared/question-wrapper"
 import { MatrixQuestion as MatrixQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
+import { useInstanceId } from "@/contexts/instance-id-context"
 
 interface MatrixQuestionProps {
   /** The question configuration */
@@ -64,6 +65,7 @@ export function MatrixQuestion({
   startTabIndex,
   computedVariables,
 }: MatrixQuestionProps) {
+  const instanceId = useInstanceId()
   // startTabIndex is required by interface but currently unused - matrix questions use default tab behavior
   void startTabIndex
 
@@ -265,7 +267,7 @@ export function MatrixQuestion({
                         >
                           <div className="flex justify-center">
                             <Checkbox
-                              id={`${question.id}-${subquestion.id}-${optionIndex}`}
+                              id={`${instanceId}${question.id}-${subquestion.id}-${optionIndex}`}
                               checked={isOptionSelected(
                                 subquestion.id,
                                 option.value
@@ -275,7 +277,7 @@ export function MatrixQuestion({
                               }
                             />
                             <Label
-                              htmlFor={`${question.id}-${subquestion.id}-${optionIndex}`}
+                              htmlFor={`${instanceId}${question.id}-${subquestion.id}-${optionIndex}`}
                               className="sr-only"
                             >
                               {subquestion.text}
@@ -294,7 +296,7 @@ export function MatrixQuestion({
                             <label className="cursor-pointer">
                               <input
                                 type="radio"
-                                name={`${question.id}_${subquestion.id}`}
+                                name={`${instanceId}${question.id}_${subquestion.id}`}
                                 value={option.value}
                                 checked={currentValue === option.value}
                                 onChange={(e) =>

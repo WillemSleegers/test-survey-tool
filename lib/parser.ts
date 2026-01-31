@@ -562,9 +562,7 @@ const parseOptions = (lines: string[]): Option[] => {
 
       // Check if this is option metadata or a new option
       const isOptionMetadata =
-        content === "OTHER" ||
         content === "TEXT" ||
-        content === "ESSAY" ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
         startsWith(content, "TOOLTIP:") ||
@@ -572,7 +570,7 @@ const parseOptions = (lines: string[]): Option[] => {
 
       if (isOptionMetadata && currentOption) {
         // This is metadata for the current option
-        if (content === "OTHER" || content === "TEXT" || content === "ESSAY") {
+        if (content === "TEXT") {
           currentOption.allowsOtherText = true
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")

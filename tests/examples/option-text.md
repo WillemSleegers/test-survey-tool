@@ -14,4 +14,4 @@ CHECKBOX
 - Java
 - C++
 - Other
-  - ESSAY
+  - TEXT

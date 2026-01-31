@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
+import { useInstanceId } from "@/contexts/instance-id-context"
 
 // Placeholder shown when computed values aren't available yet
 const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
@@ -56,6 +57,8 @@ export function BreakdownQuestion({
   startTabIndex,
   computedVariables
 }: BreakdownQuestionProps) {
+  const instanceId = useInstanceId()
+
   // Get current responses (should be object with row IDs as keys)
   const responseValue = responses[question.id]
   const currentValues = (typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue))
@@ -344,7 +347,7 @@ export function BreakdownQuestion({
             <div className="flex items-center justify-end gap-1">
               {prefix && <span className="text-muted-foreground">{prefix}</span>}
               <Input
-                id={`${question.id}-${key}`}
+                id={`${instanceId}${question.id}-${key}`}
                 type="number"
                 value={value}
                 onChange={(e) => handleRowChange(index, e.target.value)}
@@ -527,7 +530,7 @@ export function BreakdownQuestion({
                           <div className="flex items-center justify-end gap-1">
                             {prefix && <span className="text-muted-foreground">{prefix}</span>}
                             <Input
-                              id={`${question.id}-${key}`}
+                              id={`${instanceId}${question.id}-${key}`}
                               type="number"
                               value={value}
                               onChange={(e) => handleRowChange(index, e.target.value)}

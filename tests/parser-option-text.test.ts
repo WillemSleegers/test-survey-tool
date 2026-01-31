@@ -21,44 +21,6 @@ describe("Parser - Option Text Input", () => {
     }
   })
 
-  it("should parse - ESSAY modifier on option", () => {
-    const input = `Q: What is your favorite hobby?
-- Sports
-- Reading
-- Gaming
-- Other
-  - ESSAY`
-
-    const result = parseQuestionnaire(input)
-    const question = result.blocks[0].pages[0].sections[0].items[0]
-
-    expect(question).toHaveProperty("type", "multiple_choice")
-    if ("options" in question) {
-      expect(question.options).toHaveLength(4)
-      expect(question.options[3].label).toBe("Other")
-      expect(question.options[3].allowsOtherText).toBe(true)
-    }
-  })
-
-  it("should parse - OTHER modifier on option", () => {
-    const input = `Q: What is your favorite hobby?
-- Sports
-- Reading
-- Gaming
-- Other
-  - OTHER`
-
-    const result = parseQuestionnaire(input)
-    const question = result.blocks[0].pages[0].sections[0].items[0]
-
-    expect(question).toHaveProperty("type", "multiple_choice")
-    if ("options" in question) {
-      expect(question.options).toHaveLength(4)
-      expect(question.options[3].label).toBe("Other")
-      expect(question.options[3].allowsOtherText).toBe(true)
-    }
-  })
-
   it("should work with checkbox questions", () => {
     const input = `Q: Select all that apply
 CHECKBOX

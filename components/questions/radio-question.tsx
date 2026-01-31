@@ -7,6 +7,7 @@ import { MultipleChoiceQuestion, Responses, Variables, ComputedValues } from "@/
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
+import { useInstanceId } from "@/contexts/instance-id-context"
 import Markdown from "react-markdown"
 
 interface RadioQuestionProps {
@@ -54,6 +55,7 @@ export function RadioQuestion({
   computedVariables
 }: RadioQuestionProps) {
   const { t } = useLanguage()
+  const instanceId = useInstanceId()
   // Get current response value and parse it
   const responseValue = responses[question.id]
   const responseString = typeof responseValue === "string" ? responseValue : ""
@@ -151,11 +153,11 @@ export function RadioQuestion({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value={option.value}
-                  id={`${question.id}-${optionIndex}`}
+                  id={`${instanceId}${question.id}-${optionIndex}`}
                   tabIndex={radioTabIndex}
                 />
                 <Label
-                  htmlFor={`${question.id}-${optionIndex}`}
+                  htmlFor={`${instanceId}${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
                   <Markdown>
