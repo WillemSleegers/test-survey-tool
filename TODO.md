@@ -9,96 +9,38 @@
   - **Result**: Debug panel may show different visibility states than actual navigation
   - **Fix**: Make page-navigator use the same `getBlockComputedValues` function passed from questionnaire-viewer
 
-- [x] Fix React key uniqueness issue with duplicate option values
-  - ✅ Fixed in all question components (matrix, checkbox, radio, breakdown)
-  - ✅ Changed from `option.value` to array index for stable, unique keys
-  - ✅ Array indices are safe because options are never reordered
-- [x] Implement delimiter-based multi-line parsing for tooltips/hints
-  - ✅ Added support for `---` delimiters to mark complex tooltip/hint content
-  - ✅ Delimiter must be on the same line as keyword (e.g., `TOOLTIP: ---`) to avoid lookahead issues
-  - ✅ Simple single-line tooltips work without delimiters
-  - ✅ Complex multi-line content with lists requires `---` opening and closing delimiters
-  - ✅ Works for all contexts: question-level, option-level, and subquestion-level tooltips/hints
-  - ✅ Backward compatible with single-line tooltips/hints
-- [x] Implement COLUMN/EXCLUDE keywords for breakdown questions
-  - ✅ Added `COLUMN:` keyword to organize breakdown options into multiple value columns
-  - ✅ Added option-level `VARIABLE:` to store individual option values
-  - ✅ Added `VALUE:` for calculated read-only option values
-  - ✅ Added `EXCLUDE` keyword to display options without including in totals
-  - ✅ All calculation functions respect exclude flag (calculateTotal, calculateSubtotal, calculateBreakdownTotal)
-  - ✅ Removed `TOTAL_COLUMN:` - totals now always show in last column, use EXCLUDE instead
-- [x] Add BREAKDOWN documentation to text-format-guide.tsx
-  - ✅ Added comprehensive documentation covering all BREAKDOWN features
-  - ✅ Documented: BREAKDOWN, COLUMN, VALUE, VARIABLE, EXCLUDE, SUBTRACT, SUBTOTAL
-  - ✅ Added examples and clear explanations for each feature
-- [x] Remove hardcoded bold styling from SUBTOTAL rows
-  - ✅ Removed `font-bold` from both single-column and multi-column layouts
-  - ✅ Users can now control formatting via Markdown (e.g., `**bold**`)
-- [x] Fix forward slashes in question options causing variable comparison issues
-  - ✅ Investigated condition evaluation logic
-  - ✅ No actual bug found - string comparisons work correctly with forward slashes
-  - ✅ Users can quote values if needed (e.g., `Q1 == "yes/no"`)
-- [x] Remove React optimization hooks to comply with React 19 Compiler
-  - ✅ Remove `useMemo()` from `components/questions/checkbox-question.tsx:61`
-  - ✅ Remove `useMemo()` and `useCallback()` from `hooks/use-questionnaire-responses.ts`
-  - ✅ Remove `useCallback()` and `useMemo()` from `hooks/use-visible-pages.ts`
-  - ✅ Remove `useCallback()` and `useMemo()` from `hooks/use-lazy-computed-variables.ts`
-- [x] Fix disabled validation functions in parser
-  - ✅ Re-enabled validation functions in `lib/parser.ts:1115-1117`
-  - ✅ Removed associated eslint-disable comments
-
 ## Medium Priority
 
-- [x] Refactor parseSection and parsePage to eliminate multi-pass parsing
-  - ✅ Fixed bug where multi-line delimited tooltip content was rendered twice
-  - ✅ Implemented single-pass state machine for `parseSection` (extracts TOOLTIP, SHOW_IF inline)
-  - ✅ Implemented single-pass state machine for `parsePage` (extracts title, NAVIGATION, TOOLTIP, COMPUTE before building sections)
-  - ✅ Page-level keywords no longer leak into section content
-  - ✅ Removed unused `identifySections` function
-  - **Future consideration**: Apply same pattern to `parseBlock` and consider removing `identifyQuestions()` lookahead for fully inline question boundary detection
-- [ ] Add SHOW_IF support to sections
-  - **Motivation**: Sections currently support content and tooltip but not conditional visibility
-  - **Benefit**: Would enable conditional showing/hiding of entire groups of questions within a page
-  - **Current state**: Sections provide organizational layer (Pages → Sections → Questions) with content, tooltip, and questions
-  - **Implementation**:
-    - Add `showIf?: string` field to Section type in `lib/types.ts`
-    - Update parser to recognize SHOW_IF keyword at section level (similar to page-level SHOW_IF)
-    - Update visibility logic in `hooks/use-visible-pages.ts` to evaluate section conditions
-    - Ensure section visibility affects all questions within that section
-  - **Use case**: Hide entire groups of related questions based on previous responses
-  - **Priority**: Medium - Would provide useful organizational capability without breaking existing functionality
 - [ ] Review tooltip icon positioning layout
   - Tooltip icons now positioned absolutely at -left-8 for consistent left-side placement
   - Main content container has pl-8 padding to accommodate icons
   - Table containers use -ml-8 pl-8 to prevent double-indentation while keeping icons visible
   - Should verify this approach is principled and doesn't cause issues with edge cases
   - Consider whether this pattern scales well for other absolutely positioned elements
-- [x] Remove subquestions feature from BREAKDOWN questions
-  - ✅ Investigation showed BREAKDOWN never supported subquestions
-  - ✅ The `- Q:` syntax only works for MATRIX questions
-  - ✅ BreakdownOption type already excludes subquestions
-  - No action needed - this was a misunderstanding
-- [x] Clean up legacy mainQuestions array
-  - ✅ Removed always-empty `mainQuestions` array from `hooks/use-visible-pages.ts:46`
-  - ✅ Updated `VisiblePageContent` type to remove mainQuestions
-  - ✅ Verified no code depends on this legacy structure
-- [x] Update the README
-  - ✅ Removed duplicate TODOs that are now in TODO.md
-  - ✅ Updated project description and setup instructions
 
 ## Low Priority
 
-- [x] Clean up ESLint disables
-  - ✅ Removed unnecessary `@typescript-eslint/no-unused-vars` disables
-  - ✅ Fixed underlying issues rather than suppressing warnings
-- [x] Remove old format support in parser
-  - ✅ Evaluated and removed old `"- A) Option"` format support (line 85-89)
-  - ✅ Simplified parser logic by removing unused legacy pattern
-- [x] Remove debugging code
-  - ✅ Removed `computedCache` exposure from `useLazyComputedVariables`
-- [ ] Prevent mouse/trackpad scrolling affecting number inputs in Chrome
+- [ ] Render NUMBER question PREFIX/SUFFIX
+  - `PREFIX:` and `SUFFIX:` are parsed on number questions (`lib/parser.ts:460-461`) and stored in the type (`lib/types.ts:80-81`)
+  - `components/questions/number-question.tsx` does not use these fields
+  - Should display prefix/suffix around the number input (e.g., `$ [input] per year`)
+- [ ] Render matrix TEXT and ESSAY input types
+  - Matrix questions parse `inputType` for `text` and `essay` (`lib/parser.ts:714-720`, `lib/types.ts:88`)
+  - Only `checkbox` inputType is rendered; `text` and `essay` fall through to radio buttons
+  - Should render text inputs or text areas in each matrix cell instead of radio buttons
+- [ ] Render option-level HINT and TOOLTIP on radio/checkbox questions
+  - `- HINT:` and `- TOOLTIP:` on options are parsed for all question types (`lib/parser.ts:579-600`)
+  - Only breakdown options render these (`components/questions/breakdown-question.tsx:271-280`)
+  - `radio-question.tsx` and `checkbox-question.tsx` ignore option hints and tooltips
+  - Should display muted subtext (hint) or info icon (tooltip) on individual radio/checkbox options
 
 ## Ideas to Explore
+
+- [ ] Restructure docs into separate files per section
+  - **Current state**: All documentation content lives in a single `app/docs/page.tsx` file (~1200+ lines) as one large switch statement
+  - **Proposal**: Split each documentation section into its own file (e.g., `app/docs/sections/overview.tsx`, `app/docs/sections/breakdown.tsx`, etc.)
+  - **Benefits**: Easier to maintain, better code organization, smaller diffs when editing individual sections
+  - **Considerations**: Need a clean pattern for sharing `renderExample()` and `renderCodeBlock()` utilities across section files
 
 - [ ] Add INTEGER input type for whole numbers only
 

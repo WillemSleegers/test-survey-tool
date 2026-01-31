@@ -195,7 +195,7 @@ export function BreakdownQuestion({
     // If this is a header row, render it without an input field
     if (option.header) {
       return (
-        <TableRow key={index} className="font-bold">
+        <TableRow key={index}>
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
             <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
@@ -374,7 +374,7 @@ export function BreakdownQuestion({
               // If this is a header row, render it without input fields
               if (option.header) {
                 return (
-                  <TableRow key={index} className="font-bold">
+                  <TableRow key={index}>
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
                       <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                     </TableCell>

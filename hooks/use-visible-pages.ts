@@ -39,22 +39,22 @@ export function useVisiblePages(
       getPageComputedVars(page) :
       evaluateComputedValues(page, variables, blockComputedValues)
 
-    // Filter section items based on individual SHOW_IF conditions
-    return page.sections.map((section) => ({
-      id: section.id,
-      title: section.title,
-      tooltip: section.tooltip,
-      showIf: section.showIf,
-      items: section.items.filter((item) => {
-        if (isText(item)) {
-          // Text is always visible
-          return true
-        } else {
-          // Filter questions based on SHOW_IF
-          return evaluateCondition(item.showIf || "", variables, pageComputedVars)
-        }
-      }),
-    }))
+    // Filter sections based on SHOW_IF, then filter items within visible sections
+    return page.sections
+      .filter((section) => evaluateCondition(section.showIf || "", variables, pageComputedVars))
+      .map((section) => ({
+        id: section.id,
+        title: section.title,
+        tooltip: section.tooltip,
+        showIf: section.showIf,
+        items: section.items.filter((item) => {
+          if (isText(item)) {
+            return true
+          } else {
+            return evaluateCondition(item.showIf || "", variables, pageComputedVars)
+          }
+        }),
+      }))
   }
 
   return {

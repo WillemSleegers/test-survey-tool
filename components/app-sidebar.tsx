@@ -23,8 +23,8 @@ const navMain = [
       { title: "Number", section: "number" as Section },
       { title: "Multiple Choice", section: "multiple-choice" as Section },
       { title: "Checkbox", section: "checkbox" as Section },
-      { title: "Breakdown", section: "breakdown" as Section },
       { title: "Matrix", section: "matrix" as Section },
+      { title: "Breakdown", section: "breakdown" as Section },
     ],
   },
   {
@@ -126,6 +126,15 @@ export function AppSidebar({
                 </div>
               )
             })}
+
+            <div
+              className={`flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm cursor-pointer hover:bg-muted mt-2 ${
+                activeSection === "page-navigator" ? "bg-muted font-semibold" : "font-medium"
+              }`}
+              onClick={() => onSectionChange("page-navigator")}
+            >
+              Page Navigator
+            </div>
           </CardContent>
         </Card>
       </div>

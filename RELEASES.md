@@ -1,5 +1,52 @@
 # Release Notes
 
+## Version 0.3.1
+
+Released January 2026
+
+### New Features
+
+- **Section SHOW_IF support**: Sections can now be conditionally shown or hidden based on variables and responses
+
+  - Uses the same `SHOW_IF:` syntax as pages and questions
+  - Hidden sections and their questions are excluded from page completion tracking
+  - Example: `SHOW_IF: is_manager == Yes` on a `##` section heading
+
+- **Section TOOLTIP documentation**: Section-level tooltips are now documented with interactive examples
+
+  - The tooltip rendering was already implemented but undocumented — an info icon appears next to the section heading and toggles the tooltip content
+  - Uses the same `TOOLTIP:` syntax as pages and questions (including multi-line `"""` delimiters)
+
+- **Page Navigator documentation**: Added dedicated documentation page explaining the Page Navigator feature
+  - Covers overview, how to open it, and its features (page status indicators, jump-to-page, completion tracking)
+
+### Improvements
+
+- **Polished documentation**
+
+  - Went over the documentation pages and added clarifications where needed, improved consistency between pages, and improved styling
+
+- **Documentation language override**: Documentation examples now always render in English regardless of the user's language setting
+
+  - Added `defaultLanguage` prop to `LanguageProvider` to force a specific language
+  - Prevents Dutch placeholders and button labels from appearing in documentation
+
+- **Expanded Overview page**: Added detailed introductory text explaining what TST does and its design philosophy
+
+- **Collapsible navigation sections**: The chevron on expandable navigation items is now an independent click target
+  - Clicking the chevron toggles expand/collapse without navigating
+  - Clicking the item text still navigates (and auto-expands if collapsed)
+  - Previously, expanded sections could not be collapsed
+
+### Bug fixes
+
+- **Documentation state bug**: Fixed a bug where navigation between pages in one documentation example affected the navigation state in another documentation example
+
+  - Added `key={activeSection}` to force React to remount examples when navigating between sections
+  - Previously, navigating in one section's example could affect examples on other pages
+
+---
+
 ## Version 0.3.0
 
 Released December 2025
@@ -108,11 +155,13 @@ Released December 2025
 ### Bug Fixes
 
 - **Fixed duplicate question IDs across blocks**: Question IDs are now unique across all blocks
+
   - Bug introduced in 0.3.0 parser refactor: each block reset the question ID counter, causing questions in different blocks to have duplicate IDs (Q1, Q1, Q2 instead of Q1, Q2, Q3)
   - This caused block-level SHOW_IF conditions to fail because variable derivation would pick up the wrong question's variable
   - Added test suite to prevent regression
 
 - **Fixed paragraph spacing in text content**: Text with blank lines between paragraphs now renders correctly
+
   - Fixed parser bug where blank lines between content paragraphs were incorrectly skipped
   - Removed redundant `questionLineSet` check that was marking blank lines as question lines
   - Added paragraph spacing CSS (`mb-4`) to properly space separate paragraphs
@@ -127,6 +176,7 @@ Released December 2025
 ### Improvements
 
 - **Markdown-based text formatting**: Removed `whitespace-pre-wrap` CSS and let Markdown handle paragraph breaks naturally
+
   - Removed `whitespace-pre-wrap` from all text rendering components (section text, question hints/tooltips, page headers)
   - Added global CSS rules for paragraph and list spacing (`mb-3` with `last:mb-0`)
   - Content now uses standard Markdown convention: double newlines create separate paragraphs with proper spacing

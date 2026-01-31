@@ -11,16 +11,17 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('nl')
+export function LanguageProvider({ children, defaultLanguage }: { children: React.ReactNode, defaultLanguage?: Language }) {
+  const [language, setLanguageState] = useState<Language>(defaultLanguage ?? 'nl')
 
-  // Load language preference from localStorage on mount
+  // Load language preference from localStorage on mount (skip if defaultLanguage is provided)
   useEffect(() => {
+    if (defaultLanguage) return
     const savedLanguage = localStorage.getItem('survey-language') as Language
     if (savedLanguage && translations[savedLanguage]) {
       setLanguageState(savedLanguage)
     }
-  }, [])
+  }, [defaultLanguage])
 
   // Save language preference to localStorage when changed
   const setLanguage = (newLanguage: Language) => {

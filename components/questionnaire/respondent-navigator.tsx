@@ -219,11 +219,19 @@ export function RespondentNavigator({
 
                     {/* Chevron for expandable items */}
                     {itemHasChildren && (
-                      <ChevronRight
-                        className={`w-4 h-4 shrink-0 transition-transform ${
-                          isExpanded ? "rotate-90" : ""
-                        }`}
-                      />
+                      <div
+                        className="p-0.5 rounded hover:bg-accent shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleItemExpansion(index)
+                        }}
+                      >
+                        <ChevronRight
+                          className={`w-4 h-4 transition-transform ${
+                            isExpanded ? "rotate-90" : ""
+                          }`}
+                        />
+                      </div>
                     )}
                   </div>
 
