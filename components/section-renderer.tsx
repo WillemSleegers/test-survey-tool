@@ -7,6 +7,7 @@ import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Section, Responses, Variables, ComputedValues, isText, isQuestion } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
+import { markdownImageComponents } from "@/lib/markdown-components"
 
 interface SectionRendererProps {
   section: Section
@@ -34,6 +35,7 @@ export function SectionRenderer({
   const renderContentItem = (content: string) => (
     <Markdown
       components={{
+        ...markdownImageComponents,
         code: (props) => {
           const { children, className, ...rest } = props as {
             className?: string
@@ -114,11 +116,11 @@ export function SectionRenderer({
             </button>
           )}
           <div>
-            <Markdown>{section.title}</Markdown>
+            <Markdown components={markdownImageComponents}>{section.title}</Markdown>
           </div>
           {processedTooltip && isTooltipVisible && (
             <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
-              <Markdown>{processedTooltip}</Markdown>
+              <Markdown components={markdownImageComponents}>{processedTooltip}</Markdown>
             </div>
           )}
         </div>

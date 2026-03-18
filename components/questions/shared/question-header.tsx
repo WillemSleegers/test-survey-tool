@@ -3,6 +3,7 @@ import Markdown from "react-markdown"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Variables, ComputedValues } from "@/lib/types"
+import { markdownImageComponents } from "@/lib/markdown-components"
 
 interface QuestionHeaderProps {
   /** The main question text */
@@ -55,17 +56,17 @@ export function QuestionHeader({ text, subtext, tooltip, variables, computedVari
           </button>
         )}
         <div>
-          <Markdown>{processedText}</Markdown>
+          <Markdown components={markdownImageComponents}>{processedText}</Markdown>
         </div>
       </div>
       {processedSubtext && (
         <div className="text-base text-muted-foreground">
-          <Markdown>{processedSubtext}</Markdown>
+          <Markdown components={markdownImageComponents}>{processedSubtext}</Markdown>
         </div>
       )}
       {processedTooltip && isTooltipVisible && (
         <div className="text-base text-muted-foreground bg-muted p-3 rounded-md">
-          <Markdown>{processedTooltip}</Markdown>
+          <Markdown components={markdownImageComponents}>{processedTooltip}</Markdown>
         </div>
       )}
     </div>
