@@ -1,5 +1,6 @@
 import { useState } from "react"
 import Markdown from "react-markdown"
+import { remarkPlugins } from "@/lib/markdown-components"
 import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
@@ -200,7 +201,7 @@ export function BreakdownQuestion({
       return (
         <TableRow key={index}>
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
-            <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
           </TableCell>
         </TableRow>
       )
@@ -269,16 +270,16 @@ export function BreakdownQuestion({
               )}
               <div>
                 <div className="text-base">
-                  <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
                 </div>
                 {option.hint && (
                   <div className="text-base text-muted-foreground mt-0.5 font-normal">
-                    <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                   </div>
                 )}
                 {option.tooltip && isTooltipVisible && (
                   <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-                    <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                   </div>
                 )}
               </div>
@@ -323,16 +324,16 @@ export function BreakdownQuestion({
             )}
             <div>
               <div className="text-base">
-                <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
               </div>
               {option.hint && (
                 <div className="text-base text-muted-foreground mt-0.5 font-normal">
-                  <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                 </div>
               )}
               {option.tooltip && isTooltipVisible && (
                 <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-                  <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                 </div>
               )}
             </div>
@@ -379,7 +380,7 @@ export function BreakdownQuestion({
                 return (
                   <TableRow key={index}>
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
-                      <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                     </TableCell>
                   </TableRow>
                 )
@@ -447,16 +448,16 @@ export function BreakdownQuestion({
                         )}
                         <div>
                           <div className="text-base">
-                            <Markdown>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
+                            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.subtotalLabel, variables, computedVariables)}</Markdown>
                           </div>
                           {option.hint && (
                             <div className="text-base text-muted-foreground mt-0.5 font-normal">
-                              <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                              <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                             </div>
                           )}
                           {option.tooltip && isTooltipVisible && (
                             <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-                              <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                              <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                             </div>
                           )}
                         </div>
@@ -502,16 +503,16 @@ export function BreakdownQuestion({
                       )}
                       <div>
                         <div className="text-base">
-                          <Markdown>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
                         </div>
                         {option.hint && (
                           <div className="text-base text-muted-foreground mt-0.5">
-                            <Markdown>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
+                            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.hint, variables, computedVariables)}</Markdown>
                           </div>
                         )}
                         {option.tooltip && isTooltipVisible && (
                           <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2">
-                            <Markdown>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
+                            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.tooltip, variables, computedVariables)}</Markdown>
                           </div>
                         )}
                       </div>
@@ -551,7 +552,7 @@ export function BreakdownQuestion({
             {totalLabel && (
               <TableRow className="border-t border-border">
                 <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                  <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
@@ -583,7 +584,7 @@ export function BreakdownQuestion({
               {totalLabel && (
                 <TableRow className="border-t border-border">
                   <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                    <Markdown>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
                     {questionPrefix}{total}{questionSuffix}

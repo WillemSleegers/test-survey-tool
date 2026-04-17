@@ -1,4 +1,7 @@
 import type { Components } from "react-markdown"
+import remarkBreaks from "remark-breaks"
+
+export const remarkPlugins = [remarkBreaks]
 
 export const markdownImageComponents: Components = {
   img: ({ src, alt }) => (

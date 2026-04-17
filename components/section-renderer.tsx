@@ -7,7 +7,7 @@ import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Section, Responses, Variables, ComputedValues, isText, isQuestion } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
-import { markdownImageComponents } from "@/lib/markdown-components"
+import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
 
 interface SectionRendererProps {
   section: Section
@@ -34,6 +34,7 @@ export function SectionRenderer({
 
   const renderContentItem = (content: string) => (
     <Markdown
+      remarkPlugins={remarkPlugins}
       components={{
         ...markdownImageComponents,
         code: (props) => {
@@ -116,11 +117,11 @@ export function SectionRenderer({
             </button>
           )}
           <div>
-            <Markdown components={markdownImageComponents}>{section.title}</Markdown>
+            <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
           </div>
           {processedTooltip && isTooltipVisible && (
             <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
-              <Markdown components={markdownImageComponents}>{processedTooltip}</Markdown>
+              <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedTooltip}</Markdown>
             </div>
           )}
         </div>
