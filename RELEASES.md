@@ -8,6 +8,10 @@ Released April 2026
 
 - **Single-line breaks in text**: Single newlines in text content now render as line breaks, making it possible to place text on new lines without creating a new paragraph
 
+### Improvements
+
+- **Package updates**: Updated all dependencies to their latest versions
+
 ## Version 0.3.1
 
 Released January 2026
