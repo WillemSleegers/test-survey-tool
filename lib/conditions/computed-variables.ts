@@ -1,6 +1,6 @@
 import { Page, Variables, ComputedValues, ComputedVariable } from "@/lib/types"
 import { evaluateCondition } from "./condition-evaluator"
-import { evaluateExpression, isArithmeticExpression } from "./expression-evaluator"
+import { evaluateExpression, isArithmeticExpression, isIfThenElseExpression, isIfThenExpression, isStringLiteral, parseIfThenElse, parseIfThen, resolveValue } from "./expression-evaluator"
 
 /**
  * Checks if an expression contains comparison operators, making it a boolean condition
@@ -18,10 +18,20 @@ function isComparisonExpression(expression: string): boolean {
 /**
  * Evaluates all computed variables for a given page
  *
- * Supports both boolean and numeric computed variables:
+ * Supports boolean, numeric, and string computed variables:
  * - Boolean: "age >= 18" -> true/false
  * - Numeric: "count + 5" -> number
- * - Ternary: "age >= 18 ? 1 : 0" -> number (1 or 0)
+ * - String literal: '"adult"' -> "adult"
+ * - IF-THEN-ELSE: "IF age >= 18 THEN Adult ELSE Minor" -> string/number/boolean
+ * - IF-THEN (no ELSE): leaves the variable unchanged if condition is false;
+ *   useful for multi-COMPUTE patterns with a default followed by conditional overrides
+ * - ELSE IF chaining: "IF a THEN x ELSE IF b THEN y ELSE z"
+ *
+ * Multiple COMPUTE statements for the same variable are evaluated in declaration order,
+ * enabling a "default + override" pattern:
+ *   COMPUTE: level = "Low"
+ *   COMPUTE: level = IF score >= 5 THEN "Medium"
+ *   COMPUTE: level = IF score >= 8 THEN "High"
  *
  * @param page - The page containing computed variables
  * @param variables - Current user variables
@@ -32,45 +42,50 @@ export function evaluateComputedValues(
   variables: Variables,
   existingComputedValues?: ComputedValues
 ): ComputedValues {
-  // Start with existing computed variables (e.g., from block level)
   const computedVars: ComputedValues = { ...existingComputedValues }
-  
-  // Sort computed variables to handle dependencies
-  // Variables that depend on other computed variables should be evaluated after their dependencies
   const sortedVariables = topologicalSort(page.computedVariables)
-  
+
   for (const computedVar of sortedVariables) {
     try {
-      // Create a variables object that includes computed variables evaluated so far
       const extendedVariables = createExtendedVariables(variables, computedVars)
-      
-      // Determine if this is a pure arithmetic expression (numeric) or a condition (boolean)
-      let result: boolean | number
-      
-      if (isComparisonExpression(computedVar.expression)) {
-        // Expression contains comparison operators, evaluate as boolean condition
-        result = evaluateCondition(computedVar.expression, extendedVariables)
-      } else if (isArithmeticExpression(computedVar.expression)) {
-        // Pure arithmetic expression, evaluate as numeric
-        result = evaluateExpression(computedVar.expression, extendedVariables)
-      } else {
-        // Simple condition (variable name, etc.), evaluate as boolean
-        result = evaluateCondition(computedVar.expression, extendedVariables)
+      const expr = computedVar.expression
+
+      if (isIfThenExpression(expr)) {
+        // One-sided IF: only update if condition is true, otherwise keep existing value
+        const parsed = parseIfThen(expr)
+        if (parsed && evaluateCondition(parsed.condition, extendedVariables)) {
+          const value = resolveBranchValue(parsed.trueExpr, extendedVariables)
+          computedVars[computedVar.name] = value
+          computedVar.value = value
+        }
+        continue
       }
-      
+
+      let result: boolean | number | string
+
+      if (isIfThenElseExpression(expr)) {
+        result = evaluateIfThenElseExpr(expr, extendedVariables)
+      } else if (isStringLiteral(expr)) {
+        result = expr.trim().slice(1, -1)
+      } else if (isComparisonExpression(expr)) {
+        result = evaluateCondition(expr, extendedVariables)
+      } else if (isArithmeticExpression(expr)) {
+        result = evaluateExpression(expr, extendedVariables)
+      } else {
+        result = evaluateCondition(expr, extendedVariables)
+      }
+
       computedVars[computedVar.name] = result
-      
-      // Store the evaluated value for debugging purposes
       computedVar.value = result
     } catch (error) {
-      // If evaluation fails, default to false for conditions or 0 for arithmetic
       console.warn(`Failed to evaluate computed variable "${computedVar.name}": ${error}`)
-      const defaultValue = isArithmeticExpression(computedVar.expression) ? 0 : false
+      const expr = computedVar.expression
+      const defaultValue = isIfThenElseExpression(expr) || isIfThenExpression(expr) ? '' : isArithmeticExpression(expr) ? 0 : false
       computedVars[computedVar.name] = defaultValue
       computedVar.value = defaultValue
     }
   }
-  
+
   return computedVars
 }
 
@@ -93,71 +108,59 @@ function createExtendedVariables(
 }
 
 /**
- * Simple topological sort for computed variables to handle dependencies
- * This ensures that variables are evaluated in the correct order
+ * Topological sort for computed variables based on inter-variable dependencies.
+ * Multiple COMPUTE statements for the same variable are preserved in declaration order
+ * and grouped together in the sorted output.
  */
 function topologicalSort(variables: ComputedVariable[]): ComputedVariable[] {
-  // For now, we'll use a simple approach: variables that reference other computed variables
-  // should be evaluated after the variables they reference
-  
+  const uniqueNames = [...new Set(variables.map(v => v.name))]
+
   const graph: Map<string, string[]> = new Map()
   const inDegree: Map<string, number> = new Map()
-  
-  // Initialize
-  variables.forEach(v => {
-    graph.set(v.name, [])
-    inDegree.set(v.name, 0)
+
+  uniqueNames.forEach(name => {
+    graph.set(name, [])
+    inDegree.set(name, 0)
   })
-  
-  // Build dependency graph
-  variables.forEach(variable => {
-    const dependencies = extractVariableReferences(variable.expression)
-    dependencies.forEach(dep => {
-      if (graph.has(dep)) {
-        // dep -> variable.name (dep must be evaluated before variable.name)
-        graph.get(dep)!.push(variable.name)
-        inDegree.set(variable.name, (inDegree.get(variable.name) || 0) + 1)
+
+  // Build dependency graph on unique names
+  uniqueNames.forEach(name => {
+    const allExpressions = variables.filter(v => v.name === name).map(v => v.expression)
+    const deps = new Set(allExpressions.flatMap(extractVariableReferences))
+    deps.forEach(dep => {
+      if (graph.has(dep) && dep !== name) {
+        graph.get(dep)!.push(name)
+        inDegree.set(name, (inDegree.get(name) || 0) + 1)
       }
     })
   })
-  
-  // Kahn's algorithm
+
+  // Kahn's algorithm on unique names
   const queue: string[] = []
-  const result: ComputedVariable[] = []
-  
-  // Find variables with no dependencies
+  const sortedNames: string[] = []
+
   inDegree.forEach((degree, name) => {
-    if (degree === 0) {
-      queue.push(name)
-    }
+    if (degree === 0) queue.push(name)
   })
-  
+
   while (queue.length > 0) {
     const current = queue.shift()!
-    const variable = variables.find(v => v.name === current)
-    if (variable) {
-      result.push(variable)
-    }
-    
-    // Process neighbors
+    sortedNames.push(current)
     const neighbors = graph.get(current) || []
     neighbors.forEach(neighbor => {
       const newDegree = (inDegree.get(neighbor) || 0) - 1
       inDegree.set(neighbor, newDegree)
-      if (newDegree === 0) {
-        queue.push(neighbor)
-      }
+      if (newDegree === 0) queue.push(neighbor)
     })
   }
-  
-  // If we couldn't sort all variables, there might be a circular dependency
-  // In that case, just return the original order
-  if (result.length !== variables.length) {
+
+  if (sortedNames.length !== uniqueNames.length) {
     console.warn("Possible circular dependency in computed variables, using original order")
     return variables
   }
-  
-  return result
+
+  // Reconstruct full list: for each sorted name, include all entries in declaration order
+  return sortedNames.flatMap(name => variables.filter(v => v.name === name))
 }
 
 /**
@@ -191,6 +194,39 @@ function isKeywordOrOperator(word: string): boolean {
     'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'STARTS_WITH',
     'true', 'false', 'null', 'undefined'
   ])
-  
+
   return keywords.has(word.toUpperCase())
+}
+
+/**
+ * Evaluates an IF-THEN-ELSE expression against the given variables.
+ * Supports ELSE IF chaining: the false branch may itself be an IF-THEN or IF-THEN-ELSE.
+ * Lives here (not in expression-evaluator.ts) to avoid a circular import with condition-evaluator.ts.
+ */
+function evaluateIfThenElseExpr(
+  expression: string,
+  variables: Variables
+): string | number | boolean {
+  const parsed = parseIfThenElse(expression)
+  if (!parsed) return ''
+  const conditionResult = evaluateCondition(parsed.condition, variables)
+  return resolveBranchValue(conditionResult ? parsed.trueExpr : parsed.falseExpr, variables)
+}
+
+/**
+ * Resolves a branch value, handling nested IF-THEN-ELSE and IF-THEN expressions
+ * to support ELSE IF chaining.
+ */
+function resolveBranchValue(expr: string, variables: Variables): string | number | boolean {
+  if (isIfThenElseExpression(expr)) {
+    return evaluateIfThenElseExpr(expr, variables)
+  }
+  if (isIfThenExpression(expr)) {
+    const parsed = parseIfThen(expr)
+    if (parsed && evaluateCondition(parsed.condition, variables)) {
+      return resolveValue(parsed.trueExpr, variables)
+    }
+    return ''
+  }
+  return resolveValue(expr, variables)
 }

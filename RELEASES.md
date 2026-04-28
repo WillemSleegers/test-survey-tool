@@ -1,5 +1,23 @@
 # Release Notes
 
+## Version 0.3.3
+
+Released April 2026
+
+### New Features
+
+- **Conditional string values in COMPUTE**: Computed variables can now return strings conditionally
+  - `IF <condition> THEN <value> ELSE <value>`: `COMPUTE: label = IF score >= 8 THEN "High" ELSE "Low"`
+  - `ELSE IF` chaining: `COMPUTE: label = IF score >= 8 THEN "High" ELSE IF score >= 5 THEN "Medium" ELSE "Low"`
+  - One-sided `IF <condition> THEN <value>` (no `ELSE`): leaves the variable unchanged if the condition is false, enabling a default-then-override pattern with multiple `COMPUTE` statements for the same variable
+  - Values can be quoted strings, numbers, or references to other variables
+  - The condition uses the same syntax as `SHOW_IF`
+  - String results can be used in text placeholders (`{label}`) and in `SHOW_IF` comparisons
+
+- **String literal COMPUTE values**: Assign a fixed string to a computed variable with `COMPUTE: category = "high"`
+
+---
+
 ## Version 0.3.2
 
 Released April 2026
