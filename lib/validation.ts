@@ -79,6 +79,14 @@ export function validateConditionReferences(blocks: Block[]): void {
               }
             }
           }
+          // Add option-level variables (only for breakdown questions)
+          if (item.type === 'breakdown') {
+            for (const option of item.options) {
+              if (option.variable) {
+                definedVariables.add(option.variable)
+              }
+            }
+          }
         }
       }
     }
@@ -168,6 +176,14 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
             for (const subquestion of item.subquestions) {
               if (subquestion.variable) {
                 definedVariables.add(subquestion.variable)
+              }
+            }
+          }
+          // Add option-level variables (only for breakdown questions)
+          if (item.type === 'breakdown') {
+            for (const option of item.options) {
+              if (option.variable) {
+                definedVariables.add(option.variable)
               }
             }
           }
