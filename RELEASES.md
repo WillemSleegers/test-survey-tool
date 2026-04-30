@@ -1,5 +1,15 @@
 # Release Notes
 
+## Version 0.3.4
+
+Released April 2026
+
+### Bug Fixes
+
+- **Breakdown option variables recognized in SHOW_IF**: Variables defined on breakdown question options (via `- VARIABLE:`) are now correctly recognized during validation, so referencing them in `SHOW_IF` conditions no longer produces a false "undefined variable" error
+
+---
+
 ## Version 0.3.3
 
 Released April 2026
