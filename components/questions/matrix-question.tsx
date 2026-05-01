@@ -1,5 +1,6 @@
 import { useState } from "react"
 import Markdown from "react-markdown"
+import { remarkPlugins } from "@/lib/markdown-components"
 import { Info } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -181,7 +182,7 @@ export function MatrixQuestion({
                     key={index}
                     className="text-center text-base font-normal whitespace-normal align-bottom px-3 py-2"
                   >
-                    <Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>
                       {replacePlaceholders(
                         option.label,
                         variables,

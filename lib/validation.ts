@@ -79,6 +79,14 @@ export function validateConditionReferences(blocks: Block[]): void {
               }
             }
           }
+          // Add option-level variables (only for breakdown questions)
+          if (item.type === 'breakdown') {
+            for (const option of item.options) {
+              if (option.variable) {
+                definedVariables.add(option.variable)
+              }
+            }
+          }
         }
       }
     }
@@ -171,6 +179,14 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
               }
             }
           }
+          // Add option-level variables (only for breakdown questions)
+          if (item.type === 'breakdown') {
+            for (const option of item.options) {
+              if (option.variable) {
+                definedVariables.add(option.variable)
+              }
+            }
+          }
         }
       }
     }
@@ -221,36 +237,34 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
 function findUndefinedVariables(expression: string, definedVariables: Set<string>): string[] {
   const undefinedVars: string[] = []
 
+  // Strip quoted string literals before any variable extraction — they are never variable references
+  const expression_ = expression.replace(/["'][^"']*["']/g, '""')
+
   // Handle logical operators FIRST (before individual comparisons)
-  if (expression.includes(' AND ') || expression.includes(' OR ')) {
-    // Handle logical operators by splitting and checking each part
-    const parts = expression.split(/\s+(?:AND|OR)\s+/)
+  if (expression_.includes(' AND ') || expression_.includes(' OR ')) {
+    const parts = expression_.split(/\s+(?:AND|OR)\s+/)
     for (const part of parts) {
       undefinedVars.push(...findUndefinedVariables(part.trim(), definedVariables))
     }
-  } else if (expression.startsWith('NOT ')) {
-    // Handle NOT operator
-    const innerExpression = expression.substring(4).trim()
+  } else if (expression_.startsWith('NOT ')) {
+    const innerExpression = expression_.substring(4).trim()
     undefinedVars.push(...findUndefinedVariables(innerExpression, definedVariables))
   } else {
-    // Normalize operators (convert IS to ==, etc.)
-    const normalizedExpression = normalizeOperators(expression)
+    const normalizedExpression = normalizeOperators(expression_)
 
-    // Handle individual comparisons
     if (normalizedExpression.includes('==') || normalizedExpression.includes('!=') || normalizedExpression.includes('>=') ||
         normalizedExpression.includes('<=') || normalizedExpression.includes('>') || normalizedExpression.includes('<')) {
-      // This is a comparison - only check the left side (variable name)
+      // Only check the left side as a variable; right side is a literal value
       const comparisonMatch = normalizedExpression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
       if (comparisonMatch) {
         const leftSide = comparisonMatch[1].trim()
-        // Only validate the left side as a variable, right side could be a literal value
         if (isValidVariableName(leftSide) && !definedVariables.has(leftSide)) {
           undefinedVars.push(leftSide)
         }
       }
     } else {
-      // Simple variable reference or arithmetic expression
-      const variableMatches = expression.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
+      // Simple variable reference or arithmetic expression (quoted strings already stripped)
+      const variableMatches = expression_.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
 
       const keywords = new Set([
         'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'IS_NOT',
@@ -261,7 +275,7 @@ function findUndefinedVariables(expression: string, definedVariables: Set<string
       for (const variable of variableMatches) {
         if (!keywords.has(variable) &&
             !definedVariables.has(variable) &&
-            !/^\d/.test(variable) && // Not starting with a number
+            !/^\d/.test(variable) &&
             isValidVariableName(variable)) {
           undefinedVars.push(variable)
         }

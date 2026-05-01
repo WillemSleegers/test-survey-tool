@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import Markdown from "react-markdown"
+import { remarkPlugins } from "@/lib/markdown-components"
 import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Page, Variables, ComputedValues } from "@/lib/types"
@@ -53,12 +54,12 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
           </button>
         )}
         <div>
-          <Markdown>{processedTitle}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins}>{processedTitle}</Markdown>
         </div>
       </div>
       {processedTooltip && isTooltipVisible && (
         <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
-          <Markdown>{processedTooltip}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins}>{processedTooltip}</Markdown>
         </div>
       )}
     </div>

@@ -136,3 +136,101 @@ export function evaluateStartsWithComparison(
     }
   })
 }
+
+/**
+ * Checks if an expression is an IF-THEN-ELSE conditional (requires ELSE branch)
+ */
+export function isIfThenElseExpression(expression: string): boolean {
+  const trimmed = expression.trim()
+  return trimmed.startsWith('IF ') && trimmed.includes(' THEN ') && trimmed.includes(' ELSE ')
+}
+
+/**
+ * Checks if an expression is a one-sided IF-THEN conditional (no ELSE branch).
+ * Used for multi-COMPUTE patterns where a false condition leaves the previous value unchanged.
+ */
+export function isIfThenExpression(expression: string): boolean {
+  const trimmed = expression.trim()
+  return trimmed.startsWith('IF ') && trimmed.includes(' THEN ') && !trimmed.includes(' ELSE ')
+}
+
+/**
+ * Parses a one-sided IF-THEN expression into condition and true branch.
+ * Returns null if the expression doesn't match the expected syntax.
+ */
+export function parseIfThen(
+  expression: string
+): { condition: string; trueExpr: string } | null {
+  const trimmed = expression.trim()
+  const withoutIf = trimmed.slice('IF '.length)
+  const thenIndex = withoutIf.indexOf(' THEN ')
+  if (thenIndex === -1) return null
+  return {
+    condition: withoutIf.slice(0, thenIndex).trim(),
+    trueExpr: withoutIf.slice(thenIndex + ' THEN '.length).trim(),
+  }
+}
+
+/**
+ * Checks if an expression is a quoted string literal
+ */
+export function isStringLiteral(expression: string): boolean {
+  const trimmed = expression.trim()
+  return (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+         (trimmed.startsWith("'") && trimmed.endsWith("'"))
+}
+
+/**
+ * Parses an IF-THEN-ELSE expression into its three parts.
+ * Returns null if the expression doesn't match the expected syntax.
+ */
+export function parseIfThenElse(
+  expression: string
+): { condition: string; trueExpr: string; falseExpr: string } | null {
+  const trimmed = expression.trim()
+  const withoutIf = trimmed.slice('IF '.length)
+  const thenIndex = withoutIf.indexOf(' THEN ')
+  if (thenIndex === -1) return null
+
+  const condition = withoutIf.slice(0, thenIndex).trim()
+  const rest = withoutIf.slice(thenIndex + ' THEN '.length)
+  const elseIndex = rest.indexOf(' ELSE ')
+  if (elseIndex === -1) return null
+
+  return {
+    condition,
+    trueExpr: rest.slice(0, elseIndex).trim(),
+    falseExpr: rest.slice(elseIndex + ' ELSE '.length).trim(),
+  }
+}
+
+/**
+ * Resolves a branch value token from an IF-THEN-ELSE expression.
+ *
+ * Resolution order:
+ * 1. Quoted string → strip quotes, return string
+ * 2. Numeric literal → return number
+ * 3. Known variable → return its current value
+ * 4. Unquoted text → treat as string literal (lenient fallback, consistent with SHOW_IF)
+ *
+ * Note: The variable-first resolution for unquoted tokens is intentionally lenient.
+ * A future version may require explicit quotes for strings to remove the ambiguity.
+ */
+export function resolveValue(token: string, variables: Variables): string | number | boolean {
+  const trimmed = token.trim()
+
+  if (isStringLiteral(trimmed)) {
+    return trimmed.slice(1, -1)
+  }
+
+  const num = parseFloat(trimmed)
+  if (!isNaN(num) && String(num) === trimmed) {
+    return num
+  }
+
+  if (trimmed in variables) {
+    return variables[trimmed] as string | number | boolean
+  }
+
+  return trimmed
+}

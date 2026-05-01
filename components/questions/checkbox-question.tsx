@@ -9,6 +9,7 @@ import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
 import { useInstanceId } from "@/contexts/instance-id-context"
 import Markdown from "react-markdown"
+import { remarkPlugins } from "@/lib/markdown-components"
 
 interface CheckboxQuestionProps {
   /** The question configuration */
@@ -202,7 +203,7 @@ export function CheckboxQuestion({
                   htmlFor={`${instanceId}${question.id}-${optionIndex}`}
                   className="cursor-pointer text-base font-normal"
                 >
-                  <Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>
                     {replacePlaceholders(option.label, variables, computedVariables)}
                   </Markdown>
                 </Label>
