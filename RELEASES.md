@@ -1,18 +1,8 @@
 # Release Notes
 
-## Version 0.3.4
+## Version 0.4.0
 
-Released April 2026
-
-### Bug Fixes
-
-- **Breakdown option variables recognized in SHOW_IF**: Variables defined on breakdown question options (via `- VARIABLE:`) are now correctly recognized during validation, so referencing them in `SHOW_IF` conditions no longer produces a false "undefined variable" error
-
----
-
-## Version 0.3.3
-
-Released April 2026
+Released May 2026
 
 ### New Features
 
@@ -26,19 +16,21 @@ Released April 2026
 
 - **String literal COMPUTE values**: Assign a fixed string to a computed variable with `COMPUTE: category = "high"`
 
----
-
-## Version 0.3.2
-
-Released April 2026
-
-### New Features
-
 - **Single-line breaks in text**: Single newlines in text content now render as line breaks, making it possible to place text on new lines without creating a new paragraph
 
 ### Improvements
 
 - **Package updates**: Updated all dependencies to their latest versions
+
+### Bug Fixes
+
+- **Breakdown option variables recognized in SHOW_IF**: Variables defined on breakdown question options (via `- VARIABLE:`) are now correctly recognized during validation, so referencing them in `SHOW_IF` conditions no longer produces a false "undefined variable" error
+
+### Removed
+
+- **Static survey pages**: Removed all hardcoded survey routes (e.g. `/r1-groothandel`, `/r8-bouw`) along with their API routes and source files — these were added to share URLs that immediately loaded a specific survey, but are no longer needed
+
+---
 
 ## Version 0.3.1
 
