@@ -19,7 +19,11 @@ export default function ComputedPage() {
             Use <code>COMPUTE: variable = expression</code> to calculate a
             variable
           </li>
-          <li>Can be placed at block-level or page-level</li>
+          <li>
+            Place at block-level for variables visible across the entire survey
+            (all blocks share one namespace), or at page-level for variables
+            scoped to a single page
+          </li>
           <li>Supports arithmetic expressions, conditions, and conditional string values</li>
           <li>Evaluated dynamically as user answers questions</li>
         </ul>

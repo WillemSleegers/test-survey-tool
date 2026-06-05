@@ -154,6 +154,44 @@ export function validateConditionReferences(blocks: Block[]): void {
 }
 
 /**
+ * Validates that block-level computed variable names are unique across blocks.
+ * Block-level computeds share a single global namespace, so the same name
+ * defined in two different blocks would silently overwrite. Multiple COMPUTE
+ * statements for the same name within a single block are allowed (the
+ * default-then-override pattern).
+ *
+ * @param blocks - All parsed blocks to validate
+ */
+export function validateBlockComputedNameUniqueness(blocks: Block[]): void {
+  const definingBlocks = new Map<string, string[]>()
+
+  for (const block of blocks) {
+    const namesInThisBlock = new Set<string>()
+    for (const computedVar of block.computedVariables) {
+      namesInThisBlock.add(computedVar.name)
+    }
+    for (const name of namesInThisBlock) {
+      const existing = definingBlocks.get(name) ?? []
+      existing.push(block.name || '(unnamed block)')
+      definingBlocks.set(name, existing)
+    }
+  }
+
+  const collisions: string[] = []
+  for (const [name, blockNames] of definingBlocks) {
+    if (blockNames.length > 1) {
+      collisions.push(`"${name}" defined in: ${blockNames.join(', ')}`)
+    }
+  }
+
+  if (collisions.length > 0) {
+    throw new Error(
+      `Block-level computed variable names must be unique across blocks. Collisions:\n${collisions.join('\n')}`
+    )
+  }
+}
+
+/**
  * Validates that all variable references in computed variables exist
  *
  * @param blocks - All parsed blocks to validate

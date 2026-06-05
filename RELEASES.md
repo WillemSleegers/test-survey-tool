@@ -1,5 +1,18 @@
 # Release Notes
 
+## Version 0.5.0
+
+Released May 2026
+
+### Changes
+
+- **Block-level computed variables are now global**: A `COMPUTE:` defined at block level is visible everywhere in the survey, not just within its own block
+  - Block-level computeds can reference each other across blocks (resolved by dependency order)
+  - A `SHOW_IF:` on any block, page, section, or question can now reference a computed defined in any other block
+  - Page-level computeds remain page-scoped, seeded with the global block-level set
+  - Names must be unique across blocks — defining the same compute name in two different blocks is now a validation error
+  - Multiple `COMPUTE:` statements for the same name within a single block are still allowed (the default-then-override pattern)
+
 ## Version 0.4.0
 
 Released May 2026

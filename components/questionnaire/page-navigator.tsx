@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
-import { evaluateComputedValues } from "@/lib/conditions/computed-variables"
 import { Block, Page, Variables, ComputedValues } from "@/lib/types"
 
 interface PageNavigatorProps {
@@ -18,10 +17,8 @@ interface PageNavigatorProps {
   currentVisiblePageIndex: number
   /** Current user variables */
   variables: Variables
-  /** Current block's computed variables */
-  currentBlockComputedVars: ComputedValues
-  /** Current page's computed variables (page-level only) */
-  currentPageComputedVars: ComputedValues
+  /** Computed variables visible on the current page (global block-level + current page) */
+  currentComputedVars: ComputedValues
   /** Function to jump to a specific page */
   onJumpToPage: (pageIndex: number) => void
   /** Function to reset back to upload page */
@@ -44,8 +41,7 @@ export function PageNavigator({
   visiblePages,
   currentVisiblePageIndex,
   variables,
-  currentBlockComputedVars,
-  currentPageComputedVars,
+  currentComputedVars,
   onJumpToPage,
   onResetToUpload,
 }: PageNavigatorProps) {
@@ -80,17 +76,7 @@ export function PageNavigator({
   // Helper function to check if a block is visible
   const isBlockVisible = (block: Block): boolean => {
     if (!block.showIf) return true
-
-    // Create a mock page with block's computed variables to evaluate block visibility
-    const mockPage: Page = {
-      id: 0,
-      title: "",
-      sections: [],
-      computedVariables: block.computedVariables,
-    }
-    const blockComputedVars = evaluateComputedValues(mockPage, variables)
-
-    return evaluateCondition(block.showIf, variables, blockComputedVars)
+    return evaluateCondition(block.showIf, variables, currentComputedVars)
   }
 
   // Toggle block expansion
@@ -323,38 +309,12 @@ export function PageNavigator({
             )}
 
             {/* Computed Variables */}
-            {(Object.keys(currentBlockComputedVars).length > 0 ||
-              Object.keys(currentPageComputedVars).length > 0) && (
+            {Object.keys(currentComputedVars).length > 0 && (
               <div>
                 <h3 className="text-sm font-medium mb-3">Computed Variables</h3>
-
-                {/* Block-level variables */}
-                {Object.keys(currentBlockComputedVars).length > 0 && (
-                  <div className="mb-3">
-                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">
-                      Current Block
-                    </h4>
-                    <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                      <pre>
-                        {JSON.stringify(currentBlockComputedVars, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-
-                {/* Page-level variables */}
-                {Object.keys(currentPageComputedVars).length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-medium mb-2 text-muted-foreground">
-                      Current Page
-                    </h4>
-                    <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                      <pre>
-                        {JSON.stringify(currentPageComputedVars, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
+                <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
+                  <pre>{JSON.stringify(currentComputedVars, null, 2)}</pre>
+                </div>
               </div>
             )}
 

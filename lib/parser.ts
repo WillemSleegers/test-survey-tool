@@ -20,6 +20,7 @@ import {
 } from "@/lib/types"
 import {
   validateVariableNames,
+  validateBlockComputedNameUniqueness,
   validateConditionReferences,
   validateComputedVariableReferences,
 } from "@/lib/validation"
@@ -1368,6 +1369,7 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
 
     // Run validation checks
     validateVariableNames(blocks)
+    validateBlockComputedNameUniqueness(blocks)
     validateConditionReferences(blocks)
     validateComputedVariableReferences(blocks)
 

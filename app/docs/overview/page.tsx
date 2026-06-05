@@ -77,7 +77,7 @@ ESSAY`)}
         </p>
         {renderCodeBlock(`BLOCK: Block Name              ← Groups pages (optional)
   SHOW_IF: condition             ← Conditional block visibility
-  COMPUTE: var = expression      ← Block-level computed variable
+  COMPUTE: var = expression      ← Computed variable (visible across all blocks)
 
   # Page Title                   ← Starts a new page
     NAVIGATION: 1                ← Adds to sidebar navigation

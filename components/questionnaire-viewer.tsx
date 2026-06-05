@@ -45,7 +45,7 @@ export function QuestionnaireViewer({
 
   // Initialize lazy computed variables system
   const {
-    getBlockComputedValues,
+    getGlobalComputedValues,
     getPageComputedValues,
     invalidateCache
   } = useLazyComputedValues(questionnaire, variables)
@@ -53,25 +53,22 @@ export function QuestionnaireViewer({
   // Filter blocks by visibility, then flatten to pages
   const visibleBlockPages = useMemo(() => {
     const visiblePages: Page[] = []
+    const globalComputedVars = getGlobalComputedValues()
 
     questionnaire.forEach(block => {
-      // Get block-level computed variables (lazy evaluation)
-      const currentBlockComputedVars = getBlockComputedValues(block)
-
       const blockVisible = evaluateCondition(
         block.showIf || "",
         variables,
-        currentBlockComputedVars
+        globalComputedVars
       )
 
       if (blockVisible) {
-        // If block is visible, add all its pages
         visiblePages.push(...block.pages)
       }
     })
 
     return visiblePages
-  }, [questionnaire, variables, getBlockComputedValues])
+  }, [questionnaire, variables, getGlobalComputedValues])
   
   // Invalidate computed variable cache when variables change
   useEffect(() => {
@@ -110,32 +107,12 @@ export function QuestionnaireViewer({
   const currentPage = visiblePages[currentVisiblePageIndex]
   const pageContent = currentPage ? getVisiblePageContent(currentPage) : null
   
-  // Get current block and page computed variables using lazy evaluation
-  const currentBlockComputedVars: ComputedValues = useMemo(() => {
-    if (!currentPage) return {}
-    
-    // Find which block contains the current page
-    const containingBlock = questionnaire.find(block => block.pages.includes(currentPage))
-    return containingBlock ? getBlockComputedValues(containingBlock) : {}
-  }, [currentPage, questionnaire, getBlockComputedValues])
-  
-  // Get page-level computed variables
-  const currentPageComputedVars: ComputedValues = useMemo(() => {
-    if (!currentPage) return {}
-    
-    // Get all computed variables for this page (includes block-level variables)
-    const allPageVars = getPageComputedValues(currentPage)
-    
-    // Extract only the page-level ones
-    const pageOnlyVars: ComputedValues = {}
-    currentPage.computedVariables.forEach(computedVar => {
-      if (computedVar.name in allPageVars) {
-        pageOnlyVars[computedVar.name] = allPageVars[computedVar.name]
-      }
-    })
-    
-    return pageOnlyVars
-  }, [currentPage, getPageComputedValues])
+  // All computed variables visible on the current page: global block-level set
+  // merged with the current page's own computeds.
+  const currentComputedVars: ComputedValues = useMemo(() => {
+    if (!currentPage) return getGlobalComputedValues()
+    return getPageComputedValues(currentPage)
+  }, [currentPage, getPageComputedValues, getGlobalComputedValues])
   
   // Check completion status
   const allQuestionsAnswered = usePageCompletion(pageContent, variables)
@@ -185,7 +162,7 @@ export function QuestionnaireViewer({
             <PageHeader
               page={currentPage}
               variables={variables}
-              computedVariables={currentPageComputedVars}
+              computedVariables={currentComputedVars}
             />
 
             <PageContent
@@ -193,7 +170,7 @@ export function QuestionnaireViewer({
               responses={responses}
               variables={variables}
               onResponse={handleResponse}
-              computedVariables={{ ...currentBlockComputedVars, ...currentPageComputedVars }}
+              computedVariables={currentComputedVars}
             />
 
             <NavigationButtons
@@ -227,8 +204,7 @@ export function QuestionnaireViewer({
           visiblePages={visiblePages}
           currentVisiblePageIndex={currentVisiblePageIndex}
           variables={variables}
-          currentBlockComputedVars={currentBlockComputedVars}
-          currentPageComputedVars={currentPageComputedVars}
+          currentComputedVars={currentComputedVars}
           onJumpToPage={jumpToPage}
           onResetToUpload={onResetToUpload}
         />
