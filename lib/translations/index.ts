@@ -7,15 +7,6 @@ export const translations = {
 } as const
 
 export type Language = keyof typeof translations
-export type TranslationKey = keyof typeof en
-
-// Type-safe function to get nested translation values
-export function getTranslation(
-  language: Language,
-  key: keyof typeof en
-): Record<string, unknown> {
-  return translations[language][key]
-}
 
 // Helper function to get a specific nested translation
 export function t(language: Language, path: string): string {

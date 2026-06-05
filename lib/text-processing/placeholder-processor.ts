@@ -9,7 +9,7 @@ import { evaluateCondition } from "../conditions/condition-evaluator"
  * @param startIndex - Index of the opening {{ 
  * @returns Index of the matching }} or -1 if not found
  */
-export function findMatchingBraces(text: string, startIndex: number): number {
+function findMatchingBraces(text: string, startIndex: number): number {
   let depth = 0
   for (let i = startIndex; i < text.length - 1; i++) {
     if (text.slice(i, i + 2) === "{{") {
@@ -40,7 +40,7 @@ export function findMatchingBraces(text: string, startIndex: number): number {
  * parseConditionalContent("IF x THEN {{IF y THEN nested}} ELSE other")
  * // Returns: { condition: "x", trueText: "{{IF y THEN nested}}", falseText: "other" }
  */
-export function parseConditionalContent(content: string): ConditionalPlaceholder | null {
+function parseConditionalContent(content: string): ConditionalPlaceholder | null {
   const trimmed = content.trim()
   
   // Must start with IF (case insensitive)

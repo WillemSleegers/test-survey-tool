@@ -1,9 +1,5 @@
 import { Variables } from "@/lib/types"
-
-/**
- * Represents a response value that can be converted to numeric
- */
-export type ResponseValue = string | string[] | boolean | number | undefined | null | Record<string, string | string[]>
+import type { ResponseValue } from "./value-comparators"
 
 /**
  * Converts any response value to a numeric representation

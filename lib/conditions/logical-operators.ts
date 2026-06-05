@@ -22,7 +22,7 @@ export function hasNotOperator(condition: string): boolean {
  * @param condition - The condition string with NOT
  * @returns The condition without the NOT operator
  */
-export function removeNotOperator(condition: string): string {
+function removeNotOperator(condition: string): string {
   return condition.trim().substring(4).trim()
 }
 
@@ -42,7 +42,7 @@ export function hasOrOperator(condition: string): boolean {
  * @param condition - The condition string to split
  * @returns Array of condition parts
  */
-export function splitOnOr(condition: string): string[] {
+function splitOnOr(condition: string): string[] {
   if (condition.toUpperCase().includes(" OR ")) {
     return condition.split(/\s+OR\s+/i)
   }
@@ -65,7 +65,7 @@ export function hasAndOperator(condition: string): boolean {
  * @param condition - The condition string to split
  * @returns Array of condition parts
  */
-export function splitOnAnd(condition: string): string[] {
+function splitOnAnd(condition: string): string[] {
   if (condition.toUpperCase().includes(" AND ")) {
     return condition.split(/\s+AND\s+/i)
   }

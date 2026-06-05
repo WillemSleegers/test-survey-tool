@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
-export type NavigationPosition = 'left' | 'right'
+type NavigationPosition = 'left' | 'right'
 
 interface NavigationContextType {
   isVisible: boolean
