@@ -201,6 +201,7 @@ export function QuestionnaireViewer({
         <PageNavigator
           questionnaire={questionnaire}
           allPages={allPages}
+          visibleBlockPages={visibleBlockPages}
           visiblePages={visiblePages}
           currentVisiblePageIndex={currentVisiblePageIndex}
           variables={variables}

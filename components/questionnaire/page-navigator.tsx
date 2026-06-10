@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { Block, Page, Variables, ComputedValues } from "@/lib/types"
 
 interface PageNavigatorProps {
@@ -11,6 +10,8 @@ interface PageNavigatorProps {
   questionnaire: Block[]
   /** All pages flattened from blocks */
   allPages: Page[]
+  /** Pages from blocks that passed block-level visibility (before page-level filtering) */
+  visibleBlockPages: Page[]
   /** Currently visible pages */
   visiblePages: Page[]
   /** Current visible page index */
@@ -38,6 +39,7 @@ interface PageNavigatorProps {
 export function PageNavigator({
   questionnaire,
   allPages,
+  visibleBlockPages,
   visiblePages,
   currentVisiblePageIndex,
   variables,
@@ -73,11 +75,8 @@ export function PageNavigator({
     }
   }, [currentVisiblePageIndex, visiblePages, questionnaire])
 
-  // Helper function to check if a block is visible
-  const isBlockVisible = (block: Block): boolean => {
-    if (!block.showIf) return true
-    return evaluateCondition(block.showIf, variables, currentComputedVars)
-  }
+  const isBlockVisible = (block: Block): boolean =>
+    block.pages.some(p => visibleBlockPages.includes(p))
 
   // Toggle block expansion
   const toggleBlockExpansion = (blockIndex: number) => {
