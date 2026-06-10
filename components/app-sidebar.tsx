@@ -76,7 +76,7 @@ export function AppSidebar() {
   return (
     <div className="w-64 shrink-0">
       <div className="sticky top-6">
-        <Card className="py-3 shadow-xs">
+        <Card className="py-3 shadow-xs overflow-y-auto max-h-[calc(100vh-3rem)]">
           <CardContent className="px-4 py-0">
             <Link
               href="/docs/overview"
