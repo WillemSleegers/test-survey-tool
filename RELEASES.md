@@ -13,6 +13,10 @@ Released May 2026
   - Names must be unique across blocks — defining the same compute name in two different blocks is now a validation error
   - Multiple `COMPUTE:` statements for the same name within a single block are still allowed (the default-then-override pattern)
 
+- **Fixed documentation sidebar scrolling**: The sidebar now scrolls independently on long pages instead of overflowing the viewport
+
+- **Updated dependencies**: Bumped all packages to latest versions; added a postcss override to resolve a XSS vulnerability (GHSA-qx2v-qp2m-jg93)
+
 ## Version 0.4.0
 
 Released May 2026
