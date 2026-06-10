@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx fallow *)",
-      "Bash(npm audit *)"
+      "Bash(npm audit *)",
+      "Bash(npm test *)"
     ]
   }
 }
