@@ -1,22 +1,8 @@
 # Release Notes
 
-## Version 0.5.1
-
-Released June 2026
-
-### Bug Fixes
-
-- **Fixed page navigator block visibility**: The page navigator was re-evaluating block `SHOW_IF` conditions using the current page's computed variables instead of the global computed variables, which could cause it to show a different visibility state than the actual survey navigation. The navigator now derives block visibility directly from the viewer's own computation.
-
-### Internal
-
-- Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
-
----
-
 ## Version 0.5.0
 
-Released May 2026
+Released June 2026
 
 ### Changes
 
@@ -30,6 +16,14 @@ Released May 2026
 - **Fixed documentation sidebar scrolling**: The sidebar now scrolls independently on long pages instead of overflowing the viewport
 
 - **Updated dependencies**: Bumped all packages to latest versions; added a postcss override to resolve a XSS vulnerability (GHSA-qx2v-qp2m-jg93)
+
+### Bug Fixes
+
+- **Fixed page navigator block visibility**: The page navigator was re-evaluating block `SHOW_IF` conditions using the current page's computed variables instead of the global computed variables, which could cause it to show a different visibility state than the actual survey navigation. The navigator now derives block visibility directly from the viewer's own computation.
+
+### Internal
+
+- Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
 
 ## Version 0.4.0
 
