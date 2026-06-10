@@ -487,45 +487,71 @@ const generateRangeOptions = (rangeStr: string): Option[] => {
   return options
 }
 
+type MultiLineState = {
+  collectingHint: boolean
+  collectingTooltip: boolean
+  hintBuffer: string[]
+  tooltipBuffer: string[]
+}
+
+const handleMultiLineContent = (
+  trimmed: string,
+  currentOption: Partial<{ hint?: string; tooltip?: string }> | null,
+  state: MultiLineState
+): boolean => {
+  if (!state.collectingHint && !state.collectingTooltip) return false
+  if (trimmed === '"""') {
+    if (state.collectingHint && currentOption) {
+      currentOption.hint = state.hintBuffer.join('\n')
+      state.collectingHint = false
+    }
+    if (state.collectingTooltip && currentOption) {
+      currentOption.tooltip = state.tooltipBuffer.join('\n')
+      state.collectingTooltip = false
+    }
+  } else {
+    if (state.collectingHint) state.hintBuffer.push(trimmed)
+    if (state.collectingTooltip) state.tooltipBuffer.push(trimmed)
+  }
+  return true
+}
+
+const applyHintOrTooltip = (
+  content: string,
+  currentOption: Partial<{ hint?: string; tooltip?: string }>,
+  state: MultiLineState
+): void => {
+  if (startsWith(content, "HINT:")) {
+    const value = extractAfterKeyword(content, "HINT:")
+    if (value === '"""' || !value) {
+      state.collectingHint = true
+      state.hintBuffer = []
+    } else {
+      currentOption.hint = value
+    }
+  } else if (startsWith(content, "TOOLTIP:")) {
+    const value = extractAfterKeyword(content, "TOOLTIP:")
+    if (value === '"""' || !value) {
+      state.collectingTooltip = true
+      state.tooltipBuffer = []
+    } else {
+      currentOption.tooltip = value
+    }
+  }
+}
+
 /**
  * Parse options for multiple choice and checkbox questions
  */
 const parseOptions = (lines: string[]): Option[] => {
   const options: Option[] = []
   let currentOption: Partial<Option> | null = null
-  let collectingHint = false
-  let collectingTooltip = false
-  let hintBuffer: string[] = []
-  let tooltipBuffer: string[] = []
+  const state: MultiLineState = { collectingHint: false, collectingTooltip: false, hintBuffer: [], tooltipBuffer: [] }
 
   for (const line of lines) {
-
     const trimmed = line.trim()
 
-    // Handle delimited content collection (must be before other checks)
-    if (collectingHint || collectingTooltip) {
-      if (trimmed === '"""') {
-        // End delimiter
-        if (collectingHint && currentOption) {
-          currentOption.hint = hintBuffer.join('\n')
-          collectingHint = false
-        }
-        if (collectingTooltip && currentOption) {
-          currentOption.tooltip = tooltipBuffer.join('\n')
-          collectingTooltip = false
-        }
-        continue
-      } else {
-        // Collecting multi-line content
-        if (collectingHint) {
-          hintBuffer.push(trimmed)
-        }
-        if (collectingTooltip) {
-          tooltipBuffer.push(trimmed)
-        }
-        continue
-      }
-    }
+    if (handleMultiLineContent(trimmed, currentOption, state)) continue
 
     // Check for RANGE keyword
     if (startsWith(trimmed, "RANGE:")) {
@@ -575,28 +601,8 @@ const parseOptions = (lines: string[]): Option[] => {
           currentOption.allowsOtherText = true
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
-        } else if (startsWith(content, "HINT:")) {
-          const hintValue = extractAfterKeyword(content, "HINT:")
-          if (hintValue === '"""') {
-            collectingHint = true
-            hintBuffer = []
-          } else if (hintValue) {
-            currentOption.hint = hintValue
-          } else {
-            collectingHint = true
-            hintBuffer = []
-          }
-        } else if (startsWith(content, "TOOLTIP:")) {
-          const tooltipValue = extractAfterKeyword(content, "TOOLTIP:")
-          if (tooltipValue === '"""') {
-            collectingTooltip = true
-            tooltipBuffer = []
-          } else if (tooltipValue) {
-            currentOption.tooltip = tooltipValue
-          } else {
-            collectingTooltip = true
-            tooltipBuffer = []
-          }
+        } else {
+          applyHintOrTooltip(content, currentOption, state)
         }
       } else {
         // This is a new option
@@ -610,10 +616,10 @@ const parseOptions = (lines: string[]): Option[] => {
         }
 
         currentOption = { label: content }
-        collectingHint = false
-        collectingTooltip = false
-        hintBuffer = []
-        tooltipBuffer = []
+        state.collectingHint = false
+        state.collectingTooltip = false
+        state.hintBuffer = []
+        state.tooltipBuffer = []
       }
     }
   }
@@ -737,39 +743,12 @@ const parseMatrixQuestion = (lines: string[], questionCounter: { count: number }
 const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
   const options: BreakdownOption[] = []
   let currentOption: Partial<BreakdownOption> | null = null
-  let collectingHint = false
-  let collectingTooltip = false
-  let hintBuffer: string[] = []
-  let tooltipBuffer: string[] = []
+  const state: MultiLineState = { collectingHint: false, collectingTooltip: false, hintBuffer: [], tooltipBuffer: [] }
 
   for (const line of lines) {
-
     const trimmed = line.trim()
 
-    // Handle delimited content collection (must be before other checks)
-    if (collectingHint || collectingTooltip) {
-      if (trimmed === '"""') {
-        // End delimiter
-        if (collectingHint && currentOption) {
-          currentOption.hint = hintBuffer.join('\n')
-          collectingHint = false
-        }
-        if (collectingTooltip && currentOption) {
-          currentOption.tooltip = tooltipBuffer.join('\n')
-          collectingTooltip = false
-        }
-        continue
-      } else {
-        // Collecting multi-line content
-        if (collectingHint) {
-          hintBuffer.push(trimmed)
-        }
-        if (collectingTooltip) {
-          tooltipBuffer.push(trimmed)
-        }
-        continue
-      }
-    }
+    if (handleMultiLineContent(trimmed, currentOption, state)) continue
 
     // Check for special option types
     if (matches(trimmed, /^-\s+HEADER:/)) {
@@ -842,28 +821,8 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
         } else if (startsWith(content, "CUSTOM:")) {
           currentOption.custom = extractAfterKeyword(content, "CUSTOM:")
-        } else if (startsWith(content, "HINT:")) {
-          const hintValue = extractAfterKeyword(content, "HINT:")
-          if (hintValue === '"""') {
-            collectingHint = true
-            hintBuffer = []
-          } else if (hintValue) {
-            currentOption.hint = hintValue
-          } else {
-            collectingHint = true
-            hintBuffer = []
-          }
-        } else if (startsWith(content, "TOOLTIP:")) {
-          const tooltipValue = extractAfterKeyword(content, "TOOLTIP:")
-          if (tooltipValue === '"""') {
-            collectingTooltip = true
-            tooltipBuffer = []
-          } else if (tooltipValue) {
-            currentOption.tooltip = tooltipValue
-          } else {
-            collectingTooltip = true
-            tooltipBuffer = []
-          }
+        } else {
+          applyHintOrTooltip(content, currentOption, state)
         }
       } else {
         // This is a new regular option

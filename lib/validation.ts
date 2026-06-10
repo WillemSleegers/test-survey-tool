@@ -1,11 +1,34 @@
-import { Block, Page, NavItem, isQuestion } from "@/lib/types"
+import { Block, Page, Section, NavItem, isQuestion } from "@/lib/types"
 import { normalizeOperators } from "@/lib/conditions/condition-parser"
 
-/**
- * Collects all pages from blocks
- */
 function getAllPages(blocks: Block[]): Page[] {
   return blocks.flatMap(block => block.pages)
+}
+
+function addSectionVariables(sections: Section[], definedVariables: Set<string>): void {
+  for (const section of sections) {
+    for (const item of section.items) {
+      if (isQuestion(item)) {
+        if (item.variable) {
+          definedVariables.add(item.variable)
+        }
+        if (item.type === 'matrix' && item.subquestions) {
+          for (const subquestion of item.subquestions) {
+            if (subquestion.variable) {
+              definedVariables.add(subquestion.variable)
+            }
+          }
+        }
+        if (item.type === 'breakdown') {
+          for (const option of item.options) {
+            if (option.variable) {
+              definedVariables.add(option.variable)
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -59,37 +82,10 @@ export function validateConditionReferences(blocks: Block[]): void {
 
   // Collect variables from all pages
   for (const page of allPages) {
-    // Add page-level computed variables
     for (const computedVar of page.computedVariables) {
       definedVariables.add(computedVar.name)
     }
-
-    // Add section question variables
-    for (const section of page.sections) {
-      for (const item of section.items) {
-        if (isQuestion(item)) {
-          if (item.variable) {
-            definedVariables.add(item.variable)
-          }
-          // Add subquestion variables (only for matrix questions)
-          if (item.type === 'matrix' && item.subquestions) {
-            for (const subquestion of item.subquestions) {
-              if (subquestion.variable) {
-                definedVariables.add(subquestion.variable)
-              }
-            }
-          }
-          // Add option-level variables (only for breakdown questions)
-          if (item.type === 'breakdown') {
-            for (const option of item.options) {
-              if (option.variable) {
-                definedVariables.add(option.variable)
-              }
-            }
-          }
-        }
-      }
-    }
+    addSectionVariables(page.sections, definedVariables)
   }
 
   // Add block-level computed variables
@@ -201,35 +197,8 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
   const definedVariables = new Set<string>()
   const allPages = getAllPages(blocks)
 
-  // Add section question variables first
   for (const page of allPages) {
-    for (const section of page.sections) {
-      for (const item of section.items) {
-        if (isQuestion(item)) {
-          if (item.variable) {
-            definedVariables.add(item.variable)
-          }
-          // Add subquestion variables (only for matrix questions)
-          if (item.type === 'matrix' && item.subquestions) {
-            for (const subquestion of item.subquestions) {
-              if (subquestion.variable) {
-                definedVariables.add(subquestion.variable)
-              }
-            }
-          }
-          // Add option-level variables (only for breakdown questions)
-          if (item.type === 'breakdown') {
-            for (const option of item.options) {
-              if (option.variable) {
-                definedVariables.add(option.variable)
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Then add page-level computed variables
+    addSectionVariables(page.sections, definedVariables)
     for (const computedVar of page.computedVariables) {
       definedVariables.add(computedVar.name)
     }
