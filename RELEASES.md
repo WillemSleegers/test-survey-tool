@@ -1,5 +1,19 @@
 # Release Notes
 
+## Version 0.5.1
+
+Released June 2026
+
+### Bug Fixes
+
+- **Fixed page navigator block visibility**: The page navigator was re-evaluating block `SHOW_IF` conditions using the current page's computed variables instead of the global computed variables, which could cause it to show a different visibility state than the actual survey navigation. The navigator now derives block visibility directly from the viewer's own computation.
+
+### Internal
+
+- Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
+
+---
+
 ## Version 0.5.0
 
 Released May 2026
