@@ -1,9 +1,10 @@
 import { useState } from "react"
 import Markdown from "react-markdown"
 import { remarkPlugins } from "@/lib/markdown-components"
-import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { RevealButton } from "@/components/shared/reveal-button"
+import { TooltipButton } from "@/components/shared/tooltip-button"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
@@ -23,39 +24,41 @@ interface BreakdownQuestionProps {
 interface OptionLabelContentProps {
   label: string
   hint?: string
+  reveal?: string
   tooltip?: string
   optionValue: string
-  isTooltipVisible: boolean
-  onToggleTooltip: (value: string) => void
+  isRevealVisible: boolean
+  onToggleReveal: (value: string) => void
   variables: Variables
   computedVariables?: ComputedValues
 }
 
-function OptionLabelContent({ label, hint, tooltip, optionValue, isTooltipVisible, onToggleTooltip, variables, computedVariables }: OptionLabelContentProps) {
+function OptionLabelContent({ label, hint, reveal, tooltip, optionValue, isRevealVisible, onToggleReveal, variables, computedVariables }: OptionLabelContentProps) {
   return (
     <div className="relative">
-      {tooltip && (
-        <button
-          type="button"
-          onClick={() => onToggleTooltip(optionValue)}
-          className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-          aria-label="Toggle additional information"
-        >
-          <Info className="w-5 h-5 text-muted-foreground" />
-        </button>
+      {reveal && (
+        <RevealButton
+          onClick={() => onToggleReveal(optionValue)}
+          className="absolute -left-8 top-0"
+        />
       )}
       <div>
         <div className="text-base">
-          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(label, variables, computedVariables)}</Markdown>
+          <span className="[&_p]:inline">
+            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(label, variables, computedVariables)}</Markdown>
+          </span>
+          {tooltip && (
+            <TooltipButton content={replacePlaceholders(tooltip, variables, computedVariables)} />
+          )}
         </div>
         {hint && (
           <div className="text-base text-muted-foreground mt-0.5 font-normal">
             <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(hint, variables, computedVariables)}</Markdown>
           </div>
         )}
-        {tooltip && isTooltipVisible && (
+        {reveal && isRevealVisible && (
           <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(tooltip, variables, computedVariables)}</Markdown>
+            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(reveal, variables, computedVariables)}</Markdown>
           </div>
         )}
       </div>
@@ -164,10 +167,10 @@ export function BreakdownQuestion({
     })
   }
 
-  const [visibleTooltips, setVisibleTooltips] = useState<Set<string>>(new Set())
+  const [visibleReveals, setVisibleReveals] = useState<Set<string>>(new Set())
 
-  const toggleTooltip = (optionValue: string) => {
-    setVisibleTooltips(prev => {
+  const toggleReveal = (optionValue: string) => {
+    setVisibleReveals(prev => {
       const next = new Set(prev)
       if (next.has(optionValue)) {
         next.delete(optionValue)
@@ -236,10 +239,11 @@ export function BreakdownQuestion({
             <OptionLabelContent
               label={option.subtotalLabel}
               hint={option.hint}
+              reveal={option.reveal}
               tooltip={option.tooltip}
               optionValue={option.value}
-              isTooltipVisible={visibleTooltips.has(option.value)}
-              onToggleTooltip={toggleTooltip}
+              isRevealVisible={visibleReveals.has(option.value)}
+              onToggleReveal={toggleReveal}
               variables={variables}
               computedVariables={computedVariables}
             />
@@ -260,10 +264,11 @@ export function BreakdownQuestion({
           <OptionLabelContent
             label={option.label}
             hint={option.hint}
+            reveal={option.reveal}
             tooltip={option.tooltip}
             optionValue={option.value}
-            isTooltipVisible={visibleTooltips.has(option.value)}
-            onToggleTooltip={toggleTooltip}
+            isRevealVisible={visibleReveals.has(option.value)}
+            onToggleReveal={toggleReveal}
             variables={variables}
             computedVariables={computedVariables}
           />
@@ -323,10 +328,11 @@ export function BreakdownQuestion({
                       <OptionLabelContent
                         label={option.subtotalLabel}
                         hint={option.hint}
+                        reveal={option.reveal}
                         tooltip={option.tooltip}
                         optionValue={option.value}
-                        isTooltipVisible={visibleTooltips.has(option.value)}
-                        onToggleTooltip={toggleTooltip}
+                        isRevealVisible={visibleReveals.has(option.value)}
+                        onToggleReveal={toggleReveal}
                         variables={variables}
                         computedVariables={computedVariables}
                       />
@@ -350,10 +356,11 @@ export function BreakdownQuestion({
                     <OptionLabelContent
                       label={option.label}
                       hint={option.hint}
+                      reveal={option.reveal}
                       tooltip={option.tooltip}
                       optionValue={option.value}
-                      isTooltipVisible={visibleTooltips.has(option.value)}
-                      onToggleTooltip={toggleTooltip}
+                      isRevealVisible={visibleReveals.has(option.value)}
+                      onToggleReveal={toggleReveal}
                       variables={variables}
                       computedVariables={computedVariables}
                     />

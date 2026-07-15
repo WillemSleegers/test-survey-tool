@@ -25,8 +25,12 @@ export default function SectionsPage() {
           </li>
           <li>Section content supports Markdown formatting</li>
           <li>
-            Add <code>TOOLTIP:</code> to attach collapsible information to a
-            section heading
+            Add <code>REVEAL:</code> to attach collapsible information to a
+            section heading, shown inline when clicked
+          </li>
+          <li>
+            Add <code>TOOLTIP:</code> to attach information shown in a
+            popover when clicked
           </li>
           <li>
             Add <code>SHOW_IF:</code> to conditionally show or hide an entire
@@ -40,7 +44,7 @@ export default function SectionsPage() {
         {renderExample(`# **Employee Survey**
 
 ## **Work Environment**
-TOOLTIP: Work environment covers your physical workspace, equipment, office facilities, and day-to-day working conditions.
+REVEAL: Work environment covers your physical workspace, equipment, office facilities, and day-to-day working conditions.
 
 Please rate the following aspects of your work environment.
 

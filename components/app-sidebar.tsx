@@ -49,7 +49,8 @@ const navMain = [
     title: "Customization",
     items: [
       { title: "Hints", section: "hints" },
-      { title: "Tooltips", section: "tooltips" },
+      { title: "Reveal", section: "reveal" },
+      { title: "Tooltip", section: "tooltip" },
       { title: "Markdown", section: "markdown" },
     ],
   },

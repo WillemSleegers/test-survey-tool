@@ -1,9 +1,10 @@
 import React, { useState } from "react"
 import Markdown from "react-markdown"
 import { remarkPlugins } from "@/lib/markdown-components"
-import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Page, Variables, ComputedValues } from "@/lib/types"
+import { RevealButton } from "@/components/shared/reveal-button"
+import { TooltipButton } from "@/components/shared/tooltip-button"
 
 interface PageHeaderProps {
   /** The page to render header for */
@@ -27,7 +28,7 @@ interface PageHeaderProps {
  * <PageHeader page={currentPage} variables={variables} />
  */
 export function PageHeader({ page, variables, computedVariables }: PageHeaderProps) {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+  const [isRevealVisible, setIsRevealVisible] = useState(false)
 
   const processedTitle = page.title.trim()
     ? replacePlaceholders(page.title, variables, computedVariables).trim()
@@ -36,6 +37,10 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
   // Don't render anything if title is empty
   if (!processedTitle) return null
 
+  const processedReveal = page.reveal
+    ? replacePlaceholders(page.reveal, variables, computedVariables)
+    : null
+
   const processedTooltip = page.tooltip
     ? replacePlaceholders(page.tooltip, variables, computedVariables)
     : null
@@ -43,23 +48,23 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
   return (
     <div className="mb-6 space-y-2">
       <div className="relative">
-        {processedTooltip && (
-          <button
-            type="button"
-            onClick={() => setIsTooltipVisible(!isTooltipVisible)}
-            className="absolute left-0 top-0 p-1 rounded-full hover:bg-muted transition-colors -translate-x-8"
-            aria-label="Toggle page information"
-          >
-            <Info className="w-5 h-5 text-muted-foreground" />
-          </button>
+        {processedReveal && (
+          <RevealButton
+            onClick={() => setIsRevealVisible(!isRevealVisible)}
+            className="absolute left-0 top-0 -translate-x-8"
+            ariaLabel="Toggle page information"
+          />
         )}
         <div>
-          <Markdown remarkPlugins={remarkPlugins}>{processedTitle}</Markdown>
+          <span className="[&_p]:inline">
+            <Markdown remarkPlugins={remarkPlugins}>{processedTitle}</Markdown>
+          </span>
+          {processedTooltip && <TooltipButton content={processedTooltip} />}
         </div>
       </div>
-      {processedTooltip && isTooltipVisible && (
+      {processedReveal && isRevealVisible && (
         <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
-          <Markdown remarkPlugins={remarkPlugins}>{processedTooltip}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins}>{processedReveal}</Markdown>
         </div>
       )}
     </div>

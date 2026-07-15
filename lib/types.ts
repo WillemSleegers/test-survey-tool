@@ -17,6 +17,7 @@ export type NavItem = {
 export type Page = {
   id: number
   title: string
+  reveal?: string
   tooltip?: string
   sections: Section[]
   showIf?: string
@@ -42,6 +43,7 @@ export function isQuestion(item: SectionItem): item is Question {
 export type Section = {
   id: number
   title?: string
+  reveal?: string
   tooltip?: string
   items: SectionItem[]
   showIf?: string
@@ -52,6 +54,7 @@ type QuestionBase = {
   id: string
   text: string
   subtext?: string
+  reveal?: string
   tooltip?: string
   variable?: string
   showIf?: string
@@ -92,6 +95,7 @@ export type BreakdownOption = {
   value: string
   label: string
   hint?: string
+  reveal?: string
   tooltip?: string
   showIf?: string
   subtract?: boolean
@@ -128,6 +132,7 @@ export type Subquestion = {
   id: string
   text: string
   subtext?: string
+  reveal?: string
   tooltip?: string
   variable?: string
   showIf?: string
@@ -138,6 +143,7 @@ export type Option = {
   value: string
   label: string
   hint?: string
+  reveal?: string
   tooltip?: string
   showIf?: string
   allowsOtherText?: boolean

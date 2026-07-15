@@ -24,7 +24,8 @@ export default function HintsPage() {
             <code>HINT: &quot;&quot;&quot;</code> ... <code>&quot;&quot;&quot;</code>
           </li>
           <li>
-            Also works with <code>TOOLTIP:</code> and <code>SHOW_IF:</code>
+            Also works with <code>REVEAL:</code>, <code>TOOLTIP:</code>, and{" "}
+            <code>SHOW_IF:</code>
           </li>
           <li>Supports Markdown formatting</li>
         </ul>

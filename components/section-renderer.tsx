@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState } from "react"
-import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
 import { Section, Responses, Variables, ComputedValues, isText, isQuestion } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
+import { RevealButton } from "@/components/shared/reveal-button"
+import { TooltipButton } from "@/components/shared/tooltip-button"
 
 interface SectionRendererProps {
   section: Section
@@ -26,7 +27,11 @@ export function SectionRenderer({
   startTabIndex,
   computedVariables,
 }: SectionRendererProps) {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+  const [isRevealVisible, setIsRevealVisible] = useState(false)
+
+  const processedReveal = section.reveal
+    ? replacePlaceholders(section.reveal, variables, computedVariables)
+    : null
 
   const processedTooltip = section.tooltip
     ? replacePlaceholders(section.tooltip, variables, computedVariables)
@@ -106,22 +111,22 @@ export function SectionRenderer({
       {/* Section Title */}
       {section.title && (
         <div className="relative">
-          {processedTooltip && (
-            <button
-              type="button"
-              onClick={() => setIsTooltipVisible(!isTooltipVisible)}
-              className="absolute left-0 top-0 p-1 rounded-full hover:bg-muted transition-colors -translate-x-8"
-              aria-label="Toggle section information"
-            >
-              <Info className="w-5 h-5 text-muted-foreground" />
-            </button>
+          {processedReveal && (
+            <RevealButton
+              onClick={() => setIsRevealVisible(!isRevealVisible)}
+              className="absolute left-0 top-0 -translate-x-8"
+              ariaLabel="Toggle section information"
+            />
           )}
           <div>
-            <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
+            <span className="[&_p]:inline">
+              <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
+            </span>
+            {processedTooltip && <TooltipButton content={processedTooltip} />}
           </div>
-          {processedTooltip && isTooltipVisible && (
+          {processedReveal && isRevealVisible && (
             <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
-              <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedTooltip}</Markdown>
+              <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedReveal}</Markdown>
             </div>
           )}
         </div>

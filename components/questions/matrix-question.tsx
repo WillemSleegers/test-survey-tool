@@ -1,9 +1,10 @@
 import { useState } from "react"
 import Markdown from "react-markdown"
 import { remarkPlugins } from "@/lib/markdown-components"
-import { Info } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { RevealButton } from "@/components/shared/reveal-button"
+import { TooltipButton } from "@/components/shared/tooltip-button"
 import {
   Table,
   TableBody,
@@ -70,11 +71,11 @@ export function MatrixQuestion({
   // startTabIndex is required by interface but currently unused - matrix questions use default tab behavior
   void startTabIndex
 
-  // Track which subquestion tooltips are visible
-  const [visibleTooltips, setVisibleTooltips] = useState<Set<string>>(new Set())
+  // Track which subquestion reveal panels are visible
+  const [visibleReveals, setVisibleReveals] = useState<Set<string>>(new Set())
 
-  const toggleTooltip = (subquestionId: string) => {
-    setVisibleTooltips((prev) => {
+  const toggleReveal = (subquestionId: string) => {
+    setVisibleReveals((prev) => {
       const next = new Set(prev)
       if (next.has(subquestionId)) {
         next.delete(subquestionId)
@@ -204,7 +205,7 @@ export function MatrixQuestion({
 
               const hasAdditionalContent =
                 !!subquestion.subtext ||
-                (!!subquestion.tooltip && visibleTooltips.has(subquestion.id))
+                (!!subquestion.reveal && visibleReveals.has(subquestion.id))
               const alignment = hasAdditionalContent
                 ? "align-top"
                 : "align-middle"
@@ -214,24 +215,28 @@ export function MatrixQuestion({
                   <TableCell className={`${alignment} whitespace-normal`}>
                     <div className="space-y-1">
                       <div className="flex items-start gap-1">
-                        {subquestion.tooltip && (
-                          <button
-                            type="button"
-                            onClick={() => toggleTooltip(subquestion.id)}
-                            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-                            aria-label="Toggle additional information"
-                          >
-                            <Info className="w-5 h-5 text-muted-foreground" />
-                          </button>
+                        {subquestion.reveal && (
+                          <RevealButton onClick={() => toggleReveal(subquestion.id)} />
                         )}
                         <div className="flex-1 text-base font-normal">
-                          <Markdown>
-                            {replacePlaceholders(
-                              subquestion.text,
-                              variables,
-                              computedVariables
-                            )}
-                          </Markdown>
+                          <span className="[&_p]:inline">
+                            <Markdown>
+                              {replacePlaceholders(
+                                subquestion.text,
+                                variables,
+                                computedVariables
+                              )}
+                            </Markdown>
+                          </span>
+                          {subquestion.tooltip && (
+                            <TooltipButton
+                              content={replacePlaceholders(
+                                subquestion.tooltip,
+                                variables,
+                                computedVariables
+                              )}
+                            />
+                          )}
                         </div>
                       </div>
                       {subquestion.subtext && (
@@ -245,12 +250,12 @@ export function MatrixQuestion({
                           </Markdown>
                         </div>
                       )}
-                      {subquestion.tooltip &&
-                        visibleTooltips.has(subquestion.id) && (
+                      {subquestion.reveal &&
+                        visibleReveals.has(subquestion.id) && (
                           <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">
                             <Markdown>
                               {replacePlaceholders(
-                                subquestion.tooltip,
+                                subquestion.reveal,
                                 variables,
                                 computedVariables
                               )}

@@ -1,16 +1,19 @@
 import { useState } from "react"
 import Markdown from "react-markdown"
-import { Info } from "lucide-react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Variables, ComputedValues } from "@/lib/types"
 import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
+import { RevealButton } from "@/components/shared/reveal-button"
+import { TooltipButton } from "@/components/shared/tooltip-button"
 
 interface QuestionHeaderProps {
   /** The main question text */
   text: string
   /** Optional additional description/hint text */
   subtext?: string
-  /** Optional tooltip text that is initially hidden */
+  /** Optional text that is revealed inline on click */
+  reveal?: string
+  /** Optional text shown in a popover on click */
   tooltip?: string
   /** User variables for placeholder replacement */
   variables: Variables
@@ -25,38 +28,39 @@ interface QuestionHeaderProps {
  * - Processes placeholders in both text and subtext
  * - Renders content as Markdown for formatting support
  * - Consistent styling across all question types
- * - Collapsible tooltip with info icon button
+ * - Collapsible reveal panel and popover tooltip, each with their own icon button
  *
  * @example
  * <QuestionHeader
  *   text="What is your age?"
  *   subtext="This helps us customize your experience"
- *   tooltip="Additional information shown on demand"
+ *   reveal="Additional information shown inline on demand"
+ *   tooltip="Additional information shown in a popover on demand"
  *   variables={variables}
  * />
  */
-export function QuestionHeader({ text, subtext, tooltip, variables, computedVariables }: QuestionHeaderProps) {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+export function QuestionHeader({ text, subtext, reveal, tooltip, variables, computedVariables }: QuestionHeaderProps) {
+  const [isRevealVisible, setIsRevealVisible] = useState(false)
 
   const processedText = replacePlaceholders(text, variables, computedVariables)
   const processedSubtext = subtext ? replacePlaceholders(subtext, variables, computedVariables) : undefined
+  const processedReveal = reveal ? replacePlaceholders(reveal, variables, computedVariables) : undefined
   const processedTooltip = tooltip ? replacePlaceholders(tooltip, variables, computedVariables) : undefined
 
   return (
     <div className="space-y-1">
       <div className="relative">
-        {processedTooltip && (
-          <button
-            type="button"
-            onClick={() => setIsTooltipVisible(!isTooltipVisible)}
-            className="absolute -left-8 top-0 shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
-            aria-label="Toggle additional information"
-          >
-            <Info className="w-5 h-5 text-muted-foreground" />
-          </button>
+        {processedReveal && (
+          <RevealButton
+            onClick={() => setIsRevealVisible(!isRevealVisible)}
+            className="absolute -left-8 top-0"
+          />
         )}
         <div>
-          <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedText}</Markdown>
+          <span className="[&_p]:inline">
+            <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedText}</Markdown>
+          </span>
+          {processedTooltip && <TooltipButton content={processedTooltip} />}
         </div>
       </div>
       {processedSubtext && (
@@ -64,9 +68,9 @@ export function QuestionHeader({ text, subtext, tooltip, variables, computedVari
           <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedSubtext}</Markdown>
         </div>
       )}
-      {processedTooltip && isTooltipVisible && (
+      {processedReveal && isRevealVisible && (
         <div className="text-base text-muted-foreground bg-muted p-3 rounded-md">
-          <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedTooltip}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedReveal}</Markdown>
         </div>
       )}
     </div>

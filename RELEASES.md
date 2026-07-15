@@ -2,8 +2,6 @@
 
 ## Version 0.5.0
 
-Released June 2026
-
 ### Changes
 
 - **Block-level computed variables are now global**: A `COMPUTE:` defined at block level is visible everywhere in the survey, not just within its own block

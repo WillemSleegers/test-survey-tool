@@ -247,9 +247,9 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Check for delimiter start (HINT: """, TOOLTIP: """, etc.)
-    // Also check for option-level delimited keywords (- HINT: """, - TOOLTIP: """)
-    const keywords = ['HINT:', 'TOOLTIP:', 'VARIABLE:', 'SHOW_IF:']
+    // Check for delimiter start (HINT: """, REVEAL: """, etc.)
+    // Also check for option-level delimited keywords (- HINT: """, - REVEAL: """)
+    const keywords = ['HINT:', 'REVEAL:', 'TOOLTIP:', 'VARIABLE:', 'SHOW_IF:']
     for (const keyword of keywords) {
       if (startsWith(trimmed, keyword) || startsWith(trimmed, `- ${keyword}`)) {
         const afterKeyword = startsWith(trimmed, '- ')
@@ -425,6 +425,7 @@ const parseQuestionBase = (lines: string[], questionCounter: { count: number }) 
     id,
     text,
     subtext: parseDelimitedContent(lines, "HINT:"),
+    reveal: parseDelimitedContent(lines, "REVEAL:"),
     tooltip: parseDelimitedContent(lines, "TOOLTIP:"),
     variable: findKeyword(lines, "VARIABLE:"),
     showIf: findKeyword(lines, "SHOW_IF:"),
@@ -489,21 +490,27 @@ const generateRangeOptions = (rangeStr: string): Option[] => {
 
 type MultiLineState = {
   collectingHint: boolean
+  collectingReveal: boolean
   collectingTooltip: boolean
   hintBuffer: string[]
+  revealBuffer: string[]
   tooltipBuffer: string[]
 }
 
 const handleMultiLineContent = (
   trimmed: string,
-  currentOption: Partial<{ hint?: string; tooltip?: string }> | null,
+  currentOption: Partial<{ hint?: string; reveal?: string; tooltip?: string }> | null,
   state: MultiLineState
 ): boolean => {
-  if (!state.collectingHint && !state.collectingTooltip) return false
+  if (!state.collectingHint && !state.collectingReveal && !state.collectingTooltip) return false
   if (trimmed === '"""') {
     if (state.collectingHint && currentOption) {
       currentOption.hint = state.hintBuffer.join('\n')
       state.collectingHint = false
+    }
+    if (state.collectingReveal && currentOption) {
+      currentOption.reveal = state.revealBuffer.join('\n')
+      state.collectingReveal = false
     }
     if (state.collectingTooltip && currentOption) {
       currentOption.tooltip = state.tooltipBuffer.join('\n')
@@ -511,14 +518,15 @@ const handleMultiLineContent = (
     }
   } else {
     if (state.collectingHint) state.hintBuffer.push(trimmed)
+    if (state.collectingReveal) state.revealBuffer.push(trimmed)
     if (state.collectingTooltip) state.tooltipBuffer.push(trimmed)
   }
   return true
 }
 
-const applyHintOrTooltip = (
+const applyHintRevealOrTooltip = (
   content: string,
-  currentOption: Partial<{ hint?: string; tooltip?: string }>,
+  currentOption: Partial<{ hint?: string; reveal?: string; tooltip?: string }>,
   state: MultiLineState
 ): void => {
   if (startsWith(content, "HINT:")) {
@@ -528,6 +536,14 @@ const applyHintOrTooltip = (
       state.hintBuffer = []
     } else {
       currentOption.hint = value
+    }
+  } else if (startsWith(content, "REVEAL:")) {
+    const value = extractAfterKeyword(content, "REVEAL:")
+    if (value === '"""' || !value) {
+      state.collectingReveal = true
+      state.revealBuffer = []
+    } else {
+      currentOption.reveal = value
     }
   } else if (startsWith(content, "TOOLTIP:")) {
     const value = extractAfterKeyword(content, "TOOLTIP:")
@@ -546,7 +562,7 @@ const applyHintOrTooltip = (
 const parseOptions = (lines: string[]): Option[] => {
   const options: Option[] = []
   let currentOption: Partial<Option> | null = null
-  const state: MultiLineState = { collectingHint: false, collectingTooltip: false, hintBuffer: [], tooltipBuffer: [] }
+  const state: MultiLineState = { collectingHint: false, collectingReveal: false, collectingTooltip: false, hintBuffer: [], revealBuffer: [], tooltipBuffer: [] }
 
   for (const line of lines) {
     const trimmed = line.trim()
@@ -559,6 +575,7 @@ const parseOptions = (lines: string[]): Option[] => {
       if (currentOption) {
         options.push(createOption(currentOption.label || '', {
           hint: currentOption.hint,
+          reveal: currentOption.reveal,
           tooltip: currentOption.tooltip,
           showIf: currentOption.showIf,
           allowsOtherText: currentOption.allowsOtherText,
@@ -592,6 +609,7 @@ const parseOptions = (lines: string[]): Option[] => {
         content === "TEXT" ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
+        startsWith(content, "REVEAL:") ||
         startsWith(content, "TOOLTIP:") ||
         content === '"""'
 
@@ -602,13 +620,14 @@ const parseOptions = (lines: string[]): Option[] => {
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
         } else {
-          applyHintOrTooltip(content, currentOption, state)
+          applyHintRevealOrTooltip(content, currentOption, state)
         }
       } else {
         // This is a new option
         if (currentOption) {
           options.push(createOption(currentOption.label || '', {
             hint: currentOption.hint,
+            reveal: currentOption.reveal,
             tooltip: currentOption.tooltip,
             showIf: currentOption.showIf,
             allowsOtherText: currentOption.allowsOtherText,
@@ -617,8 +636,10 @@ const parseOptions = (lines: string[]): Option[] => {
 
         currentOption = { label: content }
         state.collectingHint = false
+        state.collectingReveal = false
         state.collectingTooltip = false
         state.hintBuffer = []
+        state.revealBuffer = []
         state.tooltipBuffer = []
       }
     }
@@ -628,6 +649,7 @@ const parseOptions = (lines: string[]): Option[] => {
   if (currentOption) {
     options.push(createOption(currentOption.label || '', {
       hint: currentOption.hint,
+      reveal: currentOption.reveal,
       tooltip: currentOption.tooltip,
       showIf: currentOption.showIf,
       allowsOtherText: currentOption.allowsOtherText,
@@ -695,6 +717,8 @@ const parseSubquestions = (lines: string[], baseId: string): Subquestion[] => {
         currentSubquestion.showIf = extractAfterKeyword(content, "SHOW_IF:")
       } else if (startsWith(content, "HINT:")) {
         currentSubquestion.subtext = extractAfterKeyword(content, "HINT:")
+      } else if (startsWith(content, "REVEAL:")) {
+        currentSubquestion.reveal = extractAfterKeyword(content, "REVEAL:")
       } else if (startsWith(content, "TOOLTIP:")) {
         currentSubquestion.tooltip = extractAfterKeyword(content, "TOOLTIP:")
       }
@@ -743,7 +767,7 @@ const parseMatrixQuestion = (lines: string[], questionCounter: { count: number }
 const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
   const options: BreakdownOption[] = []
   let currentOption: Partial<BreakdownOption> | null = null
-  const state: MultiLineState = { collectingHint: false, collectingTooltip: false, hintBuffer: [], tooltipBuffer: [] }
+  const state: MultiLineState = { collectingHint: false, collectingReveal: false, collectingTooltip: false, hintBuffer: [], revealBuffer: [], tooltipBuffer: [] }
 
   for (const line of lines) {
     const trimmed = line.trim()
@@ -797,6 +821,7 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
         startsWith(content, "SUFFIX:") ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
+        startsWith(content, "REVEAL:") ||
         startsWith(content, "TOOLTIP:") ||
         startsWith(content, "CUSTOM:")
 
@@ -822,7 +847,7 @@ const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
         } else if (startsWith(content, "CUSTOM:")) {
           currentOption.custom = extractAfterKeyword(content, "CUSTOM:")
         } else {
-          applyHintOrTooltip(content, currentOption, state)
+          applyHintRevealOrTooltip(content, currentOption, state)
         }
       } else {
         // This is a new regular option
@@ -914,13 +939,14 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
   }
 
   // State for single-pass parsing
+  let reveal: string | undefined
   let tooltip: string | undefined
   let showIf: string | undefined
   const items: SectionItem[] = []
   let contentBuffer: string[] = []
 
   // State machine: parsing specific section elements
-  type State = 'tooltip' | 'showif' | 'content'
+  type State = 'reveal' | 'tooltip' | 'showif' | 'content'
   let state: State = 'content'
   let metadataBuffer: string[] = []
   let useDelimiters = false
@@ -940,10 +966,12 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     const trimmed = line.trim()
 
     // Handle metadata collection states
-    if (state === 'tooltip' || state === 'showif') {
+    if (state === 'reveal' || state === 'tooltip' || state === 'showif') {
       if (useDelimiters && trimmed === '"""') {
         // End of delimited metadata
-        if (state === 'tooltip') {
+        if (state === 'reveal') {
+          reveal = metadataBuffer.join('\n')
+        } else if (state === 'tooltip') {
           tooltip = metadataBuffer.join('\n')
         } else {
           showIf = metadataBuffer.join('\n')
@@ -956,7 +984,9 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
 
       // Non-delimiter mode: stop collecting if we hit structural elements
       if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/))) {
-        if (state === 'tooltip') {
+        if (state === 'reveal') {
+          reveal = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        } else if (state === 'tooltip') {
           tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
         } else {
           showIf = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
@@ -974,6 +1004,22 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
 
     // Skip section title marker (already extracted)
     if (matches(trimmed, /^##/)) {
+      continue
+    }
+
+    // Check for REVEAL keyword
+    if (trimmed.startsWith('REVEAL:')) {
+      flushContent()
+      const afterKeyword = trimmed.substring('REVEAL:'.length).trim()
+      if (afterKeyword === '"""') {
+        state = 'reveal'
+        useDelimiters = true
+      } else if (afterKeyword) {
+        reveal = afterKeyword
+      } else {
+        state = 'reveal'
+        useDelimiters = false
+      }
       continue
     }
 
@@ -1030,6 +1076,9 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
 
   // Flush any remaining content or metadata
   flushContent()
+  if (state === 'reveal' && metadataBuffer.length > 0) {
+    reveal = metadataBuffer.join('\n')
+  }
   if (state === 'tooltip' && metadataBuffer.length > 0) {
     tooltip = metadataBuffer.join('\n')
   }
@@ -1040,6 +1089,7 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
   return {
     id: sectionId,
     title,
+    reveal,
     tooltip,
     items,
     showIf,
@@ -1065,6 +1115,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
   }
 
   // State for parsing
+  let reveal: string | undefined
   let tooltip: string | undefined
   let showIf: string | undefined
   let navLevel: number | undefined
@@ -1073,7 +1124,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
   let currentSectionLines: string[] = []
 
   // State machine: parsing specific page elements
-  type State = 'navigation' | 'tooltip' | 'compute' | 'sections'
+  type State = 'navigation' | 'reveal' | 'tooltip' | 'compute' | 'sections'
   let state: State = 'navigation'
   let metadataBuffer: string[] = []
   let useDelimiters = false
@@ -1087,10 +1138,14 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
       continue
     }
 
-    // Handle tooltip metadata collection
-    if (state === 'tooltip') {
+    // Handle reveal/tooltip metadata collection
+    if (state === 'reveal' || state === 'tooltip') {
       if (useDelimiters && trimmed === '"""') {
-        tooltip = metadataBuffer.join('\n')
+        if (state === 'reveal') {
+          reveal = metadataBuffer.join('\n')
+        } else {
+          tooltip = metadataBuffer.join('\n')
+        }
         state = 'navigation'
         metadataBuffer = []
         useDelimiters = false
@@ -1099,7 +1154,11 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
       // Non-delimiter mode: stop if we hit section content or other keywords
       if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/) || (trimmed && !trimmed.startsWith('NAVIGATION:') && !trimmed.startsWith('COMPUTE:')))) {
-        tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        if (state === 'reveal') {
+          reveal = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        } else {
+          tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
+        }
         state = 'sections'
         metadataBuffer = []
         // Don't continue - process this line as section content
@@ -1115,6 +1174,21 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
       if (trimmed.startsWith('NAVIGATION:')) {
         const navValue = trimmed.substring('NAVIGATION:'.length).trim()
         navLevel = navValue ? parseInt(navValue, 10) : undefined
+        continue
+      }
+
+      // Extract REVEAL
+      if (trimmed.startsWith('REVEAL:')) {
+        const afterKeyword = trimmed.substring('REVEAL:'.length).trim()
+        if (afterKeyword === '"""') {
+          state = 'reveal'
+          useDelimiters = true
+        } else if (afterKeyword) {
+          reveal = afterKeyword
+        } else {
+          state = 'reveal'
+          useDelimiters = false
+        }
         continue
       }
 
@@ -1190,6 +1264,7 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
   return {
     id: pageId,
     title,
+    reveal,
     tooltip,
     sections,
     showIf,

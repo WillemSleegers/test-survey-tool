@@ -34,7 +34,7 @@ export default function OverviewPage() {
           Text content supports Markdown formatting throughout — use{" "}
           <code>**bold**</code> for emphasis, <code>*italic*</code> for subtle
           emphasis, and other standard Markdown syntax in page titles, section
-          headings, questions, hints, and tooltips.
+          headings, questions, hints, reveal panels, and tooltips.
         </p>
         <p>
           Everything runs entirely in your browser — no data is sent to a server
@@ -92,7 +92,8 @@ ESSAY`)}
 
       Q: Question text           ← Defines a question
         HINT: Subtext            ← Muted helper text
-        TOOLTIP: More info       ← Collapsible info icon
+        REVEAL: More info        ← Collapsible info panel
+        TOOLTIP: More info       ← Popover shown on click
         VARIABLE: name           ← Stores the response
         SHOW_IF: condition       ← Conditional visibility
         - Option 1               ← Answer option
@@ -103,8 +104,8 @@ ESSAY`)}
           The hierarchy is <code>BLOCK</code> &gt; <code>#</code> Page &gt;{" "}
           <code>##</code> Section &gt; <code>Q:</code> Question or text.
           Keywords like <code>VARIABLE:</code>, <code>SHOW_IF:</code>,{" "}
-          <code>HINT:</code>, and <code>TOOLTIP:</code> attach to the element
-          above them. Options (<code>- text</code>) belong to the preceding
+          <code>HINT:</code>, <code>REVEAL:</code>, and <code>TOOLTIP:</code>{" "}
+          attach to the element above them. Options (<code>- text</code>) belong to the preceding
           question. All levels (blocks, pages, sections) support{" "}
           <code>SHOW_IF:</code> for conditional visibility.
         </p>
