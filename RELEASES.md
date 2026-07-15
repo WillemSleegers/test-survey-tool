@@ -4,6 +4,9 @@
 
 ### Changes
 
+- **`TOOLTIP:` is now a popover, `REVEAL:` is the old inline panel**: The previous `TOOLTIP:` keyword toggled an inline info panel below the element; that behavior is now `REVEAL:`. `TOOLTIP:` instead shows a small popover next to the text on click, for shorter contextual hints. Both are supported on pages, sections, questions, options, and matrix subquestions, and can be combined
+  - Existing surveys using `TOOLTIP:` for inline panels should switch to `REVEAL:` to keep the same behavior
+
 - **Block-level computed variables are now global**: A `COMPUTE:` defined at block level is visible everywhere in the survey, not just within its own block
   - Block-level computeds can reference each other across blocks (resolved by dependency order)
   - A `SHOW_IF:` on any block, page, section, or question can now reference a computed defined in any other block
