@@ -4,8 +4,8 @@ This example demonstrates how blank lines between text paragraphs are preserved 
 
 ## **Introduction Section**
 
-TOOLTIP: """
-This is a multi-line tooltip that explains the section.
+REVEAL: """
+This is a multi-line reveal panel that explains the section.
 
 It can contain multiple paragraphs separated by blank lines.
 
@@ -53,12 +53,12 @@ It can also have multiple paragraphs for clarity.
 
 ## **Complex Example**
 
-TOOLTIP: """
-Tooltips also support multiple paragraphs.
+REVEAL: """
+Reveal panels also support multiple paragraphs.
 
 Each paragraph maintains proper spacing.
 
-This makes tooltips more readable.
+This makes reveal panels more readable.
 """
 
 Here's a scenario with multiple elements:

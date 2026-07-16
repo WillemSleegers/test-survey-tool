@@ -3,7 +3,7 @@
 This example demonstrates multi-line HINT text at the question level using delimiter syntax.
 
 Q: **What is your total annual revenue?**
-TOOLTIP: """
+REVEAL: """
 Please include all revenue sources:
 
 - Product sales
@@ -22,7 +22,7 @@ HINT: Include all employees on your payroll, regardless of location or departmen
 NUMBER
 
 Q: **What are your primary business challenges?**
-TOOLTIP: """
+REVEAL: """
 Select all that apply. Consider challenges in:
 
 - **Operations**: Supply chain, logistics, efficiency

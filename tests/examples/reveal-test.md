@@ -1,8 +1,8 @@
-# Tooltip Feature Test
+# Reveal Feature Test
 
 Q: What is your favorite color?
 HINT: This helps us understand your preferences
-TOOLTIP: Color preferences can affect mood and decision-making.
+REVEAL: Color preferences can affect mood and decision-making.
 
 - Red
 - Blue
@@ -10,7 +10,7 @@ TOOLTIP: Color preferences can affect mood and decision-making.
 - Yellow
 
 Q: How often do you exercise?
-TOOLTIP: """
+REVEAL: """
 Regular exercise is recommended for maintaining good health and well-being.
 
 Studies show that 150 minutes of moderate exercise per week can significantly improve cardiovascular health and mental wellbeing.

@@ -1,5 +1,5 @@
 # Test Page
-TOOLTIP: Test tooltip
+REVEAL: Test reveal
 
 Q: Question?
 - Yes
