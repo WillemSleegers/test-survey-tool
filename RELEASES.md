@@ -4,6 +4,8 @@
 
 ### Changes
 
+- **`EXCLUSIVE` checkbox options**: A checkbox option can now be marked `- EXCLUSIVE` (indented under the option, like `- TEXT`) so selecting it deselects every other selected option, and selecting any other option deselects it. Useful for options like "None of the above". A question can have more than one exclusive option; selecting one always deselects the others. Exclusive options render with a circular, radio-style indicator to signal this to respondents
+
 - **Summed comparisons in `COMPUTE:`**: A computed variable can now add up multiple comparisons, e.g. `COMPUTE: hazard_total = heat == Yes + cold == Yes + severe == Yes`, counting 1 for each matching term. Plain numbers can be mixed into the sum, and the result can be used like any other computed variable (placeholders, `SHOW_IF`)
 
 - **`TOOLTIP:` is now a popover, `REVEAL:` is the old inline panel**: The previous `TOOLTIP:` keyword toggled an inline info panel below the element; that behavior is now `REVEAL:`. `TOOLTIP:` instead shows a small popover next to the text on click, for shorter contextual hints. Both are supported on pages, sections, questions, options, and matrix subquestions, and can be combined
