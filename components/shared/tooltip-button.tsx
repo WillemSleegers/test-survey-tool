@@ -1,4 +1,3 @@
-import { useId } from "react"
 import Markdown from "react-markdown"
 import {
   Popover,
@@ -10,32 +9,10 @@ import {
   remarkPlugins,
 } from "@/lib/markdown-components"
 import { Button } from "../ui/button"
+import { Info } from "lucide-react"
 
 interface TooltipButtonProps {
-  /** Already placeholder-resolved Markdown content to show in the popover */
   content: string
-}
-
-function InfoFilledIcon({ className }: { className?: string }) {
-  const maskId = useId()
-
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <mask id={maskId}>
-        <rect width="24" height="24" fill="white" />
-        <circle cx="12" cy="7.5" r="1.6" fill="black" />
-        <rect
-          x="10.4"
-          y="10.5"
-          width="3.2"
-          height="7.5"
-          rx="1.6"
-          fill="black"
-        />
-      </mask>
-      <circle cx="12" cy="12" r="10" fill="gray" mask={`url(#${maskId})`} />
-    </svg>
-  )
 }
 
 export function TooltipButton({ content }: TooltipButtonProps) {
@@ -46,10 +23,11 @@ export function TooltipButton({ content }: TooltipButtonProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="size-5 hover:bg-transparent"
+          className="ms-1 size-7 rounded-full font-sans hover:bg-muted"
           aria-label="Show tooltip"
         >
-          <InfoFilledIcon />
+          {/* translate-x-0 is a no-op numerically, but forces its own compositing layer so the icon rasterizes on-pixel instead of inheriting sub-pixel rounding from upstream layout */}
+          <Info className="size-5 translate-x-0 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
       <PopoverContent>
