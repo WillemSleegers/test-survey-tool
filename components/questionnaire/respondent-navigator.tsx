@@ -41,6 +41,34 @@ export function RespondentNavigator({
     new Set()
   )
 
+  // A nav item is visible if the respondent could currently reach at least
+  // one of its pages (i.e. it isn't excluded by SHOW_IF given current answers)
+  const visiblePageIds = new Set(visiblePages.map((page) => page.id))
+  const isNavItemVisible = (navItem: NavItem): boolean =>
+    navItem.pages.some((page) => visiblePageIds.has(page.id))
+
+  // Group level-1 items with the level-2 items that follow them, keeping only
+  // currently-visible items. A visible level-2 item whose level-1 parent is
+  // hidden is promoted to a top-level entry so it isn't lost from the nav.
+  const navGroups: { header: NavItem; children: NavItem[] }[] = []
+  let activeGroup: { header: NavItem; children: NavItem[] } | null = null
+
+  for (const item of navItems) {
+    if (item.level === 1) {
+      activeGroup = isNavItemVisible(item) ? { header: item, children: [] } : null
+      if (activeGroup) navGroups.push(activeGroup)
+      continue
+    }
+
+    if (!isNavItemVisible(item)) continue
+
+    if (activeGroup) {
+      activeGroup.children.push(item)
+    } else {
+      navGroups.push({ header: item, children: [] })
+    }
+  }
+
   // Track visited nav items
   useEffect(() => {
     const currentPage = visiblePages[currentVisiblePageIndex]
@@ -63,31 +91,21 @@ export function RespondentNavigator({
     }
   }, [currentVisiblePageIndex, visiblePages, navItems])
 
-  // Auto-expand the current level 1 item (if current page is in a level 2 item)
+  // Auto-expand the group containing the current page (if it's a level 2 child)
   useEffect(() => {
     const currentPage = visiblePages[currentVisiblePageIndex]
     if (!currentPage) return
 
-    // Find current nav item
-    const currentItemIndex = navItems.findIndex((item) =>
-      item.pages.some((page) => page === currentPage)
+    const groupIndex = navGroups.findIndex((group) =>
+      group.children.some((child) =>
+        child.pages.some((page) => page === currentPage)
+      )
     )
 
-    if (currentItemIndex === -1) return
-
-    const currentItem = navItems[currentItemIndex]
-
-    // If it's a level 2 item, find and expand its parent level 1
-    if (currentItem.level === 2) {
-      // Find the nearest preceding level 1 item
-      for (let i = currentItemIndex - 1; i >= 0; i--) {
-        if (navItems[i].level === 1) {
-          setExpandedItems((prev) => new Set([...prev, i]))
-          break
-        }
-      }
+    if (groupIndex !== -1) {
+      setExpandedItems((prev) => new Set([...prev, groupIndex]))
     }
-  }, [currentVisiblePageIndex, visiblePages, navItems])
+  }, [currentVisiblePageIndex, visiblePages, navGroups])
 
   // Toggle item expansion
   const toggleItemExpansion = (itemIndex: number) => {
@@ -115,32 +133,6 @@ export function RespondentNavigator({
     return visitedNavItems.has(navItem) || isNavItemCurrent(navItem)
   }
 
-  // Helper to check if a level 1 item has level 2 children
-  const hasChildren = (itemIndex: number): boolean => {
-    const item = navItems[itemIndex]
-    if (item.level !== 1) return false
-
-    // Check if the next item exists and is level 2
-    return (
-      itemIndex + 1 < navItems.length && navItems[itemIndex + 1].level === 2
-    )
-  }
-
-  // Helper to get children of a level 1 item
-  const getChildren = (itemIndex: number): NavItem[] => {
-    const item = navItems[itemIndex]
-    if (item.level !== 1) return []
-
-    const children: NavItem[] = []
-    for (let i = itemIndex + 1; i < navItems.length; i++) {
-      if (navItems[i].level === 1) break // Stop at next level 1
-      if (navItems[i].level === 2) {
-        children.push(navItems[i])
-      }
-    }
-    return children
-  }
-
   // Clean markdown from titles
   const cleanTitle = (title: string): string => {
     return title
@@ -152,23 +144,17 @@ export function RespondentNavigator({
       .trim()
   }
 
-  // Build navigation structure (filtering out level 2 items, they'll be rendered as children)
-  const topLevelItems = navItems
-    .map((item, index) => ({ item, index }))
-    .filter(({ item }) => item.level === 1)
-
   return (
     <div className="w-64 shrink-0">
       <div className="sticky top-6 space-y-3">
         <div className="font-semibold">{t("navigation.contents")}</div>
         <Card className="py-3 shadow-xs">
           <CardContent className="px-4 py-0">
-            {topLevelItems.map(({ item, index }) => {
+            {navGroups.map(({ header: item, children }, index) => {
               const isCurrent = isNavItemCurrent(item)
               const isVisited = visitedNavItems.has(item)
-              const itemHasChildren = hasChildren(index)
+              const itemHasChildren = children.length > 0
               const isExpanded = expandedItems.has(index)
-              const children = itemHasChildren ? getChildren(index) : []
 
               // Check if any child is visited (for parent status)
               const anyChildVisited = children.some((child) =>

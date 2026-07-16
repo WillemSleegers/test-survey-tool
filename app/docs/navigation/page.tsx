@@ -35,6 +35,11 @@ export default function NavigationPage() {
           <li>
             Level 1 items with level 2 children become collapsible sections
           </li>
+          <li>
+            Items for pages hidden by <code>SHOW_IF</code> are removed from
+            the sidebar; they reappear automatically if the respondent&apos;s
+            answers make the page reachable again
+          </li>
         </ul>
       </div>
 

@@ -123,3 +123,14 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
 - [ ] Simplify lazy vs eager computed variable evaluation
   - Consider consolidating dual evaluation paths for computed variables
   - Remove fallback complexity if not essential
+- [ ] Add dynamic/repeating pages driven by checkbox selections
+  - **Use case**: "Loop" over an arbitrary checkbox selection (e.g. ask a follow-up per selected fruit) without pre-authoring one static page per possible option
+  - **Current limitation**: pages are static and fixed in number at parse time; the only way to simulate a loop today is one `SHOW_IF`-gated page per checkbox option (see `tests/examples/checkbox-loop.md`), which doesn't scale to long or changing option lists
+  - **Proposal**: a page-template construct (e.g. `REPEAT_FOR: variable`) that gets instantiated once per selected value at runtime
+  - **Implementation considerations**:
+    - Parser: new template page type, distinct from the current fixed per-page IDs assigned at parse time
+    - Variables: need per-instance namespacing so responses don't collide (e.g. `fruits.apples.count` instead of a single `apples_per_week`)
+    - Condition system: would need to support indexing/iterating over array variables
+    - Response storage and variable extraction: must handle a variable number of instances
+    - Navigation: nav items would need to expand dynamically to match the number of selected instances
+  - **Priority**: Low - touches most core layers (parser, types, conditions, responses, navigation); current static-per-option pattern is an adequate stopgap for small, fixed option sets
