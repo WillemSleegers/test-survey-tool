@@ -24,6 +24,8 @@
 
 - **Fixed page navigator block visibility**: The page navigator was re-evaluating block `SHOW_IF` conditions using the current page's computed variables instead of the global computed variables, which could cause it to show a different visibility state than the actual survey navigation. The navigator now derives block visibility directly from the viewer's own computation.
 
+- **Hidden pages no longer clutter the nav sidebar**: `NAVIGATION` items were built once at parse time and shown unconditionally, so a page excluded by `SHOW_IF` still appeared in the respondent's sidebar (permanently greyed out). Nav items are now filtered by current page visibility, and reappear automatically once the respondent's answers make the page reachable again. A visible level-2 item whose level-1 parent is hidden is promoted to a top-level entry so it isn't lost from the nav.
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
