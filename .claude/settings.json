@@ -6,7 +6,8 @@
       "Bash(npm test *)",
       "Bash(npx @tailwindcss/cli -i .tmp-probe/probe.css -o .tmp-probe/probe.out.css)",
       "Bash(node inspect2.mjs)",
-      "Bash(node inspect3.mjs)"
+      "Bash(node inspect3.mjs)",
+      "Bash(npx vitest *)"
     ]
   }
 }

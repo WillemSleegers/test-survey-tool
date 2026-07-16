@@ -1,6 +1,6 @@
 import { Page, Variables, ComputedValues, ComputedVariable } from "@/lib/types"
-import { evaluateCondition } from "./condition-evaluator"
-import { evaluateExpression, isArithmeticExpression, isIfThenElseExpression, isIfThenExpression, isStringLiteral, parseIfThenElse, parseIfThen, resolveValue } from "./expression-evaluator"
+import { evaluateCondition, evaluateMultiComparisonSum } from "./condition-evaluator"
+import { evaluateExpression, isArithmeticExpression, isIfThenElseExpression, isIfThenExpression, isMultiComparisonExpression, isStringLiteral, parseIfThenElse, parseIfThen, resolveValue } from "./expression-evaluator"
 
 /**
  * Checks if an expression contains comparison operators, making it a boolean condition
@@ -67,6 +67,8 @@ export function evaluateComputedValues(
         result = evaluateIfThenElseExpr(expr, extendedVariables)
       } else if (isStringLiteral(expr)) {
         result = expr.trim().slice(1, -1)
+      } else if (isMultiComparisonExpression(expr)) {
+        result = evaluateMultiComparisonSum(expr, extendedVariables)
       } else if (isComparisonExpression(expr)) {
         result = evaluateCondition(expr, extendedVariables)
       } else if (isArithmeticExpression(expr)) {

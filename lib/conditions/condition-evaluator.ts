@@ -21,7 +21,14 @@ import {
   evaluateOrCondition,
   evaluateAndCondition
 } from "./logical-operators"
-import { evaluateExpression, isArithmeticExpression, evaluateStartsWithComparison } from "./expression-evaluator"
+import {
+  evaluateExpression,
+  isArithmeticExpression,
+  isMultiComparisonExpression,
+  splitTopLevelAdditive,
+  countComparisonOperators,
+  evaluateStartsWithComparison,
+} from "./expression-evaluator"
 import { convertValueToNumber } from "./value-converter"
 
 /**
@@ -139,27 +146,48 @@ function createExtendedResponses(
 }
 
 /**
+ * Evaluates an expression that sums multiple comparisons, e.g.
+ * "q1 == Yes + q2 == Yes + q3 == Yes" -> count of matching comparisons.
+ * Each additive term is evaluated on its own: terms with a comparison
+ * operator become 1/0, plain terms are evaluated arithmetically.
+ */
+export function evaluateMultiComparisonSum(expression: string, variables: Variables): number {
+  const terms = splitTopLevelAdditive(expression)
+  return terms.reduce((sum, { sign, term }) => {
+    if (!term) return sum
+    const value = countComparisonOperators(term) >= 1
+      ? convertValueToNumber(evaluateCondition(term, variables))
+      : evaluateExpression(term, variables)
+    return sum + sign * value
+  }, 0)
+}
+
+/**
  * Evaluates arithmetic expression comparisons like "age + 5 >= 25" or "var1 != var2 + var3"
  */
 function evaluateArithmeticComparison(
   leftSide: string,
-  operator: string, 
+  operator: string,
   rightSide: string,
   variables: Variables
 ): boolean {
-  // Handle left side - could be arithmetic expression or simple variable
+  // Handle left side - could be a multi-comparison sum, arithmetic expression, or simple variable
   let leftValue: number
-  if (isArithmeticExpression(leftSide)) {
+  if (isMultiComparisonExpression(leftSide)) {
+    leftValue = evaluateMultiComparisonSum(leftSide, variables)
+  } else if (isArithmeticExpression(leftSide)) {
     leftValue = evaluateExpression(leftSide, variables)
   } else {
     // Simple variable name - get its numeric value using clean converter
     const variableName = leftSide.trim()
     leftValue = convertValueToNumber(variables[variableName])
   }
-  
-  // Handle right side - could be arithmetic expression, variable name, or literal number
+
+  // Handle right side - could be a multi-comparison sum, arithmetic expression, variable name, or literal number
   let rightValue: number
-  if (isArithmeticExpression(rightSide)) {
+  if (isMultiComparisonExpression(rightSide)) {
+    rightValue = evaluateMultiComparisonSum(rightSide, variables)
+  } else if (isArithmeticExpression(rightSide)) {
     rightValue = evaluateExpression(rightSide, variables)
   } else {
     // Check if right side is a variable name

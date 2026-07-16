@@ -48,11 +48,82 @@ export function evaluateExpression(expression: string, variables: Variables): nu
 
 
 /**
+ * Counts comparison operators (==, !=, >=, <=, >, <) in an expression
+ */
+export function countComparisonOperators(expression: string): number {
+  const matches = expression.match(/==|!=|>=|<=|>|</g)
+  return matches ? matches.length : 0
+}
+
+/**
+ * Splits an expression on top-level '+'/'-' operators, ignoring +/- that are
+ * inside quoted strings or parentheses, or that act as a unary sign right
+ * after another operator (e.g. the "-5" in "score == -5 + other == 3").
+ *
+ * @example
+ * splitTopLevelAdditive("a == Yes + b == Yes")
+ * // [{ sign: 1, term: "a == Yes" }, { sign: 1, term: "b == Yes" }]
+ */
+export function splitTopLevelAdditive(
+  expression: string
+): { sign: 1 | -1; term: string }[] {
+  const terms: { sign: 1 | -1; term: string }[] = []
+  let depth = 0
+  let currentStart = 0
+  let currentSign: 1 | -1 = 1
+  let inQuote: string | null = null
+
+  for (let i = 0; i < expression.length; i++) {
+    const char = expression[i]
+
+    if (inQuote) {
+      if (char === inQuote) inQuote = null
+      continue
+    }
+    if (char === '"' || char === "'") {
+      inQuote = char
+      continue
+    }
+    if (char === "(") {
+      depth++
+      continue
+    }
+    if (char === ")") {
+      depth--
+      continue
+    }
+    if (depth === 0 && (char === "+" || char === "-")) {
+      const before = expression.slice(0, i).trimEnd()
+      const isUnarySign = before === "" || /[+\-*/(,<>=]$/.test(before)
+      if (!isUnarySign) {
+        terms.push({ sign: currentSign, term: expression.slice(currentStart, i).trim() })
+        currentSign = char === "+" ? 1 : -1
+        currentStart = i + 1
+      }
+    }
+  }
+
+  terms.push({ sign: currentSign, term: expression.slice(currentStart).trim() })
+  return terms
+}
+
+/**
+ * Checks if an expression sums multiple comparisons, e.g.
+ * "q1 == Yes + q2 == Yes + q3 == Yes". Requires at least two comparison
+ * operators split across at least two top-level additive terms, so single
+ * comparisons like "age + years >= 21" are left to the normal comparison path.
+ */
+export function isMultiComparisonExpression(expression: string): boolean {
+  if (countComparisonOperators(expression) < 2) return false
+  return splitTopLevelAdditive(expression).length > 1
+}
+
+/**
  * Checks if a condition contains arithmetic expressions (not just simple variables)
- * 
+ *
  * @param expression - The expression to check
  * @returns True if the expression contains arithmetic operators
- * 
+ *
  * @example
  * isArithmeticExpression("age + 5") // true
  * isArithmeticExpression("var1 * var2") // true

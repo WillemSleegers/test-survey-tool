@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { evaluateComputedValues } from './computed-variables'
+import { evaluateCondition } from './condition-evaluator'
 import { Page } from '@/lib/types'
 
 function makePage(computedVariables: { name: string; expression: string }[]): Page {
@@ -152,6 +153,52 @@ describe('evaluateComputedValues', () => {
       expect(evaluateComputedValues(page, { score: 9 }).points).toBe(2)
       expect(evaluateComputedValues(page, { score: 6 }).points).toBe(1)
       expect(evaluateComputedValues(page, { score: 3 }).points).toBe(0)
+    })
+  })
+
+  describe('sum of comparisons', () => {
+    it('counts how many variables equal a value', () => {
+      const page = makePage([{
+        name: 'total',
+        expression: 'heat == Yes + cold == Yes + severe == Yes',
+      }])
+      const result = evaluateComputedValues(page, { heat: 'Yes', cold: 'No', severe: 'Yes' })
+      expect(result.total).toBe(2)
+    })
+
+    it('returns 0 when none match', () => {
+      const page = makePage([{
+        name: 'total',
+        expression: 'heat == Yes + cold == Yes + severe == Yes',
+      }])
+      const result = evaluateComputedValues(page, { heat: 'No', cold: 'No', severe: 'No' })
+      expect(result.total).toBe(0)
+    })
+
+    it('feeds into a SHOW_IF comparison on another page', () => {
+      const page = makePage([{
+        name: 'total',
+        expression: 'heat == Yes + cold == Yes + severe == Yes',
+      }])
+      const variables = { heat: 'Yes', cold: 'Yes', severe: 'No' }
+      const result = evaluateComputedValues(page, variables)
+      expect(result.total).toBe(2)
+      expect(evaluateCondition('total > 1', { ...variables, ...result })).toBe(true)
+    })
+
+    it('does not affect a single comparison mixed with arithmetic (age + years >= 21)', () => {
+      const page = makePage([{ name: 'eligible', expression: 'age + years >= 21' }])
+      const result = evaluateComputedValues(page, { age: 15, years: 10 })
+      expect(result.eligible).toBe(true)
+    })
+
+    it('supports mixing plain numbers into the sum', () => {
+      const page = makePage([{
+        name: 'score',
+        expression: 'a == Yes + b == Yes + 1',
+      }])
+      const result = evaluateComputedValues(page, { a: 'Yes', b: 'No' })
+      expect(result.score).toBe(2)
     })
   })
 

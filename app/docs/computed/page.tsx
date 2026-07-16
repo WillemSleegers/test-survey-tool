@@ -49,6 +49,33 @@ COMPUTE: total = rent + food + transport
 
 # **Budget Summary**
 Your total monthly expenses: **{total}**`)}
+        <p className="text-sm">
+          Comparisons can be summed the same way — each <code>variable ==
+          value</code> term counts as 1 or 0, so adding several together
+          counts how many matched. Useful for tallying how many checkbox-style
+          questions someone answered a certain way.
+        </p>
+        {renderExample(`# Hazards
+
+Q: Extreme heat
+- Yes
+- No
+VARIABLE: heat
+
+Q: Extreme cold
+- Yes
+- No
+VARIABLE: cold
+
+Q: Severe weather
+- Yes
+- No
+VARIABLE: severe
+
+# Result
+COMPUTE: hazard_total = heat == Yes + cold == Yes + severe == Yes
+
+You reported **{hazard_total}** hazard(s).`)}
       </div>
 
       <div className="space-y-3">
