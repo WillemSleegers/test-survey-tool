@@ -133,12 +133,19 @@ export function isMultiComparisonExpression(expression: string): boolean {
 export function isArithmeticExpression(expression: string): boolean {
   // Check for arithmetic operators: +, -, *, /, (, )
   const trimmed = expression.trim()
-  
+
   // If it's a simple word variable, it's not arithmetic
   if (/^\w+$/.test(trimmed)) {
     return false
   }
-  
+
+  // A quoted string literal (e.g. a SHOW_IF comparison value) is never
+  // arithmetic, even if it contains a hyphen from a compound word like
+  // "milieu-investering" that would otherwise look like subtraction
+  if (/^["'].*["']$/.test(trimmed)) {
+    return false
+  }
+
   // Check for arithmetic operators with word boundaries (variables on both sides)
   // This matches patterns like "var1 + var2" or "age * 2" but not "text with + signs"
   return /\w+\s*[+\-*/]\s*\w+/.test(trimmed) || /^\(.*\)$/.test(trimmed)
