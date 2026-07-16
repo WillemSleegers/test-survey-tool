@@ -147,6 +147,7 @@ export type Option = {
   tooltip?: string
   showIf?: string
   allowsOtherText?: boolean
+  exclusive?: boolean
 }
 
 export type Variables = {

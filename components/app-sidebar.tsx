@@ -32,6 +32,7 @@ const navMain = [
     title: "Question Options",
     items: [
       { title: "Text on Options", section: "option-text" },
+      { title: "Exclusive Options", section: "option-exclusive" },
       { title: "Numeric Ranges", section: "numeric-ranges" },
     ],
   },

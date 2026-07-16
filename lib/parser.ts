@@ -579,6 +579,7 @@ const parseOptions = (lines: string[]): Option[] => {
           tooltip: currentOption.tooltip,
           showIf: currentOption.showIf,
           allowsOtherText: currentOption.allowsOtherText,
+          exclusive: currentOption.exclusive,
         }))
         currentOption = null
       }
@@ -607,6 +608,7 @@ const parseOptions = (lines: string[]): Option[] => {
       // Check if this is option metadata or a new option
       const isOptionMetadata =
         content === "TEXT" ||
+        content === "EXCLUSIVE" ||
         startsWith(content, "SHOW_IF:") ||
         startsWith(content, "HINT:") ||
         startsWith(content, "REVEAL:") ||
@@ -617,6 +619,8 @@ const parseOptions = (lines: string[]): Option[] => {
         // This is metadata for the current option
         if (content === "TEXT") {
           currentOption.allowsOtherText = true
+        } else if (content === "EXCLUSIVE") {
+          currentOption.exclusive = true
         } else if (startsWith(content, "SHOW_IF:")) {
           currentOption.showIf = extractAfterKeyword(content, "SHOW_IF:")
         } else {
@@ -631,6 +635,7 @@ const parseOptions = (lines: string[]): Option[] => {
             tooltip: currentOption.tooltip,
             showIf: currentOption.showIf,
             allowsOtherText: currentOption.allowsOtherText,
+            exclusive: currentOption.exclusive,
           }))
         }
 
@@ -653,6 +658,7 @@ const parseOptions = (lines: string[]): Option[] => {
       tooltip: currentOption.tooltip,
       showIf: currentOption.showIf,
       allowsOtherText: currentOption.allowsOtherText,
+      exclusive: currentOption.exclusive,
     }))
   }
 

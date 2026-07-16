@@ -124,11 +124,42 @@ export function CheckboxQuestion({
     
     if (checked) {
       // Add the option to the selected values
-      const valueToAdd = option?.allowsOtherText && otherTexts[optionValue] 
-        ? `${optionValue}: ${otherTexts[optionValue]}` 
+      const valueToAdd = option?.allowsOtherText && otherTexts[optionValue]
+        ? `${optionValue}: ${otherTexts[optionValue]}`
         : optionValue
-      
-      onResponse(question.id, [...rawCheckboxValues, valueToAdd])
+
+      if (option?.exclusive) {
+        // Selecting an exclusive option clears all other selections
+        onResponse(question.id, [valueToAdd])
+
+        const clearedValues = selectedBaseValues.filter(v => v !== optionValue)
+        if (clearedValues.length > 0) {
+          setOtherTexts(prev => {
+            const updated = { ...prev }
+            clearedValues.forEach(v => delete updated[v])
+            return updated
+          })
+        }
+      } else {
+        // Selecting a regular option clears any exclusive selections
+        const exclusiveValues = new Set(
+          visibleOptions.filter(opt => opt.exclusive).map(opt => opt.value)
+        )
+        const otherValues = rawCheckboxValues.filter(v => {
+          const parsed = parseCheckboxValue(v)
+          return !exclusiveValues.has(parsed.baseValue)
+        })
+        onResponse(question.id, [...otherValues, valueToAdd])
+
+        const clearedExclusiveValues = selectedBaseValues.filter(v => exclusiveValues.has(v))
+        if (clearedExclusiveValues.length > 0) {
+          setOtherTexts(prev => {
+            const updated = { ...prev }
+            clearedExclusiveValues.forEach(v => delete updated[v])
+            return updated
+          })
+        }
+      }
     } else {
       // Remove the option from the selected values (including any "other" variant)
       const filteredValues = rawCheckboxValues.filter(v => {
@@ -195,7 +226,8 @@ export function CheckboxQuestion({
                   id={`${instanceId}${question.id}-${optionIndex}`}
                   checked={selectedBaseValues.includes(option.value)}
                   tabIndex={checkboxTabIndex}
-                  onCheckedChange={(checked) => 
+                  shape={option.exclusive ? "circle" : "square"}
+                  onCheckedChange={(checked) =>
                     handleCheckboxChange(option.value, checked === true)
                   }
                 />
