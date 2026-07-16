@@ -39,7 +39,7 @@ function OptionLabelContent({ label, hint, reveal, tooltip, optionValue, isRevea
       {reveal && (
         <RevealButton
           onClick={() => onToggleReveal(optionValue)}
-          className="absolute -left-8 top-0"
+          className="absolute -left-8 top-1/2 -translate-y-1/2"
         />
       )}
       <div>

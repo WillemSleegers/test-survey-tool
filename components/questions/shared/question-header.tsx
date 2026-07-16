@@ -53,7 +53,7 @@ export function QuestionHeader({ text, subtext, reveal, tooltip, variables, comp
         {processedReveal && (
           <RevealButton
             onClick={() => setIsRevealVisible(!isRevealVisible)}
-            className="absolute -left-8 top-0"
+            className="absolute -left-8 top-1/2 -translate-y-1/2"
           />
         )}
         <div>

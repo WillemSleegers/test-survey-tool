@@ -51,7 +51,7 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
         {processedReveal && (
           <RevealButton
             onClick={() => setIsRevealVisible(!isRevealVisible)}
-            className="absolute left-0 top-0 -translate-x-8"
+            className="absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2"
             ariaLabel="Toggle page information"
           />
         )}
