@@ -1,5 +1,115 @@
 # TODO
 
+## Condition Parser Rewrite (umbrella plan)
+
+Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote handling, string comparisons) and two architecture items (`new Function`, fail-open evaluation) share one root cause: conditions are evaluated by string-splitting instead of real parsing. Decision: replace the internals with a proper tokenizer + recursive-descent parser. Items below marked *(subsumed by parser rewrite)* are fixed by this work and only need a regression test of their own.
+
+- [x] Build a condition expression parser in `lib/conditions/` — **done** (`lib/conditions/expression-parser.ts`): tokenizer with uppercase-only keywords, conventional precedence (`NOT` > `AND` > `OR`), parentheses, comparison sums, arithmetic without `new Function`; `evaluateCondition` signature unchanged; `logical-operators.ts` deleted; golden corpus in `lib/conditions/condition-evaluator.test.ts`; documented in the docs conditionals page and RELEASES
+- [x] Parse-time validation switch-on (step 5 / PR 2) — **done**: `validateConditionSyntax` in `lib/validation.ts` checks every `SHOW_IF` (blocks, pages, sections, questions, options, matrix subquestions) and `COMPUTE` (IF-chain aware) via a dry-run of the condition parser, throwing aggregated located errors; `findUndefinedVariables` rewritten on the tokenizer (`collectConditionVariableReferences`); `condition-parser.ts`/`normalizeOperators` deleted; announced in RELEASES; tests in `tests/parser-condition-syntax.test.ts`
+
+## Bugs (verified)
+
+- [x] Fix AND/OR splitting breaking on unquoted values containing " or " / " and " — **done** via parser rewrite; regression tests cover the sample-survey condition quoted and unquoted
+  - `splitOnOr`/`splitOnAnd` (`lib/conditions/logical-operators.ts:47,68`) split case-insensitively and ignore quotes
+  - The sample survey is broken by this: `COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3` (`lib/constants.ts:62`) splits on the " or " inside the option label, so `experienced_user` is always false and the "Overall Assessment" block never shows
+  - Quoting the value only appears to work by accident: the split still cuts through quotes and the fail-open default rescues it
+  - **Plan**: uppercase-only keywords + quote-aware tokenizer in the parser rewrite. Regression test: the exact sample-survey condition, quoted and unquoted, plus values containing " and "
+- [ ] Fix question-type detection rejecting options that start with "Q"
+  - Option-detection regex `/^-\s+[^Q]/` in `determineQuestionType` (`lib/parser.ts:445`)
+  - A question whose options all start with "Q" (`- Quality`, `- Quantity`) parses as a plain text question with no options
+  - **Plan**: replace with "any dash-prefixed line that is neither a subquestion (`/^-\s*Q\d*:/`) nor a known metadata keyword (`TEXT`, `EXCLUSIVE`, `SHOW_IF:`, `HINT:`, `REVEAL:`, `TOOLTIP:`, `"""`)" — mirroring the logic `parseOptions` already uses. Add parser tests: all-Q options, mixed options, and a question whose only dash-prefixed lines are metadata (should stay non-choice)
+- [x] Handle parentheses in logical conditions — **done** via parser rewrite; truth-table regression tests added
+  - `(a OR b) AND c` with `c` empty evaluates to true: the OR split produces fragments like `"(a"` that fail to parse and default to true
+  - **Plan**: parentheses become grouping in the AST. Regression tests: `(a OR b) AND c`, `a AND (b OR c)`, nested groups, with truth tables
+- [ ] Pass section `reveal` through `getVisiblePageContent`
+  - `hooks/use-visible-pages.ts:45-57` rebuilds section objects without the `reveal` field, so section-level REVEAL never renders — contradicts RELEASES 0.5.0 which claims REVEAL works on sections
+  - Also: the section reveal button only renders when the section has a title (`components/section-renderer.tsx:112`)
+  - **Plan**: (1) spread the original section (`{ ...section, items: filteredItems }`) instead of listing fields, so future fields can't be silently dropped; (2) in `section-renderer.tsx`, move the reveal button/panel out of the `section.title &&` block so titleless sections show it above their content; (3) verify in the docs reveal example with a `## Section` + `REVEAL:`; (4) add a hook-level test asserting `reveal`/`tooltip` survive filtering
+- [x] Strip quotes from `STARTS_WITH` comparison values — **done**: STARTS_WITH is a parser construct now; quoted and unquoted values both tested
+  - `STARTS_WITH crime == Yes` works but `STARTS_WITH crime == "Yes"` fails
+  - `lib/conditions/expression-evaluator.ts:201` compares against the raw right side instead of using `extractComparisonValue` like normal comparisons
+  - **Plan**: one-line fix now (run `rightSide` through `extractComparisonValue` in `evaluateStartsWithComparison`) with a test for both quoted and unquoted; the parser rewrite later models `STARTS_WITH` as an AST node so it shares the normal comparison path
+- [x] Fix string variable-to-variable comparisons coercing to numbers — **done**: ==/!= compare as strings unless both sides are numeric; ordered operators stay numeric; tested
+  - `name1 == name2` returns true for "Alice" vs "Bob": `lib/conditions/condition-evaluator.ts:230-246` always compares variable-to-variable numerically, and non-numeric strings both become 0
+  - Also means any unquoted right-hand value that happens to match a variable name silently changes meaning
+  - **Plan**: in the AST evaluator, `==`/`!=` compare as strings unless both operands are numeric; ordered operators (`> < >= <=`) coerce numerically as today. Document in the conditionals docs that a bareword matching a variable name resolves to the variable (and quoting forces a literal). Tests: string-vs-string, string-vs-number, number-vs-number for every operator
+- [ ] Fix bare `REVEAL:` at page level swallowing NAVIGATION/COMPUTE lines
+  - The stop-condition at `lib/parser.ts:1222` exempts `NAVIGATION:`/`COMPUTE:` lines from ending collection, so they end up as reveal text and the nav level is lost
+  - **Plan**: in `parsePage`'s non-delimited metadata collection, treat all page-level keywords (`NAVIGATION:`, `COMPUTE:`, `SHOW_IF:`, `REVEAL:`, `TOOLTIP:`) as terminators that end collection *and* get processed normally (return to the keyword-handling state instead of `sections`). Align `parseSection`'s equivalent state machine while there (see parser dedup item). Parser tests: bare `REVEAL:` followed by each keyword
+- [x] Decide and document `NOT` precedence — **done**: conventional precedence (NOT > AND > OR), documented in the docs conditionals page and RELEASES; repo grep found no surveys relying on the old interpretation
+  - `NOT a AND b` currently evaluates as `NOT(a AND b)` (NOT is checked before AND/OR in `lib/conditions/condition-evaluator.ts:72`), not the conventional `(NOT a) AND b`
+  - **Plan**: parser rewrite adopts conventional precedence (`NOT` binds tighter than `AND`/`OR`). This is a behavior change: grep existing survey files/tests for `NOT .* (AND|OR)` before shipping and call it out in RELEASES. Document precedence + parentheses in the conditionals docs page
+- [ ] Fix sample survey in `lib/constants.ts`
+  - Broken compute (see AND/OR splitting bug above)
+  - Typo "suggesed" on line 97
+  - **Plan**: fix the typo now; quote the compute's comparison value (`IS "Several weeks or more"`) so it's correct both before and after the parser rewrite. Add a test that parses `SAMPLE_SURVEY` and asserts `experienced_user` evaluates true for a qualifying response set
+
+## Validation Gaps
+
+- [ ] Validate duplicate variable names on matrix subquestions and breakdown options
+  - `validateVariableNames` (`lib/validation.ts:40-70`) only dedupes question-level variables; `addSectionVariables` already collects the other two kinds for reference checks
+  - **Plan**: extract a `collectVariableDefinitions(blocks): Map<name, location[]>` helper (question, subquestion, breakdown-option, computed) and rewrite `validateVariableNames` on top of it, reporting every name with >1 location including where each is defined. Reuse the same helper in the reference validators to remove their duplicated collection loops. Tests: dupe across subquestions, dupe between question and breakdown option, dupe between variable and computed name
+- [ ] Validate section-level and matrix-subquestion `SHOW_IF` references
+  - `validateConditionReferences` covers blocks, pages, questions, and options only — undefined variables in section or subquestion conditions pass silently
+  - **Plan**: add two loops in `validateConditionReferences`: `section.showIf` per section, and `subquestion.showIf` per matrix question, with error messages naming the section title / subquestion text. Tests mirror the existing question-level ones
+- [x] Reconsider fail-open condition evaluation — **done**: malformed conditions are rejected at parse time with located errors; the runtime keeps a fail-safe default (visible + console warning) as a last resort; docs conditionals page updated
+
+## Parsed-but-Ignored Features
+
+- [ ] Implement breakdown option `- SHOW_IF:` filtering *(decision: implement, not remove)*
+  - Parsed (`lib/parser.ts:911`) and validated, but `components/questions/breakdown-question.tsx` never filters options by it — every row always renders
+  - **Plan**:
+    1. Add a shared `getVisibleBreakdownOptions(question, variables, computedVariables)` helper in a new `lib/breakdown-calculations.ts` (seed for the existing "Extract shared calculation logic" idea) that returns options with their **original indices**, so `option_N` response keys stay stable when visibility changes
+    2. Component: render only visible options; totals/subtotals sum only visible rows (hidden rows keep their stored response but are excluded from calculations, consistent with how hidden questions keep data)
+    3. Hook: `calculateBreakdownTotal` and the subtotal pass in `use-questionnaire-responses.ts` use the same helper so derived variables match what's displayed (per the CLAUDE.md rule on coordinated data-format updates)
+    4. Tests: hidden row excluded from total; row re-appearing restores its value; subtotal ranges spanning a hidden row; docs example on the breakdown page
+- [ ] Reject question-level `VARIABLE:` on matrix questions *(decision: parse error)*
+  - Matrix responses are stored per subquestion ID, so `responses[question.id]` never exists and the question-level variable is never populated (`hooks/use-questionnaire-responses.ts:33-34`)
+  - **Plan**: in `parseMatrixQuestion`, if a top-level (non-dash) `VARIABLE:` line is present, throw a descriptive error pointing to the per-subquestion `- VARIABLE:` syntax. Remove the now-dead matrix branch registering `item.variable` in the responses hook. Parser test for the error; check docs/examples contain no offending usage
+
+## Architecture / Code Quality
+
+- [ ] Remove `useMemo` from questionnaire-viewer
+  - `components/questionnaire-viewer.tsx:54,112` uses `useMemo` twice despite the React Compiler guidelines in CLAUDE.md banning it
+  - **Plan**: do together with the lazy-computed rework below (both `useMemo`s wrap those getters). After the rework the wrapped values are plain derived values — delete the wrappers, run `npm run build` and the test suite, and click through a multi-block survey with computed SHOW_IFs
+- [ ] Rework lazy computed-variables caching (replaces "Simplify lazy vs eager" idea below)
+  - `getGlobalComputedValues`/`getPageComputedValues` call `setComputedCache` during render (from inside `useMemo` and the visibility filter)
+  - The invalidation effect (`components/questionnaire-viewer.tsx:74-76`) only avoids an infinite loop because React Compiler stabilizes the identity of `variables`
+  - There is a one-render window where stale computed values are shown after an answer changes
+  - **Plan**: drop the `useState` cache entirely and derive synchronously each render — React Compiler memoizes against stable `variables`:
+    1. Pure helpers in `lib/conditions/computed-variables.ts`: `computeGlobalValues(blocks, variables)` and `computePageValues(page, variables, globalValues)`; if per-page cost matters, share a plain `Map` created in the component body (per-render, no setState)
+    2. `useLazyComputedValues` shrinks to a thin wrapper or is deleted; remove the invalidation effect
+    3. Remove the eager-fallback branch in `use-visible-pages.ts` (`getPageComputedVars ?:`) so there is one evaluation path
+    4. Verify: existing computed-variable tests, plus manual check that PageNavigator and block SHOW_IFs update in the same render as an answer change (no stale flash)
+- [ ] Remove render-time mutation of shared state
+  - `evaluateComputedValues` writes `computedVar.value` back onto the parsed questionnaire (`lib/conditions/computed-variables.ts:59,81,87`)
+  - Breakdown rendering mutates `localVariables` while mapping rows (`components/questions/breakdown-question.tsx:233`), making `CUSTOM:` subtotals order-dependent — a custom referencing a later subtotal silently fails
+  - **Plan**: (1) grep for readers of `.value` on `ComputedVariable` (PageNavigator/debug UI) and point them at the returned `ComputedValues` map instead, then delete the writes and the `value` field from the type; (2) in breakdown, precompute all subtotal values in a single pure pass before rendering (loop options once, building a `subtotals: Record<variable, number>` map used for `CUSTOM:` placeholder resolution), which also makes forward references work — add a test for a CUSTOM referencing a later subtotal
+- [ ] Fix order-dependent variable derivation in responses hook
+  - PASS 1 in `hooks/use-questionnaire-responses.ts:104-144` resolves `prefillValue` placeholders against a half-built `variables` object iterated in `responses` insertion order (the order the user answered questions)
+  - Two users answering in different orders can get different prefill-derived variables
+  - **Plan**: iterate in **questionnaire order** (walk pages/sections/questions, looking up each question's response) instead of `Object.entries(responses)`; keep the two-pass split (simple variables, then prefill/subtotal resolution). Extract the shared breakdown math into `lib/breakdown-calculations.ts` (same helper as the SHOW_IF item). Test: two response objects with identical values inserted in different orders produce identical `variables`
+- [x] Replace `new Function` in expression evaluation — **done**: arithmetic evaluated by the parser; injection regression test asserts survey text cannot execute code
+  - `lib/conditions/expression-evaluator.ts:42` evaluates survey-derived text as JS; low risk client-side, but arbitrary code execution if surveys are ever shared — a small arithmetic evaluator would close it
+  - **Plan**: arithmetic is parsed and evaluated by the same AST as conditions (step 3 of the umbrella plan). Regression tests: nested parens, unary minus, division by zero, and inputs containing `;`, backticks, and `Math.` (must evaluate as plain tokens/0, never execute)
+- [ ] Deduplicate parser state machines
+  - The identical `createOption` push block appears three times in `parseOptions`
+  - The page/section metadata state machines in `lib/parser.ts` are near-copies of each other
+  - **Plan**: pure refactor PR, no format changes, behavior-locked by the existing test suite: (1) extract a `pushCurrentOption(options, currentOption)` helper; (2) extract a shared `collectMetadataValue(keyword, lines, terminators)` state machine (single-line / bare / `"""` modes) parameterized by terminator keywords, used by both `parsePage` and `parseSection` — do after the bare-`REVEAL:` bug fix so the fixed semantics are what gets shared
+- [ ] Sanity check with `npm run build` + full test suite after each of the above; add a `tests/` regression file per fixed bug
+
+## Documentation Accuracy
+
+- [ ] Rewrite CLAUDE.md "Documentation System" section
+  - Describes a single `app/docs/page.tsx` with a `Section` union and switch statement; the real architecture is one route per topic under `app/docs/*/page.tsx` with shared helpers in `components/docs/doc-helpers.tsx`
+  - **Plan**: rewrite the section to describe: route-per-topic under `app/docs/<section>/page.tsx`, `renderExample`/`renderCodeBlock` from `doc-helpers.tsx`, `navMain` in `app-sidebar.tsx` with the active section derived from the pathname. Update the "Adding New Documentation" steps (create route directory, add nav item — no type union, no switch). Dry-run the instructions by following them for one existing page to confirm they match reality
+- [ ] Correct RELEASES 0.5.0 TOOLTIP/REVEAL claims
+  - Claims support on "pages, sections, questions, options, and matrix subquestions" — section REVEAL is broken (see bug above), and radio/checkbox options render neither reveal, tooltip, nor hint (only breakdown options do)
+  - **Plan**: after fixing section reveal, either implement option-level reveal/tooltip on radio/checkbox (Low Priority item below) or reword the note to "pages, sections, questions, breakdown options, and matrix subquestions". Whichever lands first closes this; don't let the claim and the code disagree in the next release
+- [ ] Localize "none" for empty checkbox arrays
+  - Hardcoded English in `lib/text-processing/variable-replacer.ts:130` despite the language context and Dutch support (`ja`/`nee` in value-converter)
+  - **Plan**: `formatArrayValue` also hardcodes English "and" for inline lists — fix both together. Add an optional `listFormat: { empty: string; conjunction: string }` parameter threaded through `replacePlaceholders`; components pass values from `useLanguage` (add `lists.none` / `lists.and` keys to the translations). Default stays English so non-component callers don't break. Test with a Dutch survey rendering an empty and a multi-item checkbox variable
+
 ## Medium Priority
 
 - [ ] Review tooltip icon positioning layout
@@ -8,6 +118,7 @@
   - Table containers use -ml-8 pl-8 to prevent double-indentation while keeping icons visible
   - Should verify this approach is principled and doesn't cause issues with edge cases
   - Consider whether this pattern scales well for other absolutely positioned elements
+  - **Plan**: build a stress-test survey (reveal/tooltip at page, section, question, option, subquestion level; long wrapping labels; nested tables) and screenshot at mobile/tablet/desktop widths. If icons overlap or clip, refactor from absolute positioning to an inline icon slot in a shared header layout component; if it holds up, document the -left-8/pl-8 convention in CLAUDE.md so new components follow it
 
 ## Low Priority
 
@@ -15,15 +126,21 @@
   - `PREFIX:` and `SUFFIX:` are parsed on number questions (`lib/parser.ts:460-461`) and stored in the type (`lib/types.ts:80-81`)
   - `components/questions/number-question.tsx` does not use these fields
   - Should display prefix/suffix around the number input (e.g., `$ [input] per year`)
+  - **Plan**: reuse the prefix/suffix presentation from breakdown's `OptionValueInput` (muted spans flanking the input) — extract it into a small shared component and use it in both places. Document PREFIX/SUFFIX on the number docs page with an example
 - [ ] Render matrix TEXT and ESSAY input types
   - Matrix questions parse `inputType` for `text` and `essay` (`lib/parser.ts:714-720`, `lib/types.ts:88`)
   - Only `checkbox` inputType is rendered; `text` and `essay` fall through to radio buttons
   - Should render text inputs or text areas in each matrix cell instead of radio buttons
-- [ ] Render option-level HINT and TOOLTIP on radio/checkbox questions
-  - `- HINT:` and `- TOOLTIP:` on options are parsed for all question types (`lib/parser.ts:579-600`)
+  - **Plan**: for `text`/`essay` there are no option columns — render one `Input`/`Textarea` per subquestion row (single "response" column), storing the value under `subquestion.id` like other matrix responses so variables keep working. Branch in `matrix-question.tsx` alongside `isCheckboxMatrix`; add a docs example and a parser+render test. Decide explicitly: options present + TEXT type = parse error (fold into "parser validation for malformed input")
+- [ ] Render option-level HINT, TOOLTIP, and REVEAL on radio/checkbox questions
+  - `- HINT:`, `- TOOLTIP:`, and `- REVEAL:` on options are parsed for all question types (`lib/parser.ts:579-614`)
   - Only breakdown options render these (`components/questions/breakdown-question.tsx:271-280`)
-  - `radio-question.tsx` and `checkbox-question.tsx` ignore option hints and tooltips
-  - Should display muted subtext (hint) or info icon (tooltip) on individual radio/checkbox options
+  - `radio-question.tsx` and `checkbox-question.tsx` ignore option hints, tooltips, and reveals
+  - Should display muted subtext (hint), info popover (tooltip), or collapsible panel (reveal) on individual radio/checkbox options
+  - Related: RELEASES 0.5.0 claims TOOLTIP/REVEAL work on options (see Documentation Accuracy section)
+  - **Plan**: extract breakdown's `OptionLabelContent` into `components/questions/shared/option-label-content.tsx` and use it for radio/checkbox option labels (label + tooltip inline, hint below, reveal panel below with per-option `Set` state as in breakdown/matrix). Check tab order isn't disturbed (RevealButton is a button). Update the hints/tooltip/reveal docs pages and close the RELEASES claim
+- [ ] Restore RANGE + type detection edge cases (watchlist, no action yet)
+  - `CHECKBOX` with no options parses as text; `RANGE:` inside checkbox works (verified) — cover both in parser tests when next touching `determineQuestionType`
 
 ## Ideas to Explore
 
@@ -67,6 +184,7 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
     - Consider validation timing (on change, on blur, on submit)
     - Handle validation for all question types (TEXT, NUMBER, BREAKDOWN, etc.)
   - **Priority**: Medium - Would significantly improve data quality and user experience
+  - **Note**: wait for the condition parser rewrite — VALIDATE expressions should reuse the new parser and its parse-time error reporting
 
 - [ ] Add SUFFIX support for BREAKDOWN questions to handle thousands formatting
   - **Use case**: Allow writing "1" to display as "1,000" when values represent thousands
@@ -95,7 +213,7 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
   - Consider adding page-level HINT that displays always-visible text below page title
   - Would provide consistent pattern: TOOLTIP = collapsible, HINT = always visible
   - Use case: Important instructions that should always be visible (e.g., "Round all amounts to thousands")
-  - Would require parser changes and PageHeader component updates
+  - **Plan**: add `HINT:` to `parsePage`'s keyword handling (same single/bare/delimited modes as REVEAL — reuse the shared metadata collector from the parser dedup item), add `subtext?` to the `Page` type, render as muted text under the title in `PageHeader`. Docs update on the pages + hints pages
 - [ ] Add parser validation for malformed input
   - **Goal**: Provide clear error messages for common mistakes instead of silently ignoring them
   - **Validation rules**:
@@ -103,26 +221,28 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
     - Throw error if breakdown-specific keywords used on non-breakdown questions (COLUMN, EXCLUDE, VALUE, SUBTRACT on non-breakdown)
     - Throw error if PREFIX/SUFFIX used on incompatible question types (currently silently ignored)
     - Throw error if matrix has subquestions but no options
+    - Throw error if matrix has question-level VARIABLE (see Parsed-but-Ignored Features)
     - Warn if breakdown option has both `prefillValue` (VALUE) and no `exclude` flag when in `totalColumn`
   - **Benefits**: Users learn correct syntax immediately, fewer "why doesn't this work?" moments
   - **Implementation**: Add validation checks in handler functions that throw descriptive errors
-  - **Related**: Could remove complex type-switching logic in `handleInputType` once validation is in place
+  - **Plan**: implement as a post-parse validation pass alongside the existing validators (they already have the throw-aggregated-errors pattern); one rule per small function, one test per rule. Do after the condition parser lands so condition syntax errors come from the same release
 - [ ] Extract shared calculation logic
   - Both `breakdown-question.tsx` and `use-questionnaire-responses.ts` have similar `calculateBreakdownTotal` logic
   - Could extract to shared utility function in `lib/breakdown-calculations.ts`
-  - Low priority - current duplication is minimal and contexts slightly differ
+  - **Plan**: this happens naturally as part of the breakdown `SHOW_IF` item (shared visibility + totals helper) and the order-dependent derivation fix — fold it into whichever lands first rather than doing it standalone
 - [ ] Add example questionnaires for documentation
   - Create `docs/examples/breakdown-with-columns.md` showing COLUMN/EXCLUDE usage
   - Create `docs/examples/conditional-logic-advanced.md` for complex SHOW_IF patterns
-  - Would help users learn features through working examples
+  - Would help users learn examples through working examples
+  - **Plan**: write them as parseable `.md`/`.txt` fixtures under `tests/examples/` (like `checkbox-loop.md`) and add a test that parses every file in that directory, so examples can't rot; link or embed them from the relevant docs pages
 - [ ] Enhanced variable validation
   - Validate variable names follow consistent naming convention
   - Check for variable shadowing (same name used in different scopes)
   - Warn about unused variables
+  - **Plan**: build on the `collectVariableDefinitions` helper from the duplicate-names item; shadowing = page-computed name colliding with a question variable or block computed (currently silent); unused = defined but never referenced in any condition/placeholder/compute (needs the placeholder scanner too). Ship as warnings surfaced in the upload UI, not hard errors
 - [ ] Mobile-first responsive design review
-- [ ] Simplify lazy vs eager computed variable evaluation
-  - Consider consolidating dual evaluation paths for computed variables
-  - Remove fallback complexity if not essential
+  - **Plan**: audit the main flows (upload, survey with matrix + breakdown tables, docs) at 360px/768px in dev tools; known suspects are wide tables (`overflow-x-auto` exists on matrix — verify breakdown), the -left-8 icon convention (see tooltip positioning item), and the side navigators. File concrete follow-ups per issue found rather than one big refactor
+- [ ] ~~Simplify lazy vs eager computed variable evaluation~~ — superseded by "Rework lazy computed-variables caching" under Architecture / Code Quality
 - [ ] Add dynamic/repeating pages driven by checkbox selections
   - **Use case**: "Loop" over an arbitrary checkbox selection (e.g. ask a follow-up per selected fruit) without pre-authoring one static page per possible option
   - **Current limitation**: pages are static and fixed in number at parse time; the only way to simulate a loop today is one `SHOW_IF`-gated page per checkbox option (see `tests/examples/checkbox-loop.md`), which doesn't scale to long or changing option lists

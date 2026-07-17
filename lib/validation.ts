@@ -1,5 +1,17 @@
-import { Block, Page, Section, NavItem, isQuestion } from "@/lib/types"
-import { normalizeOperators } from "@/lib/conditions/condition-parser"
+import { Block, Page, Section, ComputedVariable, isQuestion } from "@/lib/types"
+import {
+  getConditionSyntaxError,
+  getComparisonSumSyntaxError,
+  isComparisonSumExpression,
+  collectConditionVariableReferences,
+} from "@/lib/conditions/expression-parser"
+import {
+  isIfThenElseExpression,
+  isIfThenExpression,
+  parseIfThenElse,
+  parseIfThen,
+  isStringLiteral,
+} from "@/lib/conditions/expression-evaluator"
 
 function getAllPages(blocks: Block[]): Page[] {
   return blocks.flatMap(block => block.pages)
@@ -238,65 +250,150 @@ export function validateComputedVariableReferences(blocks: Block[]): void {
 }
 
 /**
- * Finds undefined variables in an expression or condition
- * More sophisticated parsing that understands comparison contexts
+ * Validates the syntax of every SHOW_IF condition and COMPUTE expression.
+ * Throws an aggregated error listing each malformed expression with its
+ * location, so broken conditions are rejected at upload time instead of
+ * silently falling back at runtime.
+ *
+ * @param blocks - All parsed blocks to validate
  */
-function findUndefinedVariables(expression: string, definedVariables: Set<string>): string[] {
-  const undefinedVars: string[] = []
+export function validateConditionSyntax(blocks: Block[]): void {
+  const errors: string[] = []
 
-  // Strip quoted string literals before any variable extraction — they are never variable references
-  const expression_ = expression.replace(/["'][^"']*["']/g, '""')
-
-  // Handle logical operators FIRST (before individual comparisons)
-  if (expression_.includes(' AND ') || expression_.includes(' OR ')) {
-    const parts = expression_.split(/\s+(?:AND|OR)\s+/)
-    for (const part of parts) {
-      undefinedVars.push(...findUndefinedVariables(part.trim(), definedVariables))
+  const checkShowIf = (location: string, condition?: string): void => {
+    if (!condition) return
+    const error = getConditionSyntaxError(condition)
+    if (error) errors.push(`${location} SHOW_IF "${condition}": ${error}`)
+  }
+  const checkCompute = (location: string, computedVar: ComputedVariable): void => {
+    const error = getComputeExpressionSyntaxError(computedVar.expression)
+    if (error) {
+      errors.push(
+        `${location} COMPUTE "${computedVar.name} = ${computedVar.expression}": ${error}`
+      )
     }
-  } else if (expression_.startsWith('NOT ')) {
-    const innerExpression = expression_.substring(4).trim()
-    undefinedVars.push(...findUndefinedVariables(innerExpression, definedVariables))
-  } else {
-    const normalizedExpression = normalizeOperators(expression_)
+  }
 
-    if (normalizedExpression.includes('==') || normalizedExpression.includes('!=') || normalizedExpression.includes('>=') ||
-        normalizedExpression.includes('<=') || normalizedExpression.includes('>') || normalizedExpression.includes('<')) {
-      // Only check the left side as a variable; right side is a literal value
-      const comparisonMatch = normalizedExpression.match(/^(.+?)\s*(?:==|!=|>=|<=|>|<)\s*(.+)$/)
-      if (comparisonMatch) {
-        const leftSide = comparisonMatch[1].trim()
-        if (isValidVariableName(leftSide) && !definedVariables.has(leftSide)) {
-          undefinedVars.push(leftSide)
-        }
-      }
-    } else {
-      // Simple variable reference or arithmetic expression (quoted strings already stripped)
-      const variableMatches = expression_.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
+  for (const block of blocks) {
+    const blockLabel = `Block "${block.name || '(unnamed block)'}"`
+    checkShowIf(blockLabel, block.showIf)
+    block.computedVariables.forEach(cv => checkCompute(blockLabel, cv))
 
-      const keywords = new Set([
-        'AND', 'OR', 'NOT', 'IS', 'THEN', 'ELSE', 'IF', 'IS_NOT',
-        'GREATER_THAN', 'LESS_THAN', 'GREATER_THAN_OR_EQUAL', 'LESS_THAN_OR_EQUAL',
-        'true', 'false', 'null', 'undefined'
-      ])
+    for (const page of block.pages) {
+      const pageLabel = `Page "${page.title}"`
+      checkShowIf(pageLabel, page.showIf)
+      page.computedVariables.forEach(cv => checkCompute(pageLabel, cv))
 
-      for (const variable of variableMatches) {
-        if (!keywords.has(variable) &&
-            !definedVariables.has(variable) &&
-            !/^\d/.test(variable) &&
-            isValidVariableName(variable)) {
-          undefinedVars.push(variable)
+      for (const section of page.sections) {
+        const sectionLabel = section.title
+          ? `Section "${section.title}"`
+          : `Section on page "${page.title}"`
+        checkShowIf(sectionLabel, section.showIf)
+
+        for (const item of section.items) {
+          if (!isQuestion(item)) continue
+          const questionLabel = `Question "${item.id}"`
+          checkShowIf(questionLabel, item.showIf)
+
+          if ('options' in item && item.options) {
+            for (const option of item.options) {
+              checkShowIf(`${questionLabel} option "${option.label}"`, option.showIf)
+            }
+          }
+          if (item.type === 'matrix') {
+            for (const subquestion of item.subquestions) {
+              checkShowIf(
+                `${questionLabel} subquestion "${subquestion.text}"`,
+                subquestion.showIf
+              )
+            }
+          }
         }
       }
     }
   }
 
-  return [...new Set(undefinedVars)] // Remove duplicates
+  if (errors.length > 0) {
+    throw new Error(`Condition syntax errors:\n${errors.join('\n')}`)
+  }
 }
 
 /**
- * Checks if a string looks like a valid variable name (not a literal value)
+ * Syntax-checks a COMPUTE expression, mirroring the classification used by
+ * evaluateComputedValues: IF-THEN(-ELSE) chains, string literals,
+ * comparison sums, then plain conditions/arithmetic.
  */
-function isValidVariableName(str: string): boolean {
-  // Variable names should match the pattern: letters/underscore, followed by letters/numbers/underscores
-  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)
+function getComputeExpressionSyntaxError(expression: string): string | null {
+  const trimmed = expression.trim()
+  if (isIfThenElseExpression(trimmed)) {
+    const parsed = parseIfThenElse(trimmed)
+    if (!parsed) return "Malformed IF-THEN-ELSE expression"
+    return (
+      getConditionSyntaxError(parsed.condition) ??
+      getBranchSyntaxError(parsed.trueExpr) ??
+      getBranchSyntaxError(parsed.falseExpr)
+    )
+  }
+  if (isIfThenExpression(trimmed)) {
+    const parsed = parseIfThen(trimmed)
+    if (!parsed) return "Malformed IF-THEN expression"
+    return (
+      getConditionSyntaxError(parsed.condition) ??
+      getBranchSyntaxError(parsed.trueExpr)
+    )
+  }
+  if (isStringLiteral(trimmed)) return null
+  if (isComparisonSumExpression(trimmed)) return getComparisonSumSyntaxError(trimmed)
+  return getConditionSyntaxError(trimmed)
+}
+
+/**
+ * Branch values resolve variable-first with a plain-text fallback, so free
+ * text is always valid; only nested IF chains carry checkable syntax.
+ */
+function getBranchSyntaxError(branch: string): string | null {
+  if (isIfThenElseExpression(branch) || isIfThenExpression(branch)) {
+    return getComputeExpressionSyntaxError(branch)
+  }
+  return null
+}
+
+/**
+ * Finds undefined variables in an expression or condition.
+ * Variable references are collected by the condition tokenizer; branch
+ * values of IF expressions are skipped (they fall back to plain text).
+ */
+function findUndefinedVariables(expression: string, definedVariables: Set<string>): string[] {
+  const references = collectExpressionReferences(expression)
+  return [...new Set(references.filter(name => !definedVariables.has(name)))]
+}
+
+function collectExpressionReferences(expression: string): string[] {
+  const trimmed = expression.trim()
+  if (isIfThenElseExpression(trimmed)) {
+    const parsed = parseIfThenElse(trimmed)
+    if (!parsed) return []
+    return [
+      ...collectConditionVariableReferences(parsed.condition),
+      ...collectBranchReferences(parsed.trueExpr),
+      ...collectBranchReferences(parsed.falseExpr),
+    ]
+  }
+  if (isIfThenExpression(trimmed)) {
+    const parsed = parseIfThen(trimmed)
+    if (!parsed) return []
+    return [
+      ...collectConditionVariableReferences(parsed.condition),
+      ...collectBranchReferences(parsed.trueExpr),
+    ]
+  }
+  if (isStringLiteral(trimmed)) return []
+  return collectConditionVariableReferences(trimmed)
+}
+
+function collectBranchReferences(branch: string): string[] {
+  if (isIfThenElseExpression(branch) || isIfThenExpression(branch)) {
+    return collectExpressionReferences(branch)
+  }
+  return []
 }

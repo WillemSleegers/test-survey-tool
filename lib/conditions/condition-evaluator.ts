@@ -1,125 +1,80 @@
 import { Variables, ComputedValues } from "@/lib/types"
-import { 
-  parseCondition, 
-  isSimpleBooleanTest, 
-  evaluateSimpleBooleanTest,
-  type ComparisonOperator
-} from "./condition-parser"
 import {
-  compareStringValue,
-  compareNumericValue,
-  compareEmptyString,
-  extractComparisonValue,
-  isNumericValue,
-  type ResponseValue
-} from "./value-comparators"
-import {
-  hasNotOperator,
-  hasOrOperator, 
-  hasAndOperator,
-  evaluateNotCondition,
-  evaluateOrCondition,
-  evaluateAndCondition
-} from "./logical-operators"
-import {
-  evaluateExpression,
-  isArithmeticExpression,
-  isMultiComparisonExpression,
-  splitTopLevelAdditive,
-  countComparisonOperators,
-  evaluateStartsWithComparison,
-} from "./expression-evaluator"
-import { convertValueToNumber } from "./value-converter"
+  evaluateConditionExpression,
+  evaluateComparisonSum,
+  ConditionParseError,
+} from "./expression-parser"
 
 /**
  * Main condition evaluator that handles all types of survey conditions
- * 
+ *
  * Supports:
- * - Simple boolean tests: "variableName" 
- * - Comparisons: "age >= 18", "name IS John"
- * - Logical operators: "age >= 18 AND rating >= 4"
- * - Negation: "NOT completed"
+ * - Simple boolean tests: "variableName"
+ * - Comparisons: "age >= 18", "name IS John", quoted and unquoted values
+ * - Logical operators with conventional precedence: NOT binds tighter than
+ *   AND, AND tighter than OR; parentheses group sub-conditions
  * - Arithmetic: "age + years >= 21"
- * - Array operations: "selections >= 2" (for checkboxes)
+ * - Array operations: "selections >= 2" (checkbox count), "selections == Yes"
+ *   (checkbox inclusion)
+ * - Comparison sums: "a == Yes + b == Yes >= 2"
  * - STARTS_WITH patterns: "STARTS_WITH crime == Yes"
- * - Computed variables: References to computed variables defined in sections
- * 
+ * - Computed variables, referenced like regular variables
+ *
+ * Keywords (AND, OR, NOT, IS, ...) are recognized in UPPERCASE only, so
+ * unquoted answer values containing words like "or" stay plain text.
+ *
+ * Malformed conditions log a console warning and default to true (visible)
+ * so a broken condition never hides content silently.
+ *
  * @param condition - The condition string to evaluate
  * @param variables - Object containing all user variables
- * @param computedVariables - Optional computed variables from current section
+ * @param computedVariables - Optional computed variables from current scope
  * @returns True if condition is met, false otherwise
- * 
+ *
  * @example
- * evaluateCondition("age >= 18", variables) // Check if age is 18 or more
- * evaluateCondition("experience IS Advanced", variables) // Check exact match
- * evaluateCondition("age >= 18 AND experience", variables) // Multiple conditions
- * evaluateCondition("has_crime", variables, computedVars) // Use computed variable
+ * evaluateCondition("age >= 18", variables)
+ * evaluateCondition("experience IS Advanced", variables)
+ * evaluateCondition("(age >= 18 OR guardian == Yes) AND consent == Yes", variables)
+ * evaluateCondition("has_crime", variables, computedVars)
  */
 export function evaluateCondition(
-  condition: string, 
-  variables: Variables, 
+  condition: string,
+  variables: Variables,
   computedVariables?: ComputedValues
 ): boolean {
-  // Empty condition always passes
-  if (!condition) return true
+  if (!condition || !condition.trim()) return true
 
+  const extendedVariables = createExtendedResponses(variables, computedVariables)
 
   try {
-    // Create extended variables that includes computed variables
-    const extendedResponses = createExtendedResponses(variables, computedVariables)
-
-    // Handle NOT operator
-    if (hasNotOperator(condition)) {
-      return evaluateNotCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, variables, computedVariables)
+    return evaluateConditionExpression(condition, extendedVariables)
+  } catch (error) {
+    if (error instanceof ConditionParseError) {
+      console.warn(
+        `Invalid condition "${condition}": ${error.message} — defaulting to visible`
       )
-    }
-
-    // Handle OR conditions  
-    if (hasOrOperator(condition)) {
-      return evaluateOrCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, variables, computedVariables)
-      )
-    }
-
-    // Handle AND conditions
-    if (hasAndOperator(condition)) {
-      return evaluateAndCondition(condition, extendedResponses, (cond) => 
-        evaluateCondition(cond, variables, computedVariables)
-      )
-    }
-
-    // Handle literal boolean values first
-    const trimmedCondition = condition.trim()
-    if (trimmedCondition === "true") return true
-    if (trimmedCondition === "false") return false
-
-    // Handle simple boolean testing (just variable name)
-    if (isSimpleBooleanTest(condition)) {
-      return evaluateSimpleBooleanTest(trimmedCondition, extendedResponses)
-    }
-
-    // Parse comparison condition
-    const parsed = parseCondition(condition)
-    if (!parsed) return true // Invalid condition defaults to true
-
-    const { leftSide, operator, rightSide } = parsed
-
-    // Handle STARTS_WITH patterns in comparisons
-    if (leftSide.trim().startsWith('STARTS_WITH ')) {
-      const prefix = leftSide.trim().substring('STARTS_WITH '.length).trim()
-      return evaluateStartsWithComparison(prefix, operator, rightSide, extendedResponses)
-    }
-
-    // Handle arithmetic expressions vs simple variable comparisons
-    if (isArithmeticExpression(leftSide) || isArithmeticExpression(rightSide)) {
-      return evaluateArithmeticComparison(leftSide, operator, rightSide, extendedResponses)
     } else {
-      return evaluateVariableComparison(leftSide, operator, rightSide, extendedResponses)
+      console.warn(`Failed to evaluate condition "${condition}": ${error}`)
     }
-  } catch {
-    // Any error in evaluation defaults to true (fail-safe)
     return true
+  }
+}
+
+/**
+ * Evaluates an expression that sums multiple comparisons, e.g.
+ * "q1 == Yes + q2 == Yes + q3 == Yes" -> count of matching comparisons.
+ * Each additive term is evaluated on its own: terms with a comparison
+ * operator become 1/0, plain terms are evaluated arithmetically.
+ */
+export function evaluateMultiComparisonSum(
+  expression: string,
+  variables: Variables
+): number {
+  try {
+    return evaluateComparisonSum(expression, variables)
+  } catch (error) {
+    console.warn(`Failed to evaluate comparison sum "${expression}": ${error}`)
+    return 0
   }
 }
 
@@ -134,132 +89,5 @@ function createExtendedResponses(
   if (!computedVariables) {
     return variables
   }
-
-  const extended = { ...variables }
-
-  // Add computed variables directly
-  Object.entries(computedVariables).forEach(([name, value]) => {
-    extended[name] = value
-  })
-
-  return extended
-}
-
-/**
- * Evaluates an expression that sums multiple comparisons, e.g.
- * "q1 == Yes + q2 == Yes + q3 == Yes" -> count of matching comparisons.
- * Each additive term is evaluated on its own: terms with a comparison
- * operator become 1/0, plain terms are evaluated arithmetically.
- */
-export function evaluateMultiComparisonSum(expression: string, variables: Variables): number {
-  const terms = splitTopLevelAdditive(expression)
-  return terms.reduce((sum, { sign, term }) => {
-    if (!term) return sum
-    const value = countComparisonOperators(term) >= 1
-      ? convertValueToNumber(evaluateCondition(term, variables))
-      : evaluateExpression(term, variables)
-    return sum + sign * value
-  }, 0)
-}
-
-/**
- * Evaluates arithmetic expression comparisons like "age + 5 >= 25" or "var1 != var2 + var3"
- */
-function evaluateArithmeticComparison(
-  leftSide: string,
-  operator: string,
-  rightSide: string,
-  variables: Variables
-): boolean {
-  // Handle left side - could be a multi-comparison sum, arithmetic expression, or simple variable
-  let leftValue: number
-  if (isMultiComparisonExpression(leftSide)) {
-    leftValue = evaluateMultiComparisonSum(leftSide, variables)
-  } else if (isArithmeticExpression(leftSide)) {
-    leftValue = evaluateExpression(leftSide, variables)
-  } else {
-    // Simple variable name - get its numeric value using clean converter
-    const variableName = leftSide.trim()
-    leftValue = convertValueToNumber(variables[variableName])
-  }
-
-  // Handle right side - could be a multi-comparison sum, arithmetic expression, variable name, or literal number
-  let rightValue: number
-  if (isMultiComparisonExpression(rightSide)) {
-    rightValue = evaluateMultiComparisonSum(rightSide, variables)
-  } else if (isArithmeticExpression(rightSide)) {
-    rightValue = evaluateExpression(rightSide, variables)
-  } else {
-    // Check if right side is a variable name
-    const variableName = rightSide.trim()
-    if (variables[variableName] !== undefined) {
-      rightValue = convertValueToNumber(variables[variableName])
-    } else {
-      rightValue = parseFloat(rightSide)
-      if (isNaN(rightValue)) rightValue = 0
-    }
-  }
-  
-  switch (operator) {
-    case "==": return leftValue === rightValue
-    case "!=": return leftValue !== rightValue
-    case ">=": return leftValue >= rightValue
-    case "<=": return leftValue <= rightValue
-    case ">": return leftValue > rightValue
-    case "<": return leftValue < rightValue
-    default: return true
-  }
-}
-
-/**
- * Evaluates simple variable comparisons like "age >= 18" or "name IS John"
- */
-function evaluateVariableComparison(
-  variable: string,
-  operator: string,
-  rawValue: string, 
-  variables: Variables
-): boolean {
-  // Get variable value directly
-  const responseValue: ResponseValue = variables[variable]
-  
-  // Check if rawValue is actually another variable name
-  const rightVariableName = rawValue.trim()
-  const rightVariableValue = variables[rightVariableName]
-  
-  if (rightVariableValue !== undefined) {
-    // Variable-to-variable comparison using clean converter utilities
-    const leftNum = convertValueToNumber(responseValue)
-    const rightNum = convertValueToNumber(rightVariableValue)
-    
-    
-    // Perform numeric comparison
-    switch (operator) {
-      case "==": return leftNum === rightNum
-      case "!=": return leftNum !== rightNum
-      case ">=": return leftNum >= rightNum
-      case "<=": return leftNum <= rightNum
-      case ">": return leftNum > rightNum
-      case "<": return leftNum < rightNum
-      default: return true
-    }
-  }
-  
-  // Original logic for literal value comparison
-  const value = extractComparisonValue(rawValue)
-  
-  // Handle empty string checks (special case)
-  if (value === "") {
-    return compareEmptyString(variable, responseValue, variables, operator as ComparisonOperator)
-  }
-
-  // Determine if this should be numeric or string comparison
-  if (isNumericValue(rawValue)) {
-    // Numeric comparison
-    const numValue = parseFloat(rawValue)
-    return compareNumericValue(responseValue, numValue, operator as ComparisonOperator)
-  } else {
-    // String comparison (either quoted or non-numeric unquoted)
-    return compareStringValue(responseValue, value, operator as ComparisonOperator)
-  }
+  return { ...variables, ...computedVariables }
 }

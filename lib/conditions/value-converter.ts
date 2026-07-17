@@ -54,24 +54,3 @@ export function convertValueToNumber(value: ResponseValue): number {
   return 0
 }
 
-/**
- * Gets the numeric value for a variable from the variables object
- *
- * @param variableName - Name of the variable to look up
- * @param variables - Variables object containing all variable values
- * @returns Numeric value for the variable, or 0 if not found
- */
-export function getVariableNumericValue(variableName: string, variables: Variables): number {
-  return convertValueToNumber(variables[variableName])
-}
-
-/**
- * Gets all variable names from the variables object
- *
- * @param variables - Variables object
- * @returns Array of variable names, sorted by length (longest first) to avoid partial matches
- */
-export function getKnownVariables(variables: Variables): string[] {
-  return Object.keys(variables)
-    .sort((a, b) => b.length - a.length)
-}

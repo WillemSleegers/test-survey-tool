@@ -21,6 +21,7 @@ import {
 import {
   validateVariableNames,
   validateBlockComputedNameUniqueness,
+  validateConditionSyntax,
   validateConditionReferences,
   validateComputedVariableReferences,
 } from "@/lib/validation"
@@ -1467,9 +1468,11 @@ export const parseQuestionnaire = (text: string): { blocks: Block[], navItems: N
     // Derive navigation items from pages with navLevel metadata
     const navItems = deriveNavItemsFromPages(blocks)
 
-    // Run validation checks
+    // Run validation checks (syntax before references, so a malformed
+    // condition is reported as such rather than as missing variables)
     validateVariableNames(blocks)
     validateBlockComputedNameUniqueness(blocks)
+    validateConditionSyntax(blocks)
     validateConditionReferences(blocks)
     validateComputedVariableReferences(blocks)
 

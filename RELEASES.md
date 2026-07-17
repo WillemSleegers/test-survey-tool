@@ -1,5 +1,18 @@
 # Release Notes
 
+## Unreleased
+
+### Changes
+
+- **Rewritten condition engine**: `SHOW_IF` and `COMPUTE` expressions are now evaluated by a real expression parser instead of string splitting. What this changes for surveys:
+  - **Parentheses work**: `SHOW_IF: (age >= 65 OR age < 30) AND consent == Yes` now groups correctly (previously it silently mis-evaluated)
+  - **Keywords are UPPERCASE-only**: `AND`, `OR`, `NOT`, `IS`, `IS_NOT`, `STARTS_WITH` etc. are only recognized in uppercase, so unquoted answer values containing words like "or" ("Several weeks or more") are no longer torn apart. Lowercase `and`/`or`/`not` are now treated as plain text
+  - **`NOT` binds tighter than `AND`/`OR`**: `NOT a AND b` now means `(NOT a) AND b` (conventional precedence); previously it negated everything after it. No surveys or examples in this repository used the old interpretation
+  - **String comparisons fixed**: comparing two text variables (`name1 == name2`) now compares their text; previously both sides were coerced to numbers, making any two non-numeric values "equal"
+  - **`STARTS_WITH` accepts quoted values**: `STARTS_WITH crime == "Yes"` now works the same as the unquoted form
+  - **No more JavaScript evaluation**: arithmetic is evaluated by the parser itself instead of generated JavaScript code, so survey text can never execute code
+- **Malformed conditions are now rejected when a survey is loaded**: every `SHOW_IF` and `COMPUTE` expression — on blocks, pages, sections, questions, options, and matrix subquestions — is syntax-checked at parse time, and errors name the exact location (e.g. `Question "Q3" option "Sometimes" SHOW_IF "mode == (": Unbalanced parentheses`). Previously a broken condition silently kept its content visible; surveys that relied on that will now fail to load until the condition is fixed. The runtime evaluator keeps a fail-safe default (content stays visible plus a console warning) as a last resort for conditions that slip past validation
+
 ## Version 0.5.0
 
 ### Changes

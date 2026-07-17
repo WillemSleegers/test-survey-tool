@@ -1,5 +1,7 @@
-import { Variables } from "@/lib/types"
-import { ComparisonOperator } from "./condition-parser"
+/**
+ * Supported comparison operators
+ */
+export type ComparisonOperator = "==" | "!=" | ">=" | "<=" | ">" | "<"
 
 /**
  * Represents a response value that can be compared
@@ -15,18 +17,6 @@ export type ResponseValue = string | string[] | boolean | number | undefined | n
 export function isNumericValue(rawValue: string): boolean {
   const numValue = parseFloat(rawValue)
   return !isNaN(numValue) && rawValue.trim() === numValue.toString()
-}
-
-/**
- * Extracts the actual comparison value from a raw string
- * Handles both quoted strings ("value") and unquoted values
- * 
- * @param rawValue - The raw value string from the condition
- * @returns The extracted value without quotes
- */
-export function extractComparisonValue(rawValue: string): string {
-  const quotedMatch = rawValue.match(/^["'](.*)["']$/)
-  return quotedMatch ? quotedMatch[1] : rawValue
 }
 
 /**
@@ -111,29 +101,3 @@ export function compareNumericValue(
   }
 }
 
-/**
- * Handles special case comparisons for empty string checks
- * 
- * @param variable - The variable name
- * @param responseValue - The response value
- * @param responses - All responses  
- * @param operator - The comparison operator
- * @returns The comparison result for empty string checks
- */
-export function compareEmptyString(
-  variable: string,
-  responseValue: ResponseValue,
-  variables: Variables,
-  operator: ComparisonOperator
-): boolean {
-  const variableValue = variables[variable]
-
-  if (variableValue === undefined) {
-    // Variable was never set - return based on operator
-    return operator === "==" ? true : false
-  }
-
-  // Variable exists but check if empty
-  const isEmpty = variableValue === "" || (Array.isArray(variableValue) && variableValue.length === 0)
-  return operator === "==" ? isEmpty : !isEmpty
-}

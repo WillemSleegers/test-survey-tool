@@ -46,6 +46,37 @@ export default function ConditionalsPage() {
           </div>
 
           <div className="space-y-3">
+            <h4 className="text-lg font-semibold">Operator Precedence and Values</h4>
+            <ul className="list-disc list-outside ml-5 space-y-2">
+              <li>
+                <code>NOT</code> binds tighter than <code>AND</code>, and{" "}
+                <code>AND</code> binds tighter than <code>OR</code>:{" "}
+                <code>a AND b OR c</code> means <code>(a AND b) OR c</code>
+              </li>
+              <li>
+                Use parentheses to group:{" "}
+                <code>(age &gt;= 65 OR age &lt; 30) AND consent == Yes</code>
+              </li>
+              <li>
+                Keywords are recognized in UPPERCASE only, so unquoted answer
+                values containing words like &quot;or&quot; stay plain text:{" "}
+                <code>usage == Several weeks or more</code>
+              </li>
+              <li>
+                Values may be quoted: <code>usage == &quot;Several weeks or
+                more&quot;</code>. Quotes are required when a value contains an
+                operator character (<code>+</code>, <code>-</code>,{" "}
+                <code>&gt;</code>, ...) or an UPPERCASE keyword
+              </li>
+              <li>
+                Malformed conditions are rejected when the survey is loaded,
+                with an error naming the block, page, section, question, or
+                option they belong to
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
             <h4 className="text-lg font-semibold">Example</h4>
             {renderExample(`Q: Do you have pets?
 - Yes
