@@ -177,11 +177,11 @@ export function MatrixQuestion({
           {hasOptions && (
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left font-medium w-1/4"></TableHead>
+                <TableHead className="text-left font-medium"></TableHead>
                 {responseOptions.map((option, index) => (
                   <TableHead
                     key={index}
-                    className="text-center text-base font-normal whitespace-normal align-bottom px-3 py-2"
+                    className="w-24 text-center text-base font-normal whitespace-normal align-bottom px-3 py-2"
                   >
                     <Markdown remarkPlugins={remarkPlugins}>
                       {replacePlaceholders(

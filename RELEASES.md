@@ -35,6 +35,8 @@
 
 - **Fixed checkbox options rendering as circles**: All checkbox inputs, not just `EXCLUSIVE` ones, were rendering as full circles instead of rounded squares. The checkbox's corner radius used the theme's `--radius-lg` (10px), which exceeds half the checkbox's 16px size — the browser clamps that to a perfect circle regardless of the intended shape. Non-exclusive checkboxes now use a fixed 4px radius so they render as squares again; `EXCLUSIVE` options are unaffected and still render as circles
 
+- **Fixed matrix tables being too wide with few response options**: The row-label column had a fixed 25% width, so with `table-fixed` layout the remaining 75% was split evenly across however many response-option columns existed — a 2-option matrix (e.g. Yes/No) ended up with very wide, mostly-empty columns. Response-option columns now use a fixed width instead, and the row-label column takes up the remaining space
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
