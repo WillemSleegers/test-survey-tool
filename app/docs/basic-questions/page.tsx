@@ -26,7 +26,15 @@ export default function BasicQuestionsPage() {
           </li>
           <li>Use numbers when you want to reference questions explicitly</li>
           <li>
-            Question text must be on a single line after <code>Q:</code>
+            Question text is normally a single line after <code>Q:</code>.
+            Wrap it in <code>&quot;&quot;&quot;</code> delimiters to write
+            multi-line, multi-paragraph markdown instead:{" "}
+            <code>Q: &quot;&quot;&quot;</code> on its own line, the markdown
+            content, then a closing <code>&quot;&quot;&quot;</code> on its
+            own line. Lines starting with <code>-</code> or{" "}
+            <code>*</code> inside the delimited block render as a bullet
+            list and are never treated as answer options — useful when the
+            question itself needs to reference a list.
           </li>
           <li>
             Questions default to a text input question or, when options are
@@ -50,6 +58,24 @@ Q: What is your favorite color?
 
 Q: How old are you?
 NUMBER`)}
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-xl font-semibold">Multi-line question text</h3>
+        <p className="text-sm">
+          Use <code>&quot;&quot;&quot;</code> delimiters for any question text
+          that spans multiple lines or paragraphs. This also covers the case
+          where the question needs to reference a list, without turning that
+          list into answer options.
+        </p>
+        {renderExample(`Q: """
+Which of these measures has your employer provided?
+
+- Climate-appropriate clothing/gear
+- Information and training about handling climate-related risks
+"""
+- Yes
+- No`)}
       </div>
     </div>
   )

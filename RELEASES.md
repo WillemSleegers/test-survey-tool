@@ -6,6 +6,9 @@
 
 - **`EXCLUSIVE` checkbox options**: A checkbox option can now be marked `- EXCLUSIVE` (indented under the option, like `- TEXT`) so selecting it deselects every other selected option, and selecting any other option deselects it. Useful for options like "None of the above". A question can have more than one exclusive option; selecting one always deselects the others. Exclusive options render with a circular, radio-style indicator to signal this to respondents
 
+- **Multi-line `Q:` text**: Question text can now span multiple lines using `"""` delimiters, the same convention already used by `HINT:`, `REVEAL:`, and `TOOLTIP:`. This lets a question reference a bulleted or numbered list of examples as part of its own text (e.g. "has your employer provided any of the following measures: ...") without those list items being mistaken for answer options
+  - Example: `Q: """` on its own line, the markdown content (including a `-` or `*` list), then a closing `"""` on its own line, followed by the actual options
+
 - **Summed comparisons in `COMPUTE:`**: A computed variable can now add up multiple comparisons, e.g. `COMPUTE: hazard_total = heat == Yes + cold == Yes + severe == Yes`, counting 1 for each matching term. Plain numbers can be mixed into the sum, and the result can be used like any other computed variable (placeholders, `SHOW_IF`)
 
 - **`TOOLTIP:` is now a popover, `REVEAL:` is the old inline panel**: The previous `TOOLTIP:` keyword toggled an inline info panel below the element; that behavior is now `REVEAL:`. `TOOLTIP:` instead shows a small popover next to the text on click, for shorter contextual hints. Both are supported on pages, sections, questions, options, and matrix subquestions, and can be combined
@@ -27,6 +30,10 @@
 - **Fixed page navigator block visibility**: The page navigator was re-evaluating block `SHOW_IF` conditions using the current page's computed variables instead of the global computed variables, which could cause it to show a different visibility state than the actual survey navigation. The navigator now derives block visibility directly from the viewer's own computation.
 
 - **Hidden pages no longer clutter the nav sidebar**: `NAVIGATION` items were built once at parse time and shown unconditionally, so a page excluded by `SHOW_IF` still appeared in the respondent's sidebar (permanently greyed out). Nav items are now filtered by current page visibility, and reappear automatically once the respondent's answers make the page reachable again. A visible level-2 item whose level-1 parent is hidden is promoted to a top-level entry so it isn't lost from the nav.
+
+- **Fixed dash-bulleted lists inside `"""` blocks being parsed as answer options**: A `-` line inside a delimited `HINT:`, `REVEAL:`, or `TOOLTIP:` block (e.g. a bullet list of examples) was being scraped by the option parser as a real, selectable option in addition to being rendered as text. Delimited content is now correctly excluded from option and question-type detection, so `-` and `*` lists inside any `"""` block render as plain lists and never become options
+
+- **Fixed checkbox options rendering as circles**: All checkbox inputs, not just `EXCLUSIVE` ones, were rendering as full circles instead of rounded squares. The checkbox's corner radius used the theme's `--radius-lg` (10px), which exceeds half the checkbox's 16px size — the browser clamps that to a perfect circle regardless of the intended shape. Non-exclusive checkboxes now use a fixed 4px radius so they render as squares again; `EXCLUSIVE` options are unaffected and still render as circles
 
 ### Internal
 

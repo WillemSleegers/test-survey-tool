@@ -27,7 +27,12 @@ export default function HintsPage() {
             Also works with <code>REVEAL:</code>, <code>TOOLTIP:</code>, and{" "}
             <code>SHOW_IF:</code>
           </li>
-          <li>Supports Markdown formatting</li>
+          <li>
+            Supports Markdown formatting, including bullet lists. Lines
+            starting with <code>-</code> or <code>*</code> inside a delimited
+            <code>&quot;&quot;&quot;</code> block render as a list and are
+            never mistaken for question options
+          </li>
         </ul>
       </div>
 
@@ -42,7 +47,17 @@ HINT: """
 Please be as detailed as possible.
 Include specific examples where relevant.
 """
-ESSAY`)}
+ESSAY
+
+Q: Has your employer provided any of the following measures?
+HINT: """
+Examples include:
+
+- Climate-appropriate clothing/gear
+- Information and training about handling climate-related risks
+"""
+- Yes
+- No`)}
       </div>
     </div>
   )

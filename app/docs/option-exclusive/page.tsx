@@ -39,14 +39,14 @@ export default function OptionExclusivePage() {
       <div className="space-y-3">
         <h3 className="text-xl font-semibold">Example</h3>
         {renderExample(`Q: Which of these do you own?
-CHECKBOX
 - A car
 - A bicycle
 - A motorcycle
 - None of the above
   - EXCLUSIVE
 - Prefer not to say
-  - EXCLUSIVE`)}
+  - EXCLUSIVE
+CHECKBOX`)}
       </div>
     </div>
   )

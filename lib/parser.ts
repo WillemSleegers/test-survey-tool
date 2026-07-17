@@ -163,6 +163,61 @@ const parseDelimitedContent = (
 }
 
 /**
+ * Remove lines that fall inside a top-level `KEYWORD: """ ... """` block
+ * (HINT/REVEAL/TOOLTIP/VARIABLE/SHOW_IF/Q). Used before scanning a question
+ * chunk for options, subquestions, or type markers, so list items or other
+ * `-` lines written inside delimited content are never mistaken for them.
+ * Option-level (dash-prefixed) delimited blocks, e.g. `- HINT: """`, are
+ * left untouched since they're handled by their own state machines.
+ */
+const stripTopLevelDelimitedContent = (lines: string[]): string[] => {
+  const result: string[] = []
+  let inDelimited = false
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (inDelimited) {
+      if (trimmed === '"""') {
+        inDelimited = false
+      }
+      continue
+    }
+
+    if (matches(trimmed, /^(HINT|REVEAL|TOOLTIP|VARIABLE|SHOW_IF|Q\d*):\s*"""$/)) {
+      inDelimited = true
+      continue
+    }
+
+    result.push(line)
+  }
+
+  return result
+}
+
+/**
+ * Extract question text after `Q:`/`Q1:`/etc. Supports both single-line
+ * text and `"""`-delimited multi-line text (markdown, including lists).
+ */
+const parseQuestionText = (lines: string[]): string => {
+  const startIndex = lines.findIndex((line) => matches(line.trim(), /^Q\d*:/))
+  if (startIndex === -1) return ''
+
+  const afterKeyword = lines[startIndex].trim().replace(/^Q\d*:\s*/, '')
+  if (afterKeyword !== '"""') {
+    return afterKeyword
+  }
+
+  const buffer: string[] = []
+  for (let i = startIndex + 1; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (trimmed === '"""') break
+    buffer.push(removeIndentation(lines[i]))
+  }
+  return buffer.join('\n')
+}
+
+/**
  * Create an option with value and label set to the same string
  */
 const createOption = (label: string, overrides?: Partial<Option>): Option => ({
@@ -306,6 +361,13 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
 
       // Start new question
       currentQuestionStart = i
+
+      // If the question text itself opens a delimited (multi-line) block,
+      // skip subsequent lines until the closing delimiter so they aren't
+      // treated as new questions, structural markers, or options.
+      if (trimmed.replace(/^Q\d*:\s*/, '') === '"""') {
+        inDelimitedContent = true
+      }
     } else if (currentQuestionStart !== null && !trimmed) {
       // Blank line - check if next non-blank line is an option
       let nextNonBlankIndex = i + 1
@@ -348,6 +410,7 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
  * Determine question type by scanning for keywords and patterns
  */
 const determineQuestionType = (lines: string[]): Question["type"] => {
+  const scanLines = stripTopLevelDelimitedContent(lines)
   let hasSubquestions = false
   let hasOptions = false
   let hasRange = false
@@ -357,7 +420,7 @@ const determineQuestionType = (lines: string[]): Question["type"] => {
   let hasExplicitNumberType = false
   let hasExplicitCheckboxType = false
 
-  for (const line of lines) {
+  for (const line of scanLines) {
 
     const trimmed = line.trim()
 
@@ -413,13 +476,7 @@ const determineQuestionType = (lines: string[]): Question["type"] => {
 const parseQuestionBase = (lines: string[], questionCounter: { count: number }) => {
   const id = `Q${questionCounter.count++}`
 
-  // Extract question text (first line after Q:)
-  const questionLine = lines.find((line) =>
-    matches(line.trim(), /^Q\d*:/)
-  )
-  const text = questionLine
-    ? questionLine.trim().replace(/^Q\d*:\s*/, '')
-    : ''
+  const text = parseQuestionText(lines)
 
   return {
     id,
@@ -560,11 +617,12 @@ const applyHintRevealOrTooltip = (
  * Parse options for multiple choice and checkbox questions
  */
 const parseOptions = (lines: string[]): Option[] => {
+  const scanLines = stripTopLevelDelimitedContent(lines)
   const options: Option[] = []
   let currentOption: Partial<Option> | null = null
   const state: MultiLineState = { collectingHint: false, collectingReveal: false, collectingTooltip: false, hintBuffer: [], revealBuffer: [], tooltipBuffer: [] }
 
-  for (const line of lines) {
+  for (const line of scanLines) {
     const trimmed = line.trim()
 
     if (handleMultiLineContent(trimmed, currentOption, state)) continue
@@ -691,11 +749,12 @@ const parseCheckboxQuestion = (lines: string[], questionCounter: { count: number
  * Parse subquestions for matrix questions
  */
 const parseSubquestions = (lines: string[], baseId: string): Subquestion[] => {
+  const scanLines = stripTopLevelDelimitedContent(lines)
   const subquestions: Subquestion[] = []
   let currentSubquestion: Partial<Subquestion> | null = null
   let subquestionIndex = 0
 
-  for (const line of lines) {
+  for (const line of scanLines) {
 
     const trimmed = line.trim()
 
@@ -771,11 +830,12 @@ const parseMatrixQuestion = (lines: string[], questionCounter: { count: number }
  * Parse breakdown options
  */
 const parseBreakdownOptions = (lines: string[]): BreakdownOption[] => {
+  const scanLines = stripTopLevelDelimitedContent(lines)
   const options: BreakdownOption[] = []
   let currentOption: Partial<BreakdownOption> | null = null
   const state: MultiLineState = { collectingHint: false, collectingReveal: false, collectingTooltip: false, hintBuffer: [], revealBuffer: [], tooltipBuffer: [] }
 
-  for (const line of lines) {
+  for (const line of scanLines) {
     const trimmed = line.trim()
 
     if (handleMultiLineContent(trimmed, currentOption, state)) continue
