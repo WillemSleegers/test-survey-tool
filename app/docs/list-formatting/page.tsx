@@ -32,6 +32,12 @@ export default function ListFormattingPage() {
           <li>
             Perfect for inserting lists within question text or page content
           </li>
+          <li>
+            An unanswered checkbox variable renders as &quot;none&quot;, and the
+            joining word before the last item is &quot;and&quot; — both follow the
+            survey&apos;s language setting (e.g. Dutch renders &quot;geen&quot; and
+            &quot;en&quot;)
+          </li>
         </ul>
       </div>
 

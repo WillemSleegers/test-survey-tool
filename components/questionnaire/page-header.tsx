@@ -5,6 +5,7 @@ import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { Page, Variables, ComputedValues } from "@/lib/types"
 import { RevealButton } from "@/components/shared/reveal-button"
 import { TooltipButton } from "@/components/shared/tooltip-button"
+import { useLanguage } from "@/contexts/language-context"
 
 interface PageHeaderProps {
   /** The page to render header for */
@@ -29,20 +30,22 @@ interface PageHeaderProps {
  */
 export function PageHeader({ page, variables, computedVariables }: PageHeaderProps) {
   const [isRevealVisible, setIsRevealVisible] = useState(false)
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
 
   const processedTitle = page.title.trim()
-    ? replacePlaceholders(page.title, variables, computedVariables).trim()
+    ? replacePlaceholders(page.title, variables, computedVariables, listFormat).trim()
     : ''
 
   // Don't render anything if title is empty
   if (!processedTitle) return null
 
   const processedReveal = page.reveal
-    ? replacePlaceholders(page.reveal, variables, computedVariables)
+    ? replacePlaceholders(page.reveal, variables, computedVariables, listFormat)
     : null
 
   const processedTooltip = page.tooltip
-    ? replacePlaceholders(page.tooltip, variables, computedVariables)
+    ? replacePlaceholders(page.tooltip, variables, computedVariables, listFormat)
     : null
 
   return (

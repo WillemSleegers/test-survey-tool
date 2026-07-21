@@ -5,6 +5,7 @@ import { Variables, ComputedValues } from "@/lib/types"
 import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
 import { RevealButton } from "@/components/shared/reveal-button"
 import { TooltipButton } from "@/components/shared/tooltip-button"
+import { useLanguage } from "@/contexts/language-context"
 
 interface QuestionHeaderProps {
   /** The main question text */
@@ -41,11 +42,13 @@ interface QuestionHeaderProps {
  */
 export function QuestionHeader({ text, subtext, reveal, tooltip, variables, computedVariables }: QuestionHeaderProps) {
   const [isRevealVisible, setIsRevealVisible] = useState(false)
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
 
-  const processedText = replacePlaceholders(text, variables, computedVariables)
-  const processedSubtext = subtext ? replacePlaceholders(subtext, variables, computedVariables) : undefined
-  const processedReveal = reveal ? replacePlaceholders(reveal, variables, computedVariables) : undefined
-  const processedTooltip = tooltip ? replacePlaceholders(tooltip, variables, computedVariables) : undefined
+  const processedText = replacePlaceholders(text, variables, computedVariables, listFormat)
+  const processedSubtext = subtext ? replacePlaceholders(subtext, variables, computedVariables, listFormat) : undefined
+  const processedReveal = reveal ? replacePlaceholders(reveal, variables, computedVariables, listFormat) : undefined
+  const processedTooltip = tooltip ? replacePlaceholders(tooltip, variables, computedVariables, listFormat) : undefined
 
   return (
     <div className="space-y-1">

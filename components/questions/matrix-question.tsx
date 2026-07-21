@@ -18,6 +18,7 @@ import { MatrixQuestion as MatrixQuestionType, Responses, Variables, ComputedVal
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useInstanceId } from "@/contexts/instance-id-context"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MatrixQuestionProps {
   /** The question configuration */
@@ -68,6 +69,8 @@ export function MatrixQuestion({
   computedVariables,
 }: MatrixQuestionProps) {
   const instanceId = useInstanceId()
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
   // startTabIndex is required by interface but currently unused - matrix questions use default tab behavior
   void startTabIndex
 
@@ -187,7 +190,8 @@ export function MatrixQuestion({
                       {replacePlaceholders(
                         option.label,
                         variables,
-                        computedVariables
+                        computedVariables,
+                        listFormat
                       )}
                     </Markdown>
                   </TableHead>
@@ -220,7 +224,8 @@ export function MatrixQuestion({
                             {replacePlaceholders(
                               subquestion.text,
                               variables,
-                              computedVariables
+                              computedVariables,
+                              listFormat
                             )}
                           </Markdown>
                         </span>
@@ -229,7 +234,8 @@ export function MatrixQuestion({
                             content={replacePlaceholders(
                               subquestion.tooltip,
                               variables,
-                              computedVariables
+                              computedVariables,
+                              listFormat
                             )}
                           />
                         )}
@@ -243,7 +249,8 @@ export function MatrixQuestion({
                             {replacePlaceholders(
                               subquestion.subtext,
                               variables,
-                              computedVariables
+                              computedVariables,
+                              listFormat
                             )}
                           </Markdown>
                         </div>
@@ -255,7 +262,8 @@ export function MatrixQuestion({
                               {replacePlaceholders(
                                 subquestion.reveal,
                                 variables,
-                                computedVariables
+                                computedVariables,
+                                listFormat
                               )}
                             </Markdown>
                           </div>

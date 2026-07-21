@@ -1,6 +1,6 @@
-import { Variables, ComputedValues } from "@/lib/types"
+import { Variables, ComputedValues, ListFormat } from "@/lib/types"
 import { processConditionalPlaceholders } from "./placeholder-processor"
-import { processVariablePlaceholders } from "./variable-replacer"
+import { processVariablePlaceholders, DEFAULT_LIST_FORMAT } from "./variable-replacer"
 
 /**
  * Creates an extended variables object that includes computed variables
@@ -30,8 +30,9 @@ function createExtendedVariables(
  * @param text - Text containing placeholders to process
  * @param variables - User variables for condition evaluation and variable replacement
  * @param computedVariables - Optional computed variables from current section
+ * @param listFormat - Localized empty-array text and list conjunction (defaults to English)
  * @returns Fully processed text with all placeholders resolved
- * 
+ *
  * @example
  * replacePlaceholders(
  *   "{{IF age >= 18 THEN Welcome {name} ELSE Access denied}}",
@@ -42,7 +43,8 @@ function createExtendedVariables(
 export function replacePlaceholders(
   text: string | undefined,
   variables: Variables,
-  computedVariables?: ComputedValues
+  computedVariables?: ComputedValues,
+  listFormat: ListFormat = DEFAULT_LIST_FORMAT
 ): string {
   if (!text) return ""
 
@@ -51,5 +53,5 @@ export function replacePlaceholders(
 
   // First process conditional placeholders, then variable placeholders
   const afterConditionals = processConditionalPlaceholders(text, extendedVariables, computedVariables)
-  return processVariablePlaceholders(afterConditionals, extendedVariables)
+  return processVariablePlaceholders(afterConditionals, extendedVariables, listFormat)
 }

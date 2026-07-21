@@ -64,9 +64,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 - [x] Rewrite CLAUDE.md "Documentation System" section — **done**: now describes route-per-topic (`app/docs/<section>/page.tsx`), `renderCodeBlock`/`renderExample` from `doc-helpers.tsx`, and the pathname-derived sidebar; also trimmed the rest of CLAUDE.md (325 → 147 lines) for drift-risk
 - [x] Correct RELEASES 0.5.0 TOOLTIP/REVEAL claims — **done**: reworded to "pages, sections, questions, breakdown options, and matrix subquestions", plus a note that radio/checkbox options parse but don't yet render TOOLTIP/REVEAL/HINT (tracked separately below)
-- [ ] Localize "none" for empty checkbox arrays
-  - Hardcoded English in `lib/text-processing/variable-replacer.ts:130` despite the language context and Dutch support (`ja`/`nee` in value-converter)
-  - **Plan**: `formatArrayValue` also hardcodes English "and" for inline lists — fix both together. Add an optional `listFormat: { empty: string; conjunction: string }` parameter threaded through `replacePlaceholders`; components pass values from `useLanguage` (add `lists.none` / `lists.and` keys to the translations). Default stays English so non-component callers don't break. Test with a Dutch survey rendering an empty and a multi-item checkbox variable
+- [x] Localize "none" for empty checkbox arrays — **done**: added `ListFormat` type (`lib/types.ts`) and `lists.none`/`lists.and` translation keys (`en.ts`/`nl.ts`); `formatArrayValue`/`processVariablePlaceholders`/`replacePlaceholders` take an optional `listFormat` param (default English, `DEFAULT_LIST_FORMAT` in `variable-replacer.ts`) so the two pure, non-component callers (`lib/breakdown-calculations.ts`, `lib/response-variables.ts`) are unaffected; the six components that call `replacePlaceholders` (`page-header.tsx`, `section-renderer.tsx`, `question-header.tsx`, `option-label-content.tsx`, `breakdown-question.tsx`, `matrix-question.tsx`) each pull `t('lists.none')`/`t('lists.and')` from `useLanguage()`. Tests in `lib/text-processing/variable-replacer.test.ts`; docs note added to the list-formatting page
 
 ## Medium Priority
 

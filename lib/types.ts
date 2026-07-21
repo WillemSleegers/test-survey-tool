@@ -171,3 +171,8 @@ export type ConditionalPlaceholder = {
   falseText: string
 }
 
+export type ListFormat = {
+  empty: string
+  conjunction: string
+}
+

@@ -27,6 +27,8 @@
 
 - **Tooltip and reveal icons now sit consistently next to the text everywhere**: pages, sections, questions, breakdown/matrix/multiple-choice/checkbox options previously used two different layouts — a fixed left-margin icon for `REVEAL:` and an icon trailing the text for `TOOLTIP:` — which drifted apart once a label wrapped to multiple lines (the left-margin icon centers on the whole block; text-trailing follows the last line). Both icons now trail the text everywhere, in the same order (tooltip, then reveal), and are sized to fit inside a line of text instead of overhanging it. The page no longer reserves a left icon gutter (`pl-8`), since nothing is positioned there anymore
 
+- **Empty checkbox variables and list conjunctions are now localized**: `{selections}` on an unanswered checkbox variable rendered as the English word "none" and `{colors AS INLINE_LIST}` always joined the last item with "and", regardless of the survey's language setting. Both now follow the current language (Dutch: "geen"/"en")
+
 - **Block-level computed variables are now global**: A `COMPUTE:` defined at block level is visible everywhere in the survey, not just within its own block
   - Block-level computeds can reference each other across blocks (resolved by dependency order)
   - A `SHOW_IF:` on any block, page, section, or question can now reference a computed defined in any other block

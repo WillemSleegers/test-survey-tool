@@ -21,4 +21,8 @@ export const nl = {
     noPages:
       "Er zijn momenteel geen pagina's zichtbaar op basis van uw antwoorden.",
   },
+  lists: {
+    none: "geen",
+    and: "en",
+  },
 } as const

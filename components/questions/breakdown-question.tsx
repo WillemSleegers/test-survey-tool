@@ -8,6 +8,7 @@ import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useInstanceId } from "@/contexts/instance-id-context"
+import { useLanguage } from "@/contexts/language-context"
 import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
 
 const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
@@ -65,6 +66,8 @@ export function BreakdownQuestion({
   computedVariables
 }: BreakdownQuestionProps) {
   const instanceId = useInstanceId()
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
 
   const responseValue = responses[question.id]
   const currentValues = (typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue))
@@ -126,7 +129,7 @@ export function BreakdownQuestion({
     let value = currentValues[key] || ""
     let hasUnresolvedPlaceholders = false
     if (isReadOnly) {
-      value = replacePlaceholders(option.prefillValue!, variables, computedVariables)
+      value = replacePlaceholders(option.prefillValue!, variables, computedVariables, listFormat)
       hasUnresolvedPlaceholders = value.includes('\\{')
     }
     return { key, isReadOnly, value, hasUnresolvedPlaceholders }
@@ -137,7 +140,7 @@ export function BreakdownQuestion({
       return (
         <TableRow key={index}>
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables, listFormat)}</Markdown>
           </TableCell>
         </TableRow>
       )
@@ -224,7 +227,7 @@ export function BreakdownQuestion({
                 return (
                   <TableRow key={index}>
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
-                      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables)}</Markdown>
+                      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables, listFormat)}</Markdown>
                     </TableCell>
                   </TableRow>
                 )
@@ -309,7 +312,7 @@ export function BreakdownQuestion({
             {totalLabel && (
               <TableRow className="border-t border-border">
                 <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables, listFormat)}</Markdown>
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
@@ -339,7 +342,7 @@ export function BreakdownQuestion({
               {totalLabel && (
                 <TableRow className="border-t border-border">
                   <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables)}</Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables, listFormat)}</Markdown>
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
                     {questionPrefix}{total}{questionSuffix}

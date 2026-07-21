@@ -9,6 +9,7 @@ import Markdown from "react-markdown"
 import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
 import { RevealButton } from "@/components/shared/reveal-button"
 import { TooltipButton } from "@/components/shared/tooltip-button"
+import { useLanguage } from "@/contexts/language-context"
 
 interface SectionRendererProps {
   section: Section
@@ -28,13 +29,15 @@ export function SectionRenderer({
   computedVariables,
 }: SectionRendererProps) {
   const [isRevealVisible, setIsRevealVisible] = useState(false)
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
 
   const processedReveal = section.reveal
-    ? replacePlaceholders(section.reveal, variables, computedVariables)
+    ? replacePlaceholders(section.reveal, variables, computedVariables, listFormat)
     : null
 
   const processedTooltip = section.tooltip
-    ? replacePlaceholders(section.tooltip, variables, computedVariables)
+    ? replacePlaceholders(section.tooltip, variables, computedVariables, listFormat)
     : null
 
   const renderContentItem = (content: string) => (
@@ -144,7 +147,7 @@ export function SectionRenderer({
       {/* Interleaved Section Items (text and questions) */}
       {section.items.map((item, index) => {
         if (isText(item)) {
-          const processedText = replacePlaceholders(item.value, variables, computedVariables).trim()
+          const processedText = replacePlaceholders(item.value, variables, computedVariables, listFormat).trim()
           return processedText ? (
             <React.Fragment key={`content-${index}`}>
               {renderContentItem(processedText)}

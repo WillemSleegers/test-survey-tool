@@ -1,5 +1,7 @@
-import { Variables } from "@/lib/types"
+import { Variables, ListFormat } from "@/lib/types"
 import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/expression-evaluator"
+
+export const DEFAULT_LIST_FORMAT: ListFormat = { empty: "none", conjunction: "and" }
 
 /**
  * Processes variable placeholders and arithmetic expressions in text
@@ -16,8 +18,9 @@ import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/exp
  * 
  * @param text - Text containing variable placeholders and expressions
  * @param variables - User variables to get variable values from
+ * @param listFormat - Localized empty-array text and list conjunction (defaults to English)
  * @returns Text with placeholders replaced with actual values or computed results
- * 
+ *
  * @example
  * processVariablePlaceholders("Hello {name}!", variables)
  * // Returns "Hello John!" if name variable = "John"
@@ -33,7 +36,8 @@ import { evaluateExpression, isArithmeticExpression } from "@/lib/conditions/exp
  */
 export function processVariablePlaceholders(
   text: string,
-  variables: Variables
+  variables: Variables,
+  listFormat: ListFormat = DEFAULT_LIST_FORMAT
 ): string {
   // Updated regex to capture any content inside braces (including expressions with spaces and operators)
   return text.replace(/\{([^}]+)\}/g, (match, content) => {
@@ -55,7 +59,7 @@ export function processVariablePlaceholders(
 
       // Handle array values with formatting
       if (Array.isArray(value)) {
-        return formatArrayValue(value, format.toLowerCase() as 'list' | 'inline_list')
+        return formatArrayValue(value, format.toLowerCase() as 'list' | 'inline_list', listFormat)
       }
 
       // For non-array values, just return as string regardless of format
@@ -94,7 +98,7 @@ export function processVariablePlaceholders(
 
       // Handle array values (from checkbox questions)
       if (Array.isArray(value)) {
-        return formatArrayValue(value)
+        return formatArrayValue(value, undefined, listFormat)
       }
 
       // Handle different value types
@@ -114,20 +118,25 @@ export function processVariablePlaceholders(
 
 /**
  * Formats array values for display in text
- * 
+ *
  * @param value - Array of selected values
  * @param format - Optional format type ('list' or 'inline_list')
+ * @param listFormat - Localized empty-array text and list conjunction (defaults to English)
  * @returns Formatted string representation
- * 
+ *
  * @example
  * formatArrayValue([]) // "none"
  * formatArrayValue(["Red"]) // "Red"
  * formatArrayValue(["Red", "Blue"]) // "\n- Red\n- Blue\n\n"
  * formatArrayValue(["Red", "Blue", "Green"], "inline_list") // "red, blue, and green"
  */
-function formatArrayValue(value: string[], format?: 'list' | 'inline_list'): string {
+function formatArrayValue(
+  value: string[],
+  format?: 'list' | 'inline_list',
+  listFormat: ListFormat = DEFAULT_LIST_FORMAT
+): string {
   if (value.length === 0) {
-    return "none"
+    return listFormat.empty
   } else if (value.length === 1) {
     // For inline_list with single item, lowercase it
     if (format === 'inline_list') {
@@ -139,11 +148,11 @@ function formatArrayValue(value: string[], format?: 'list' | 'inline_list'): str
       // Convert to comma-separated list with Oxford comma and lowercase
       const lowercaseItems = value.map(item => item.toLowerCase())
       if (lowercaseItems.length === 2) {
-        return `${lowercaseItems[0]} and ${lowercaseItems[1]}`
+        return `${lowercaseItems[0]} ${listFormat.conjunction} ${lowercaseItems[1]}`
       } else {
         const allButLast = lowercaseItems.slice(0, -1)
         const last = lowercaseItems[lowercaseItems.length - 1]
-        return `${allButLast.join(', ')}, and ${last}`
+        return `${allButLast.join(', ')}, ${listFormat.conjunction} ${last}`
       }
     } else {
       // Convert to markdown unordered list with surrounding newlines (default behavior)

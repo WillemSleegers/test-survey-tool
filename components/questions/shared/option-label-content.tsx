@@ -5,6 +5,7 @@ import { RevealButton } from "@/components/shared/reveal-button"
 import { TooltipButton } from "@/components/shared/tooltip-button"
 import { Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
+import { useLanguage } from "@/contexts/language-context"
 
 interface OptionLabelContentProps {
   label: string
@@ -42,9 +43,12 @@ export function OptionLabelContent({
   computedVariables,
   labelFor,
 }: OptionLabelContentProps) {
+  const { t } = useLanguage()
+  const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
+
   const labelText = (
     <span className="[&_p]:inline">
-      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(label, variables, computedVariables)}</Markdown>
+      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(label, variables, computedVariables, listFormat)}</Markdown>
     </span>
   )
 
@@ -59,7 +63,7 @@ export function OptionLabelContent({
           labelText
         )}
         {tooltip && (
-          <TooltipButton content={replacePlaceholders(tooltip, variables, computedVariables)} />
+          <TooltipButton content={replacePlaceholders(tooltip, variables, computedVariables, listFormat)} />
         )}
         {reveal && (
           <RevealButton onClick={() => onToggleReveal(optionValue)} className="ms-1" />
@@ -67,12 +71,12 @@ export function OptionLabelContent({
       </div>
       {hint && (
         <div className="text-base text-muted-foreground mt-0.5 font-normal">
-          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(hint, variables, computedVariables)}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(hint, variables, computedVariables, listFormat)}</Markdown>
         </div>
       )}
       {reveal && isRevealVisible && (
         <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(reveal, variables, computedVariables)}</Markdown>
+          <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(reveal, variables, computedVariables, listFormat)}</Markdown>
         </div>
       )}
     </div>

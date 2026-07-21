@@ -20,4 +20,8 @@ export const en = {
     noSections: "No sections are currently visible based on your responses.",
     noPages: "No pages are currently visible based on your responses.",
   },
+  lists: {
+    none: "none",
+    and: "and",
+  },
 } as const
