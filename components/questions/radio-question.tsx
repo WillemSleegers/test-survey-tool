@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { OptionLabelContent } from "./shared/option-label-content"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { MultipleChoiceQuestion, Responses, Variables, ComputedValues } from "@/lib/types"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useLanguage } from "@/contexts/language-context"
 import { useInstanceId } from "@/contexts/instance-id-context"
-import Markdown from "react-markdown"
-import { remarkPlugins } from "@/lib/markdown-components"
 
 interface RadioQuestionProps {
   /** The question configuration */
@@ -82,9 +80,24 @@ export function RadioQuestion({
   }
   
   const { baseValue, otherText } = parseResponse(responseString)
-  
+
   const [currentOtherText, setCurrentOtherText] = useState(otherText)
   const isAnswered = baseValue !== ""
+
+  // Track which option reveal panels are visible
+  const [visibleReveals, setVisibleReveals] = useState<Set<string>>(new Set())
+
+  const toggleReveal = (optionValue: string) => {
+    setVisibleReveals(prev => {
+      const next = new Set(prev)
+      if (next.has(optionValue)) {
+        next.delete(optionValue)
+      } else {
+        next.add(optionValue)
+      }
+      return next
+    })
+  }
 
   // Update local other text state when response changes
   useEffect(() => {
@@ -151,20 +164,25 @@ export function RadioQuestion({
 
           return (
             <div key={optionIndex} className="space-y-2">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-2">
                 <RadioGroupItem
                   value={option.value}
                   id={`${instanceId}${question.id}-${optionIndex}`}
                   tabIndex={radioTabIndex}
+                  className="mt-1"
                 />
-                <Label
-                  htmlFor={`${instanceId}${question.id}-${optionIndex}`}
-                  className="cursor-pointer text-base font-normal"
-                >
-                  <Markdown remarkPlugins={remarkPlugins}>
-                    {replacePlaceholders(option.label, variables, computedVariables)}
-                  </Markdown>
-                </Label>
+                <OptionLabelContent
+                  label={option.label}
+                  hint={option.hint}
+                  reveal={option.reveal}
+                  tooltip={option.tooltip}
+                  optionValue={option.value}
+                  isRevealVisible={visibleReveals.has(option.value)}
+                  onToggleReveal={toggleReveal}
+                  variables={variables}
+                  computedVariables={computedVariables}
+                  labelFor={`${instanceId}${question.id}-${optionIndex}`}
+                />
               </div>
               {option.allowsOtherText && (
                 <div className="ml-6">

@@ -20,8 +20,12 @@
 
 - **Summed comparisons in `COMPUTE:`**: A computed variable can now add up multiple comparisons, e.g. `COMPUTE: hazard_total = heat == Yes + cold == Yes + severe == Yes`, counting 1 for each matching term. Plain numbers can be mixed into the sum, and the result can be used like any other computed variable (placeholders, `SHOW_IF`)
 
-- **`TOOLTIP:` is now a popover, `REVEAL:` is the old inline panel**: The previous `TOOLTIP:` keyword toggled an inline info panel below the element; that behavior is now `REVEAL:`. `TOOLTIP:` instead shows a small popover next to the text on click, for shorter contextual hints. Both are supported on pages, sections, questions, breakdown options, and matrix subquestions, and can be combined. Radio/checkbox options parse `TOOLTIP:`/`REVEAL:`/`HINT:` but don't render them yet
+- **`TOOLTIP:` is now a popover, `REVEAL:` is the old inline panel**: The previous `TOOLTIP:` keyword toggled an inline info panel below the element; that behavior is now `REVEAL:`. `TOOLTIP:` instead shows a small popover next to the text on click, for shorter contextual hints. Both are supported on pages, sections, questions, all option types (including multiple-choice and checkbox), and matrix subquestions, and can be combined
   - Existing surveys using `TOOLTIP:` for inline panels should switch to `REVEAL:` to keep the same behavior
+
+- **`HINT:`, `TOOLTIP:`, and `REVEAL:` now render on multiple-choice and checkbox options**: these were already parsed on every option type but silently ignored for anything other than breakdown options. A `- HINT:`/`- TOOLTIP:`/`- REVEAL:` indented under a `-` option now shows the same muted subtext, popover, and collapsible panel as elsewhere
+
+- **Tooltip and reveal icons now sit consistently next to the text everywhere**: pages, sections, questions, breakdown/matrix/multiple-choice/checkbox options previously used two different layouts — a fixed left-margin icon for `REVEAL:` and an icon trailing the text for `TOOLTIP:` — which drifted apart once a label wrapped to multiple lines (the left-margin icon centers on the whole block; text-trailing follows the last line). Both icons now trail the text everywhere, in the same order (tooltip, then reveal), and are sized to fit inside a line of text instead of overhanging it. The page no longer reserves a left icon gutter (`pl-8`), since nothing is positioned there anymore
 
 - **Block-level computed variables are now global**: A `COMPUTE:` defined at block level is visible everywhere in the survey, not just within its own block
   - Block-level computeds can reference each other across blocks (resolved by dependency order)
@@ -71,6 +75,8 @@
 - Extracted breakdown subtotal computation (`computeSubtotalValues`/`subtotalVariables`) into `lib/breakdown-calculations.ts`, shared by `breakdown-question.tsx` and `lib/response-variables.ts` instead of being duplicated
 - Removed render-time mutation of shared parsed state: `evaluateComputedValues` no longer writes back onto `ComputedVariable.value` (the field is deleted from the type; nothing read it) — computed values are only ever returned, never stored on the parsed questionnaire
 - Deduplicated parser state machines in `lib/parser.ts`: a `pushCurrentOption` helper replaces the triplicated option-push block in `parseOptions`; shared `beginMetadataCollection`/`stepMetadataCollection` helpers (single-line/bare/`"""`-delimited, parameterized by a terminator predicate) replace the near-identical `REVEAL`/`TOOLTIP`/`SHOW_IF` state machines duplicated across `parsePage` and `parseSection`
+- Extracted `breakdown-question.tsx`'s option label rendering into `components/questions/shared/option-label-content.tsx`, shared by `radio-question.tsx` and `checkbox-question.tsx`
+- Removed the gutter/absolute-positioning path for `REVEAL:` icons (`question-header.tsx`, `page-header.tsx`, `section-renderer.tsx`) in favor of the same text-trailing layout used by tooltips and options; deleted the now-unused `pl-8`/`-ml-8` gutter compensation from `questionnaire-viewer.tsx` and `components/ui/table.tsx`
 
 ## Version 0.4.0
 

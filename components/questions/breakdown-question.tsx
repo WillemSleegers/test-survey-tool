@@ -3,8 +3,7 @@ import Markdown from "react-markdown"
 import { remarkPlugins } from "@/lib/markdown-components"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
-import { RevealButton } from "@/components/shared/reveal-button"
-import { TooltipButton } from "@/components/shared/tooltip-button"
+import { OptionLabelContent } from "./shared/option-label-content"
 import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
@@ -20,51 +19,6 @@ interface BreakdownQuestionProps {
   onResponse: (questionId: string, value: Record<string, string>) => void
   startTabIndex: number
   computedVariables?: ComputedValues
-}
-
-interface OptionLabelContentProps {
-  label: string
-  hint?: string
-  reveal?: string
-  tooltip?: string
-  optionValue: string
-  isRevealVisible: boolean
-  onToggleReveal: (value: string) => void
-  variables: Variables
-  computedVariables?: ComputedValues
-}
-
-function OptionLabelContent({ label, hint, reveal, tooltip, optionValue, isRevealVisible, onToggleReveal, variables, computedVariables }: OptionLabelContentProps) {
-  return (
-    <div className="relative">
-      {reveal && (
-        <RevealButton
-          onClick={() => onToggleReveal(optionValue)}
-          className="absolute -left-8 top-1/2 -translate-y-1/2"
-        />
-      )}
-      <div>
-        <div className="text-base">
-          <span className="[&_p]:inline">
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(label, variables, computedVariables)}</Markdown>
-          </span>
-          {tooltip && (
-            <TooltipButton content={replacePlaceholders(tooltip, variables, computedVariables)} />
-          )}
-        </div>
-        {hint && (
-          <div className="text-base text-muted-foreground mt-0.5 font-normal">
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(hint, variables, computedVariables)}</Markdown>
-          </div>
-        )}
-        {reveal && isRevealVisible && (
-          <div className="text-base text-muted-foreground bg-muted p-3 rounded-md mt-2 font-normal">
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(reveal, variables, computedVariables)}</Markdown>
-          </div>
-        )}
-      </div>
-    </div>
-  )
 }
 
 interface OptionValueInputProps {

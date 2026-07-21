@@ -110,23 +110,21 @@ export function SectionRenderer({
     <>
       {/* Section Title */}
       {(section.title || processedReveal) && (
-        <div className="relative">
+        <div>
           {section.title ? (
-            <>
+            <div>
+              <span className="[&_p]:inline">
+                <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
+              </span>
+              {processedTooltip && <TooltipButton content={processedTooltip} />}
               {processedReveal && (
                 <RevealButton
                   onClick={() => setIsRevealVisible(!isRevealVisible)}
-                  className="absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2"
+                  className="ms-1"
                   ariaLabel="Toggle section information"
                 />
               )}
-              <div>
-                <span className="[&_p]:inline">
-                  <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
-                </span>
-                {processedTooltip && <TooltipButton content={processedTooltip} />}
-              </div>
-            </>
+            </div>
           ) : (
             processedReveal && (
               <RevealButton

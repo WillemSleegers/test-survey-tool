@@ -9,16 +9,10 @@ TOOLTIP: Color preferences can affect mood and decision-making.
 - Green
 - Yellow
 
-Q: How often do you exercise?
-TOOLTIP: """
-Regular exercise is recommended for maintaining good health and well-being.
+Q: Thinking about the past twelve months, how would you describe the flexibility your employer offered around adjusting your start and end times to fit personal or family needs?
+TOOLTIP: We ask this to understand how common flexible scheduling arrangements are across different industries.
 
-Studies show that 150 minutes of moderate exercise per week can significantly improve cardiovascular health and mental wellbeing.
-
-"""
-
-- Daily
-- 3-5 times per week
-- 1-2 times per week
-- Rarely
-- Never
+- Very flexible
+- Somewhat flexible
+- Not very flexible
+- Not flexible at all

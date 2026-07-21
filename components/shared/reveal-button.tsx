@@ -8,17 +8,24 @@ interface RevealButtonProps {
   ariaLabel?: string
 }
 
-export function RevealButton({ onClick, className, ariaLabel = "Toggle additional information" }: RevealButtonProps) {
+export function RevealButton({
+  onClick,
+  className,
+  ariaLabel = "Toggle additional information",
+}: RevealButtonProps) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
       onClick={onClick}
-      className={cn("relative size-7 shrink-0 rounded-full hover:bg-muted", className)}
+      className={cn(
+        "relative size-6 shrink-0 rounded-full align-middle mb-1 hover:bg-muted",
+        className,
+      )}
       aria-label={ariaLabel}
     >
-      <Info className="absolute inset-0 m-auto size-5 text-muted-foreground" />
+      <Info className="absolute inset-0 m-auto size-4 text-primary" />
     </Button>
   )
 }

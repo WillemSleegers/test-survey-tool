@@ -23,11 +23,11 @@ export function TooltipButton({ content }: TooltipButtonProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="ms-1 size-7 rounded-full font-sans hover:bg-muted"
+          className="ms-1 mb-1 size-6 rounded-full font-sans align-middle hover:bg-muted"
           aria-label="Show tooltip"
         >
           {/* translate-x-0 is a no-op numerically, but forces its own compositing layer so the icon rasterizes on-pixel instead of inheriting sub-pixel rounding from upstream layout */}
-          <Info className="size-5 translate-x-0 text-muted-foreground" />
+          <Info className="size-4 translate-x-0 text-primary" />
         </Button>
       </PopoverTrigger>
       <PopoverContent>

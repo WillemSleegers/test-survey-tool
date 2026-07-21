@@ -29,6 +29,10 @@ export default function RevealPage() {
             For information shown in a popover instead of inline, see{" "}
             <code>TOOLTIP:</code>
           </li>
+          <li>
+            Multiple choice and checkbox options support their own reveal
+            too, with <code>- REVEAL:</code> indented under the option
+          </li>
         </ul>
       </div>
 
@@ -46,7 +50,13 @@ REVEAL: """
 This helps us understand our user demographics.
 All data is anonymized and encrypted.
 """
-NUMBER`)}
+NUMBER
+
+Q: Which of these apply to your role?
+- Manager
+  - REVEAL: We ask this to tailor the follow-up questions on the next page
+- Individual contributor
+CHECKBOX`)}
       </div>
     </div>
   )

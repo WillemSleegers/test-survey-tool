@@ -47,20 +47,18 @@ export function PageHeader({ page, variables, computedVariables }: PageHeaderPro
 
   return (
     <div className="mb-6 space-y-2">
-      <div className="relative">
+      <div>
+        <span className="[&_p]:inline">
+          <Markdown remarkPlugins={remarkPlugins}>{processedTitle}</Markdown>
+        </span>
+        {processedTooltip && <TooltipButton content={processedTooltip} />}
         {processedReveal && (
           <RevealButton
             onClick={() => setIsRevealVisible(!isRevealVisible)}
-            className="absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2"
+            className="ms-1"
             ariaLabel="Toggle page information"
           />
         )}
-        <div>
-          <span className="[&_p]:inline">
-            <Markdown remarkPlugins={remarkPlugins}>{processedTitle}</Markdown>
-          </span>
-          {processedTooltip && <TooltipButton content={processedTooltip} />}
-        </div>
       </div>
       {processedReveal && isRevealVisible && (
         <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md">

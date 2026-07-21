@@ -49,19 +49,17 @@ export function QuestionHeader({ text, subtext, reveal, tooltip, variables, comp
 
   return (
     <div className="space-y-1">
-      <div className="relative">
+      <div>
+        <span className="[&_p]:inline">
+          <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedText}</Markdown>
+        </span>
+        {processedTooltip && <TooltipButton content={processedTooltip} />}
         {processedReveal && (
           <RevealButton
             onClick={() => setIsRevealVisible(!isRevealVisible)}
-            className="absolute -left-8 top-1/2 -translate-y-1/2"
+            className="ms-1"
           />
         )}
-        <div>
-          <span className="[&_p]:inline">
-            <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedText}</Markdown>
-          </span>
-          {processedTooltip && <TooltipButton content={processedTooltip} />}
-        </div>
       </div>
       {processedSubtext && (
         <div className="text-base text-muted-foreground">

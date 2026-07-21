@@ -141,7 +141,7 @@ export function QuestionnaireViewer({
           )}
 
           {/* Main content */}
-          <div className="w-full max-w-4xl space-y-6 pl-8">
+          <div className="w-full max-w-4xl space-y-6">
             <PageHeader
               page={currentPage}
               variables={variables}

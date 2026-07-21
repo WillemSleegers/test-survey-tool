@@ -214,30 +214,28 @@ export function MatrixQuestion({
                 <TableRow key={subquestion.id}>
                   <TableCell className={`${alignment} whitespace-normal`}>
                     <div className="space-y-1">
-                      <div className="flex items-start gap-1">
-                        {subquestion.reveal && (
-                          <RevealButton onClick={() => toggleReveal(subquestion.id)} />
+                      <div className="text-base font-normal">
+                        <span className="[&_p]:inline">
+                          <Markdown>
+                            {replacePlaceholders(
+                              subquestion.text,
+                              variables,
+                              computedVariables
+                            )}
+                          </Markdown>
+                        </span>
+                        {subquestion.tooltip && (
+                          <TooltipButton
+                            content={replacePlaceholders(
+                              subquestion.tooltip,
+                              variables,
+                              computedVariables
+                            )}
+                          />
                         )}
-                        <div className="flex-1 text-base font-normal">
-                          <span className="[&_p]:inline">
-                            <Markdown>
-                              {replacePlaceholders(
-                                subquestion.text,
-                                variables,
-                                computedVariables
-                              )}
-                            </Markdown>
-                          </span>
-                          {subquestion.tooltip && (
-                            <TooltipButton
-                              content={replacePlaceholders(
-                                subquestion.tooltip,
-                                variables,
-                                computedVariables
-                              )}
-                            />
-                          )}
-                        </div>
+                        {subquestion.reveal && (
+                          <RevealButton onClick={() => toggleReveal(subquestion.id)} className="ms-1" />
+                        )}
                       </div>
                       {subquestion.subtext && (
                         <div className="text-base text-muted-foreground">

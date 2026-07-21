@@ -28,6 +28,10 @@ export default function HintsPage() {
             <code>SHOW_IF:</code>
           </li>
           <li>
+            Multiple choice and checkbox options support their own hint too,
+            with <code>- HINT:</code> indented under the option
+          </li>
+          <li>
             Supports Markdown formatting, including bullet lists. Lines
             starting with <code>-</code> or <code>*</code> inside a delimited
             <code>&quot;&quot;&quot;</code> block render as a list and are
@@ -57,7 +61,13 @@ Examples include:
 - Information and training about handling climate-related risks
 """
 - Yes
-- No`)}
+- No
+
+Q: Which of these apply to your role?
+- Manager
+  - HINT: Includes team leads and supervisors
+- Individual contributor
+CHECKBOX`)}
       </div>
     </div>
   )

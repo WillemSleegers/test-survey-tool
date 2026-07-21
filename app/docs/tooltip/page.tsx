@@ -29,6 +29,10 @@ export default function TooltipPage() {
             For information shown inline instead of in a popover, see{" "}
             <code>REVEAL:</code>
           </li>
+          <li>
+            Multiple choice and checkbox options support their own tooltip
+            too, with <code>- TOOLTIP:</code> indented under the option
+          </li>
         </ul>
       </div>
 
@@ -46,7 +50,13 @@ TOOLTIP: """
 This helps us understand our user demographics.
 All data is anonymized and encrypted.
 """
-NUMBER`)}
+NUMBER
+
+Q: What is your employment status?
+- Full-time
+  - TOOLTIP: 32 or more hours per week
+- Part-time
+  - TOOLTIP: Fewer than 32 hours per week`)}
       </div>
     </div>
   )

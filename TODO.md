@@ -70,13 +70,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 ## Medium Priority
 
-- [ ] Review tooltip icon positioning layout
-  - Tooltip icons now positioned absolutely at -left-8 for consistent left-side placement
-  - Main content container has pl-8 padding to accommodate icons
-  - Table containers use -ml-8 pl-8 to prevent double-indentation while keeping icons visible
-  - Should verify this approach is principled and doesn't cause issues with edge cases
-  - Consider whether this pattern scales well for other absolutely positioned elements
-  - **Plan**: build a stress-test survey (reveal/tooltip at page, section, question, option, subquestion level; long wrapping labels; nested tables) and screenshot at mobile/tablet/desktop widths. If icons overlap or clip, refactor from absolute positioning to an inline icon slot in a shared header layout component; if it holds up, document the -left-8/pl-8 convention in CLAUDE.md so new components follow it
+- [x] Review tooltip icon positioning layout — **done**: the `-left-8` gutter approach didn't hold up (icons centered on the whole block, drifting away from long/wrapping labels). Replaced everywhere — pages, sections, questions, and all option/subquestion types — with a single convention: tooltip then reveal icon, both trailing the text inline, sized to fit inside a line of text instead of overhanging it. `pl-8`/`-ml-8` gutter compensation removed from `questionnaire-viewer.tsx` and `components/ui/table.tsx` since nothing positions into it anymore
 
 ## Low Priority
 
@@ -90,13 +84,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
   - Only `checkbox` inputType is rendered; `text` and `essay` fall through to radio buttons
   - Should render text inputs or text areas in each matrix cell instead of radio buttons
   - **Plan**: for `text`/`essay` there are no option columns — render one `Input`/`Textarea` per subquestion row (single "response" column), storing the value under `subquestion.id` like other matrix responses so variables keep working. Branch in `matrix-question.tsx` alongside `isCheckboxMatrix`; add a docs example and a parser+render test. Decide explicitly: options present + TEXT type = parse error (fold into "parser validation for malformed input")
-- [ ] Render option-level HINT, TOOLTIP, and REVEAL on radio/checkbox questions
-  - `- HINT:`, `- TOOLTIP:`, and `- REVEAL:` on options are parsed for all question types (`lib/parser.ts:579-614`)
-  - Only breakdown options render these (`components/questions/breakdown-question.tsx:271-280`)
-  - `radio-question.tsx` and `checkbox-question.tsx` ignore option hints, tooltips, and reveals
-  - Should display muted subtext (hint), info popover (tooltip), or collapsible panel (reveal) on individual radio/checkbox options
-  - Related: RELEASES 0.5.0 claims TOOLTIP/REVEAL work on options (see Documentation Accuracy section)
-  - **Plan**: extract breakdown's `OptionLabelContent` into `components/questions/shared/option-label-content.tsx` and use it for radio/checkbox option labels (label + tooltip inline, hint below, reveal panel below with per-option `Set` state as in breakdown/matrix). Check tab order isn't disturbed (RevealButton is a button). Update the hints/tooltip/reveal docs pages and close the RELEASES claim
+- [x] Render option-level HINT, TOOLTIP, and REVEAL on radio/checkbox questions — **done**: `OptionLabelContent` extracted to `components/questions/shared/option-label-content.tsx` (used by breakdown, radio, and checkbox), rendering tooltip then reveal trailing the label text. Per-option `visibleReveals` `Set` state added to both components, mirroring breakdown/matrix. Tests in `tests/parser-option-hint-tooltip-reveal.test.ts`; docs updated in hints/tooltip/reveal pages; RELEASES updated
 - [ ] Restore RANGE + type detection edge cases (watchlist, no action yet)
   - `CHECKBOX` with no options parses as text; `RANGE:` inside checkbox works (verified) — cover both in parser tests when next touching `determineQuestionType`
 
@@ -196,7 +184,7 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
   - Warn about unused variables
   - **Plan**: build on the `collectVariableDefinitions` helper from the duplicate-names item; shadowing = page-computed name colliding with a question variable or block computed (currently silent); unused = defined but never referenced in any condition/placeholder/compute (needs the placeholder scanner too). Ship as warnings surfaced in the upload UI, not hard errors
 - [ ] Mobile-first responsive design review
-  - **Plan**: audit the main flows (upload, survey with matrix + breakdown tables, docs) at 360px/768px in dev tools; known suspects are wide tables (`overflow-x-auto` exists on matrix — verify breakdown), the -left-8 icon convention (see tooltip positioning item), and the side navigators. File concrete follow-ups per issue found rather than one big refactor
+  - **Plan**: audit the main flows (upload, survey with matrix + breakdown tables, docs) at 360px/768px in dev tools; known suspects are wide tables (`overflow-x-auto` exists on matrix — verify breakdown) and the side navigators. File concrete follow-ups per issue found rather than one big refactor
 - [ ] ~~Simplify lazy vs eager computed variable evaluation~~ — superseded by "Rework lazy computed-variables caching" under Architecture / Code Quality
 - [ ] Add dynamic/repeating pages driven by checkbox selections
   - **Use case**: "Loop" over an arbitrary checkbox selection (e.g. ask a follow-up per selected fruit) without pre-authoring one static page per possible option
@@ -209,3 +197,12 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
     - Response storage and variable extraction: must handle a variable number of instances
     - Navigation: nav items would need to expand dynamically to match the number of selected instances
   - **Priority**: Low - touches most core layers (parser, types, conditions, responses, navigation); current static-per-option pattern is an adequate stopgap for small, fixed option sets
+- [ ] Add a settings option to customize the reveal/tooltip icon color
+  - **Use case**: Let users pick an accent color for the info icons without editing code
+  - **Current state**: `reveal-button.tsx` and `tooltip-button.tsx` both use `text-primary`, tied to the app's CSS theme variable — retheming today means editing that class directly
+  - **Proposal**: expose a color picker in the Settings panel (`components/settings.tsx`), persisted like the other settings (language, nav visibility/position)
+  - **Implementation considerations**:
+    - Settings currently only holds respondent-facing survey behavior (language, nav) — this would be the first purely cosmetic setting; decide if it belongs there or in a separate "appearance" section
+    - Needs a place to persist the choice and a context to read it from, mirroring `useLanguage`/`useNavigation`
+    - Decide scope: recolor just these two icons, or expose it as a general accent/`--primary` override
+  - **Priority**: Low - narrow, cosmetic detail; not needed until someone actually wants a non-default color
