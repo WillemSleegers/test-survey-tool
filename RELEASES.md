@@ -56,11 +56,14 @@
 
 - **Fixed breakdown option `SHOW_IF` being silently ignored**: `- SHOW_IF:` on a breakdown row was parsed and validated but never affected rendering — every row always showed regardless of the condition. Hidden rows are now excluded from the table and from totals/subtotals; their stored value is kept and restored if the row becomes visible again
 
+- **Fixed order-dependent variable derivation**: variables were derived by walking responses in the order the respondent answered them, not the order questions appear in the survey. A breakdown row's `VALUE:` placeholder referencing another question's variable could resolve differently (or not at all) depending on the order the two questions were answered, e.g. via back-navigation. Variables are now derived by walking the questionnaire's own page/section/question order, so identical answers always produce identical variables
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
 - Consolidated variable-definition collection in `lib/validation.ts` into a single `collectVariableDefinitions` helper, reused by both the name-uniqueness and reference validators
 - Extracted a shared `BaseOption` type for the fields `Option` and `BreakdownOption` actually have in common (`value`, `label`, `hint`, `reveal`, `tooltip`, `showIf`), and fixed type-narrowing errors in `parser-option-exclusive.test.ts`/`parser-option-text.test.ts` surfaced by `tsc --noEmit`
+- Extracted breakdown row visibility/summing into `lib/breakdown-calculations.ts` and the two-pass variable derivation out of `use-questionnaire-responses.ts` into a pure, directly-testable `lib/response-variables.ts`; the hook is now a thin `useState` wrapper around it
 
 ## Version 0.4.0
 

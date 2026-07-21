@@ -1,0 +1,127 @@
+import { describe, it, expect } from "vitest"
+import { deriveVariables } from "@/lib/response-variables"
+import { Page, Responses } from "@/lib/types"
+
+function makePage(id: number, sections: Page["sections"]): Page {
+  return { id, title: `Page ${id}`, sections, computedVariables: [] }
+}
+
+describe("deriveVariables", () => {
+  it("extracts a simple question-level variable", () => {
+    const questionnaire: Page[] = [
+      makePage(1, [
+        {
+          id: 1,
+          items: [{ id: "q1", type: "text", text: "Name", variable: "name" }],
+        },
+      ]),
+    ]
+    const responses: Responses = { q1: "Alice" }
+
+    expect(deriveVariables(questionnaire, responses)).toEqual({ name: "Alice" })
+  })
+
+  it("extracts matrix subquestion variables", () => {
+    const questionnaire: Page[] = [
+      makePage(1, [
+        {
+          id: 1,
+          items: [
+            {
+              id: "matrix1",
+              type: "matrix",
+              text: "Rate these",
+              options: [
+                { value: "yes", label: "Yes" },
+                { value: "no", label: "No" },
+              ],
+              subquestions: [{ id: "row1", text: "Row 1", variable: "row1_answer" }],
+            },
+          ],
+        },
+      ]),
+    ]
+    const responses: Responses = { row1: "yes" }
+
+    expect(deriveVariables(questionnaire, responses)).toEqual({ row1_answer: "yes" })
+  })
+
+  it("calculates a breakdown question total and a subtotal that depends on it", () => {
+    const questionnaire: Page[] = [
+      makePage(1, [
+        {
+          id: 1,
+          items: [
+            {
+              id: "bd1",
+              type: "breakdown",
+              text: "Expenses",
+              variable: "total",
+              options: [
+                { value: "Rent", label: "Rent" },
+                { value: "Food", label: "Food" },
+                {
+                  value: "Subtotal",
+                  label: "Subtotal",
+                  subtotalLabel: "Subtotal",
+                  variable: "subtotal",
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    ]
+    const responses: Responses = { bd1: { option_0: "100", option_1: "50" } }
+
+    expect(deriveVariables(questionnaire, responses)).toEqual({
+      total: 150,
+      subtotal: 150,
+    })
+  })
+
+  it("derives identical variables regardless of the order responses were inserted in", () => {
+    // q_base defines `base`; q_bd's "Double" row prefills from {base} via VALUE
+    const questionnaire: Page[] = [
+      makePage(1, [
+        {
+          id: 1,
+          items: [
+            { id: "q_base", type: "number", text: "Base value", variable: "base" },
+            {
+              id: "q_bd",
+              type: "breakdown",
+              text: "Breakdown",
+              options: [
+                { value: "Rent", label: "Rent" },
+                {
+                  value: "Double",
+                  label: "Double",
+                  prefillValue: "{base}",
+                  variable: "doubled",
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    ]
+
+    // Same content, inserted in questionnaire order
+    const responsesAnsweredInOrder: Responses = {}
+    responsesAnsweredInOrder["q_base"] = 10
+    responsesAnsweredInOrder["q_bd"] = { option_0: "5" }
+
+    // Same content, inserted in reverse order (e.g. user filled it in out of order)
+    const responsesAnsweredOutOfOrder: Responses = {}
+    responsesAnsweredOutOfOrder["q_bd"] = { option_0: "5" }
+    responsesAnsweredOutOfOrder["q_base"] = 10
+
+    const varsInOrder = deriveVariables(questionnaire, responsesAnsweredInOrder)
+    const varsOutOfOrder = deriveVariables(questionnaire, responsesAnsweredOutOfOrder)
+
+    expect(varsInOrder).toEqual(varsOutOfOrder)
+    expect(varsInOrder.base).toBe(10)
+    expect(varsInOrder.doubled).toBe(10)
+  })
+})

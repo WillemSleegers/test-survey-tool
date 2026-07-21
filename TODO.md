@@ -58,10 +58,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
   - `evaluateComputedValues` writes `computedVar.value` back onto the parsed questionnaire (`lib/conditions/computed-variables.ts:59,81,87`)
   - Breakdown rendering mutates `localVariables` while mapping rows (`components/questions/breakdown-question.tsx:233`), making `CUSTOM:` subtotals order-dependent — a custom referencing a later subtotal silently fails
   - **Plan**: (1) grep for readers of `.value` on `ComputedVariable` (PageNavigator/debug UI) and point them at the returned `ComputedValues` map instead, then delete the writes and the `value` field from the type; (2) in breakdown, precompute all subtotal values in a single pure pass before rendering (loop options once, building a `subtotals: Record<variable, number>` map used for `CUSTOM:` placeholder resolution), which also makes forward references work — add a test for a CUSTOM referencing a later subtotal
-- [ ] Fix order-dependent variable derivation in responses hook
-  - PASS 1 in `hooks/use-questionnaire-responses.ts:104-144` resolves `prefillValue` placeholders against a half-built `variables` object iterated in `responses` insertion order (the order the user answered questions)
-  - Two users answering in different orders can get different prefill-derived variables
-  - **Plan**: iterate in **questionnaire order** (walk pages/sections/questions, looking up each question's response) instead of `Object.entries(responses)`; keep the two-pass split (simple variables, then prefill/subtotal resolution). Extract the shared breakdown math into `lib/breakdown-calculations.ts` (same helper as the SHOW_IF item). Test: two response objects with identical values inserted in different orders produce identical `variables`
+- [x] Fix order-dependent variable derivation in responses hook — **done**: derivation logic extracted to a pure `deriveVariables(questionnaire, responses)` in `lib/response-variables.ts`, which walks pages/sections/questions (matrix subquestions included) in questionnaire order instead of `Object.entries(responses)`; `use-questionnaire-responses.ts` is now a thin `useState` wrapper around it; dropped the dead `optionVariableMap`. Tests in `lib/response-variables.test.ts`, including two responses objects with identical values inserted in different order producing identical variables
 - [x] Replace `new Function` in expression evaluation — **done**: arithmetic evaluated by the parser; injection regression test asserts survey text cannot execute code
   - `lib/conditions/expression-evaluator.ts:42` evaluates survey-derived text as JS; low risk client-side, but arbitrary code execution if surveys are ever shared — a small arithmetic evaluator would close it
   - **Plan**: arithmetic is parsed and evaluated by the same AST as conditions (step 3 of the umbrella plan). Regression tests: nested parens, unary minus, division by zero, and inputs containing `;`, backticks, and `Math.` (must evaluate as plain tokens/0, never execute)
@@ -199,10 +196,7 @@ VALIDATE: Q1 < 10000, "Please verify this number seems unusually high"`
   - **Benefits**: Users learn correct syntax immediately, fewer "why doesn't this work?" moments
   - **Implementation**: Add validation checks in handler functions that throw descriptive errors
   - **Plan**: implement as a post-parse validation pass alongside the existing validators (they already have the throw-aggregated-errors pattern); one rule per small function, one test per rule. Do after the condition parser lands so condition syntax errors come from the same release
-- [ ] Extract shared calculation logic
-  - Both `breakdown-question.tsx` and `use-questionnaire-responses.ts` have similar `calculateBreakdownTotal` logic
-  - Could extract to shared utility function in `lib/breakdown-calculations.ts`
-  - **Plan**: this happens naturally as part of the breakdown `SHOW_IF` item (shared visibility + totals helper) and the order-dependent derivation fix — fold it into whichever lands first rather than doing it standalone
+- [x] Extract shared calculation logic — **done**: landed via the breakdown `SHOW_IF` item (`lib/breakdown-calculations.ts`) and the order-dependent derivation fix (`lib/response-variables.ts`)
 - [ ] Add example questionnaires for documentation
   - Create `docs/examples/breakdown-with-columns.md` showing COLUMN/EXCLUDE usage
   - Create `docs/examples/conditional-logic-advanced.md` for complex SHOW_IF patterns
