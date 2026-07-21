@@ -62,12 +62,8 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 ## Documentation Accuracy
 
-- [ ] Rewrite CLAUDE.md "Documentation System" section
-  - Describes a single `app/docs/page.tsx` with a `Section` union and switch statement; the real architecture is one route per topic under `app/docs/*/page.tsx` with shared helpers in `components/docs/doc-helpers.tsx`
-  - **Plan**: rewrite the section to describe: route-per-topic under `app/docs/<section>/page.tsx`, `renderExample`/`renderCodeBlock` from `doc-helpers.tsx`, `navMain` in `app-sidebar.tsx` with the active section derived from the pathname. Update the "Adding New Documentation" steps (create route directory, add nav item — no type union, no switch). Dry-run the instructions by following them for one existing page to confirm they match reality
-- [ ] Correct RELEASES 0.5.0 TOOLTIP/REVEAL claims
-  - Claims support on "pages, sections, questions, options, and matrix subquestions" — section REVEAL is broken (see bug above), and radio/checkbox options render neither reveal, tooltip, nor hint (only breakdown options do)
-  - **Plan**: after fixing section reveal, either implement option-level reveal/tooltip on radio/checkbox (Low Priority item below) or reword the note to "pages, sections, questions, breakdown options, and matrix subquestions". Whichever lands first closes this; don't let the claim and the code disagree in the next release
+- [x] Rewrite CLAUDE.md "Documentation System" section — **done**: now describes route-per-topic (`app/docs/<section>/page.tsx`), `renderCodeBlock`/`renderExample` from `doc-helpers.tsx`, and the pathname-derived sidebar; also trimmed the rest of CLAUDE.md (325 → 147 lines) for drift-risk
+- [x] Correct RELEASES 0.5.0 TOOLTIP/REVEAL claims — **done**: reworded to "pages, sections, questions, breakdown options, and matrix subquestions", plus a note that radio/checkbox options parse but don't yet render TOOLTIP/REVEAL/HINT (tracked separately below)
 - [ ] Localize "none" for empty checkbox arrays
   - Hardcoded English in `lib/text-processing/variable-replacer.ts:130` despite the language context and Dutch support (`ja`/`nee` in value-converter)
   - **Plan**: `formatArrayValue` also hardcodes English "and" for inline lists — fix both together. Add an optional `listFormat: { empty: string; conjunction: string }` parameter threaded through `replacePlaceholders`; components pass values from `useLanguage` (add `lists.none` / `lists.and` keys to the translations). Default stays English so non-component callers don't break. Test with a Dutch survey rendering an empty and a multi-item checkbox variable
