@@ -1,4 +1,4 @@
-import { Page, Variables, ComputedValues, ComputedVariable } from "@/lib/types"
+import { Block, Page, Variables, ComputedValues, ComputedVariable } from "@/lib/types"
 import { evaluateCondition, evaluateMultiComparisonSum } from "./condition-evaluator"
 import { evaluateExpression, isArithmeticExpression, isIfThenElseExpression, isIfThenExpression, isMultiComparisonExpression, isStringLiteral, parseIfThenElse, parseIfThen, resolveValue } from "./expression-evaluator"
 
@@ -89,6 +89,43 @@ export function evaluateComputedValues(
   }
 
   return computedVars
+}
+
+/**
+ * Evaluates all block-level computed variables across the entire survey as one
+ * global set. Names share a flat namespace; ordering follows topological sort
+ * of dependencies.
+ */
+export function computeGlobalValues(blocks: Block[], variables: Variables): ComputedValues {
+  const allBlockComputed = blocks.flatMap(block => block.computedVariables)
+  if (allBlockComputed.length === 0) {
+    return {}
+  }
+
+  const syntheticPage: Page = {
+    id: 0,
+    title: "",
+    sections: [],
+    computedVariables: allBlockComputed,
+  }
+
+  return evaluateComputedValues(syntheticPage, variables, {})
+}
+
+/**
+ * Computed variables visible on a specific page: the global block-level set,
+ * plus that page's own computeds (page-level overrides global on name clash).
+ */
+export function computePageValues(
+  page: Page,
+  variables: Variables,
+  globalValues: ComputedValues
+): ComputedValues {
+  if (page.computedVariables.length === 0) {
+    return globalValues
+  }
+
+  return evaluateComputedValues(page, variables, globalValues)
 }
 
 /**

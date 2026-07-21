@@ -54,18 +54,12 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 ## Architecture / Code Quality
 
-- [ ] Remove `useMemo` from questionnaire-viewer
-  - `components/questionnaire-viewer.tsx:54,112` uses `useMemo` twice despite the React Compiler guidelines in CLAUDE.md banning it
-  - **Plan**: do together with the lazy-computed rework below (both `useMemo`s wrap those getters). After the rework the wrapped values are plain derived values — delete the wrappers, run `npm run build` and the test suite, and click through a multi-block survey with computed SHOW_IFs
-- [ ] Rework lazy computed-variables caching (replaces "Simplify lazy vs eager" idea below)
-  - `getGlobalComputedValues`/`getPageComputedValues` call `setComputedCache` during render (from inside `useMemo` and the visibility filter)
-  - The invalidation effect (`components/questionnaire-viewer.tsx:74-76`) only avoids an infinite loop because React Compiler stabilizes the identity of `variables`
-  - There is a one-render window where stale computed values are shown after an answer changes
-  - **Plan**: drop the `useState` cache entirely and derive synchronously each render — React Compiler memoizes against stable `variables`:
-    1. Pure helpers in `lib/conditions/computed-variables.ts`: `computeGlobalValues(blocks, variables)` and `computePageValues(page, variables, globalValues)`; if per-page cost matters, share a plain `Map` created in the component body (per-render, no setState)
-    2. `useLazyComputedValues` shrinks to a thin wrapper or is deleted; remove the invalidation effect
-    3. Remove the eager-fallback branch in `use-visible-pages.ts` (`getPageComputedVars ?:`) so there is one evaluation path
-    4. Verify: existing computed-variable tests, plus manual check that PageNavigator and block SHOW_IFs update in the same render as an answer change (no stale flash)
+- [x] Remove `useMemo` from questionnaire-viewer
+  - Removed both `useMemo` wrappers along with the `useState` cache and invalidation effect; `visibleBlockPages` and `currentComputedVars` are now plain per-render derived values
+- [x] Rework lazy computed-variables caching (replaces "Simplify lazy vs eager" idea below)
+  - Added pure helpers `computeGlobalValues(blocks, variables)` and `computePageValues(page, variables, globalValues)` to `lib/conditions/computed-variables.ts`; deleted `hooks/use-lazy-computed-variables.ts` and its `setComputedCache`/invalidation effect
+  - `use-visible-pages.ts` now requires `getPageComputedVars` (no more eager-fallback branch or unused `blockComputedValues` param) — one evaluation path
+  - Verified: `npm run build` and full test suite pass (205 tests); dev server boots and serves `/` and `/survey` with no runtime warnings
 - [ ] Remove render-time mutation of shared state
   - `evaluateComputedValues` writes `computedVar.value` back onto the parsed questionnaire (`lib/conditions/computed-variables.ts:59,81,87`)
   - Breakdown rendering mutates `localVariables` while mapping rows (`components/questions/breakdown-question.tsx:233`), making `CUSTOM:` subtotals order-dependent — a custom referencing a later subtotal silently fails

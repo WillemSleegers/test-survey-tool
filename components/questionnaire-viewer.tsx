@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState } from "react"
 import { PageContent } from "@/components/page-content"
 import { useLanguage } from "@/contexts/language-context"
 import { useNavigation } from "@/contexts/navigation-context"
 
 import { useQuestionnaireNavigation } from "@/hooks/use-questionnaire-navigation"
 import { useVisiblePages } from "@/hooks/use-visible-pages"
-import { useLazyComputedValues } from "@/hooks/use-lazy-computed-variables"
 import { evaluateCondition } from "@/lib/conditions/condition-evaluator"
+import { computeGlobalValues, computePageValues } from "@/lib/conditions/computed-variables"
 import { useQuestionnaireResponses } from "@/hooks/use-questionnaire-responses"
 import { usePageCompletion } from "@/hooks/use-page-completion"
 import { PageHeader } from "@/components/questionnaire/page-header"
@@ -18,7 +18,7 @@ import { PageNavigator } from "@/components/questionnaire/page-navigator"
 import { RespondentNavigator } from "@/components/questionnaire/respondent-navigator"
 import { calculateTotalTabInputs } from "@/lib/utils/tab-index-calculator"
 
-import { Block, Page, NavItem, ComputedValues } from "@/lib/types"
+import { Block, Page, NavItem } from "@/lib/types"
 
 interface QuestionnaireViewerProps {
   questionnaire: Block[]
@@ -43,44 +43,28 @@ export function QuestionnaireViewer({
   const allPages = questionnaire.flatMap(block => block.pages)
   const { responses, variables, handleResponse } = useQuestionnaireResponses(allPages)
 
-  // Initialize lazy computed variables system
-  const {
-    getGlobalComputedValues,
-    getPageComputedValues,
-    invalidateCache
-  } = useLazyComputedValues(questionnaire, variables)
+  // Global block-level computed variables, shared across the whole survey
+  const globalComputedVars = computeGlobalValues(questionnaire, variables)
 
   // Filter blocks by visibility, then flatten to pages
-  const visibleBlockPages = useMemo(() => {
-    const visiblePages: Page[] = []
-    const globalComputedVars = getGlobalComputedValues()
+  const visibleBlockPages: Page[] = []
+  questionnaire.forEach(block => {
+    const blockVisible = evaluateCondition(
+      block.showIf || "",
+      variables,
+      globalComputedVars
+    )
 
-    questionnaire.forEach(block => {
-      const blockVisible = evaluateCondition(
-        block.showIf || "",
-        variables,
-        globalComputedVars
-      )
+    if (blockVisible) {
+      visibleBlockPages.push(...block.pages)
+    }
+  })
 
-      if (blockVisible) {
-        visiblePages.push(...block.pages)
-      }
-    })
-
-    return visiblePages
-  }, [questionnaire, variables, getGlobalComputedValues])
-  
-  // Invalidate computed variable cache when variables change
-  useEffect(() => {
-    invalidateCache()
-  }, [variables, invalidateCache])
-
-  // Get visible pages and content filtering based on current variables  
+  // Get visible pages and content filtering based on current variables
   const { visiblePages, getVisiblePageContent } = useVisiblePages(
-    visibleBlockPages, 
-    variables, 
-    {}, 
-    getPageComputedValues
+    visibleBlockPages,
+    variables,
+    (page) => computePageValues(page, variables, globalComputedVars)
   )
   
   // Navigation state and actions
@@ -109,11 +93,10 @@ export function QuestionnaireViewer({
   
   // All computed variables visible on the current page: global block-level set
   // merged with the current page's own computeds.
-  const currentComputedVars: ComputedValues = useMemo(() => {
-    if (!currentPage) return getGlobalComputedValues()
-    return getPageComputedValues(currentPage)
-  }, [currentPage, getPageComputedValues, getGlobalComputedValues])
-  
+  const currentComputedVars = currentPage
+    ? computePageValues(currentPage, variables, globalComputedVars)
+    : globalComputedVars
+
   // Check completion status
   const allQuestionsAnswered = usePageCompletion(pageContent, variables)
 

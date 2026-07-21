@@ -19,7 +19,7 @@ describe("useVisiblePages - getVisiblePageContent", () => {
       computedVariables: [],
     }
 
-    const { getVisiblePageContent } = useVisiblePages([page], {})
+    const { getVisiblePageContent } = useVisiblePages([page], {}, () => ({}))
     const sections = getVisiblePageContent(page)
 
     expect(sections).toHaveLength(1)
@@ -41,7 +41,7 @@ describe("useVisiblePages - getVisiblePageContent", () => {
       computedVariables: [],
     }
 
-    const { getVisiblePageContent } = useVisiblePages([page], {})
+    const { getVisiblePageContent } = useVisiblePages([page], {}, () => ({}))
     const sections = getVisiblePageContent(page)
 
     expect(sections).toHaveLength(1)
