@@ -1,27 +1,16 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## IMPORTANT: Context Reset Protocol
-
-**When starting a new conversation or after a context reset, ALWAYS read this CLAUDE.md file first.** This ensures you have the latest project guidelines, quality standards, and development practices before beginning any work.
-
 ## Project Overview
 
 Test Survey Tool (TST) is a Next.js React application that converts structured text files into interactive survey questionnaires. Users upload or paste text files with a specific format, and the app renders them as dynamic surveys with conditional logic, computed variables, and multi-page navigation.
-
-## Development Commands
-
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build production version
 
 ## Architecture Overview
 
 ### Core Structure
 
-- **Next.js 16** with App Router (`app/` directory) and Turbopack
+- **Next.js** with App Router (`app/` directory) and Turbopack
 - **TypeScript** with strict configuration
-- **React 19** with React Compiler
+- **React** with React Compiler
 - **Tailwind CSS** for styling with Radix UI components
 - **shadcn/ui** component library
 
@@ -31,107 +20,6 @@ Test Survey Tool (TST) is a Next.js React application that converts structured t
 2. **Condition System** (`lib/conditions/`): Handles dynamic show/hide logic and computed variables
 3. **State Management**: Custom hooks manage responses, navigation, and visibility
 4. **Rendering**: Component hierarchy renders questions with conditional logic
-
-### Core Data Types (`lib/types.ts`)
-
-The questionnaire data follows a four-level hierarchy:
-
-```
-Block (id, name, showIf?)
-└── Page[] (id, title, showIf?, computedVariables)
-    └── Section[] (id, title?, showIf?)
-        └── SectionItem[] (Text | Question)
-```
-
-**Detailed structure:**
-
-- `Block`: Top-level container
-
-  - `id` (number): Unique block identifier
-  - `name` (string): Block name/label
-  - `pages` (Page[]): Array of pages in this block
-  - `computedVariables` (ComputedVariable[]): Block-level calculations
-  - `showIf` (string, optional): Conditional visibility expression
-
-- `Page`: Second-level container (defined with `#` or `# Title`)
-
-  - `id` (number): Unique page identifier (for navigation and comparison)
-  - `title` (string): Page title
-  - `sections` (Section[]): Array of sections on this page
-  - `computedVariables` (ComputedVariable[]): Page-level calculations
-  - `tooltip`, `showIf`, `navLevel` (optional): Additional metadata
-
-- `Section`: Third-level container (defined with `##` or `## Title`)
-
-  - `id` (number): Unique section identifier (within the page)
-  - `items` (SectionItem[]): Array of content items (Text or Question). Use type guard functions `isText(item)` or `isQuestion(item)` to discriminate
-  - `title` (string, optional): Section title (undefined for implicit default section)
-  - `tooltip`, `showIf` (optional): Additional metadata
-  - Sections can be explicit (has `##` marker) or implicit (default section for content before first `##`)
-
-- `Text`: Plain text/markdown content
-
-  - `value` (string): The text content (markdown supported)
-  - No `type` property (discriminated from Question using `isText()` type guard)
-
-- `Question`: Individual survey questions with various types
-
-  - All questions share base fields: `type`, `id`, `text`, `subtext?`, `tooltip?`, `variable?`, `showIf?`
-  - `type` discriminates the question variant: `"text"`, `"number"`, `"essay"`, `"multiple_choice"`, `"checkbox"`, `"matrix"`, `"breakdown"`
-  - Type-specific fields vary by question type
-
-- `ComputedVariable`: Dynamic calculations based on responses
-  - `name` (string): Variable identifier
-  - `expression` (string): Calculation expression
-  - `value` (boolean | string | number, optional): Computed result
-
-### Text Format Parser (`lib/parser.ts`)
-
-The parser converts structured text using these patterns:
-
-- `#` or `# Title` - Page headers
-- `## Section` - Section headers
-- `Q:` or `Q1:` - Questions
-- `HINT:` - Question subtexts
-- `- Option` - Multiple choice options
-- `TEXT`, `ESSAY`, `NUMBER`, `CHECKBOX` - Input types
-- `VARIABLE:` - Assigns variables to questions
-- `SHOW_IF:` - Conditional display logic
-- `COMPUTE:` - Variable calculations
-- `BLOCK:` - Groups pages together
-
-### Condition System (`lib/conditions/`)
-
-Sophisticated conditional logic supporting:
-
-- Simple comparisons (`Q1 == yes` or `Q1 == "yes"`)
-- Logical operators (`AND`, `OR`, `NOT`)
-- Arithmetic expressions
-- Wildcard matching
-- Computed variable evaluation
-
-### Component Architecture
-
-- **Question Renderers** (`components/questions/`): Type-specific question components
-- **Navigation** (`components/questionnaire/`): Page navigation and progress
-- **Hooks** (`hooks/`): State management for responses, visibility, navigation
-- **Context** (`contexts/`): Language provider for i18n
-
-### State Management Pattern
-
-Custom hooks manage questionnaire state:
-
-- `use-questionnaire-responses`: Response data management
-- `use-questionnaire-navigation`: Page navigation logic
-- `use-visible-pages`: Conditional page visibility
-- `use-page-completion`: Track completion status
-
-### Styling System
-
-- **Tailwind CSS** with custom configuration
-- **Radix UI** primitives for accessible components
-- **shadcn/ui** component variants using class-variance-authority
-- **Responsive design** with mobile-first approach
 
 ### Type Safety
 
@@ -152,7 +40,7 @@ Strong TypeScript usage throughout:
 
 ## React Compiler Guidelines
 
-**IMPORTANT**: This project uses React 19 with React Compiler. Follow these guidelines:
+**IMPORTANT**: This project uses React with React Compiler. Follow these guidelines:
 
 ### ❌ DO NOT USE
 
@@ -170,7 +58,6 @@ Strong TypeScript usage throughout:
 
 ### Key Principles
 
-- Write code as if there's no performance optimization needed
 - React Compiler will handle memoization and re-render optimization
 - Focus on correctness and readability over manual performance tuning
 - Avoid setState calls during render cycles - they interfere with compiler analysis
@@ -212,6 +99,7 @@ Strong TypeScript usage throughout:
 - Check TODO.md for prioritized development items
 - Test core functionality after parser or component changes
 - Commit frequently with descriptive messages explaining the "why" not just the "what"
+- Update `RELEASES.md` alongside any change worth recording (features, bug fixes, or internal refactors) — add a bullet under the current unreleased version's `### Changes`, `### Bug Fixes`, or `### Internal` section
 
 ### Data Format Changes Require System-Wide Updates
 
@@ -220,7 +108,6 @@ Strong TypeScript usage throughout:
 **Common patterns that require coordinated updates:**
 
 1. **Question response storage format changes**:
-
    - Component that renders the question (e.g., `breakdown-question.tsx`)
    - Hook that extracts variables from responses (e.g., `use-questionnaire-responses.ts`)
    - Any utility functions that calculate values (e.g., `calculateBreakdownTotal`)

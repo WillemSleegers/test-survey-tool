@@ -58,6 +58,7 @@
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
 - Consolidated variable-definition collection in `lib/validation.ts` into a single `collectVariableDefinitions` helper, reused by both the name-uniqueness and reference validators
+- Extracted a shared `BaseOption` type for the fields `Option` and `BreakdownOption` actually have in common (`value`, `label`, `hint`, `reveal`, `tooltip`, `showIf`), and fixed type-narrowing errors in `parser-option-exclusive.test.ts`/`parser-option-text.test.ts` surfaced by `tsc --noEmit`
 
 ## Version 0.4.0
 
