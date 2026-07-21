@@ -408,6 +408,19 @@ const identifyQuestions = (lines: string[]): QuestionChunk[] => {
 }
 
 /**
+ * Whether a dash-line's content (with the leading "- " stripped) is option
+ * metadata rather than the start of a new option.
+ */
+const isOptionMetadataLine = (content: string): boolean =>
+  content === "TEXT" ||
+  content === "EXCLUSIVE" ||
+  startsWith(content, "SHOW_IF:") ||
+  startsWith(content, "HINT:") ||
+  startsWith(content, "REVEAL:") ||
+  startsWith(content, "TOOLTIP:") ||
+  content === '"""'
+
+/**
  * Determine question type by scanning for keywords and patterns
  */
 const determineQuestionType = (lines: string[]): Question["type"] => {
@@ -442,8 +455,12 @@ const determineQuestionType = (lines: string[]): Question["type"] => {
       hasSubquestions = true
     }
 
-    // Check for options
-    if (matches(trimmed, /^-\s+[^Q]/)) {
+    // Check for options: any dash-prefixed line that isn't a subquestion or option metadata
+    if (
+      matches(trimmed, /^-\s+/) &&
+      !matches(trimmed, /^-\s*Q\d*:/) &&
+      !isOptionMetadataLine(trimmed.replace(/^-\s+/, ""))
+    ) {
       hasOptions = true
     }
   }
@@ -665,14 +682,7 @@ const parseOptions = (lines: string[]): Option[] => {
       }
 
       // Check if this is option metadata or a new option
-      const isOptionMetadata =
-        content === "TEXT" ||
-        content === "EXCLUSIVE" ||
-        startsWith(content, "SHOW_IF:") ||
-        startsWith(content, "HINT:") ||
-        startsWith(content, "REVEAL:") ||
-        startsWith(content, "TOOLTIP:") ||
-        content === '"""'
+      const isOptionMetadata = isOptionMetadataLine(content)
 
       if (isOptionMetadata && currentOption) {
         // This is metadata for the current option
@@ -1219,16 +1229,25 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
         continue
       }
 
-      // Non-delimiter mode: stop if we hit section content or other keywords
-      if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/) || (trimmed && !trimmed.startsWith('NAVIGATION:') && !trimmed.startsWith('COMPUTE:')))) {
+      // Non-delimiter mode: stop if we hit section content or another page-level keyword
+      if (!useDelimiters && trimmed) {
+        const isPageLevelKeyword =
+          trimmed.startsWith('NAVIGATION:') ||
+          trimmed.startsWith('COMPUTE:') ||
+          trimmed.startsWith('SHOW_IF:') ||
+          trimmed.startsWith('REVEAL:') ||
+          trimmed.startsWith('TOOLTIP:')
+
         if (state === 'reveal') {
           reveal = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
         } else {
           tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
         }
-        state = 'sections'
+        // A page-level keyword returns to keyword handling so it gets processed
+        // normally; anything else (Q:, ##, plain text) starts section content.
+        state = isPageLevelKeyword ? 'navigation' : 'sections'
         metadataBuffer = []
-        // Don't continue - process this line as section content
+        // Don't continue - process this line in the new state
       } else {
         metadataBuffer.push(removeIndentation(line))
         continue

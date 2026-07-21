@@ -59,7 +59,7 @@ Q: How would you rate each aspect of the survey tool?
 - Poor
 
 BLOCK: Feature Feedback
-COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3
+COMPUTE: experienced_user = usage_time IS "Several weeks or more" AND surveys_created >= 3
 SHOW_IF: features_tried
 
 # Detailed Feedback
@@ -94,6 +94,6 @@ NAVIGATION: 1
 
 Thank you for taking the time to complete our survey! Your feedback helps us improve the survey creation tool and make it better for everyone.
 
-{{IF recommend IS Yes THEN We appreciate your willingness to recommend the tool to others. ELSE The improvements you've suggesed will be used to improve the tool.}}
+{{IF recommend IS Yes THEN We appreciate your willingness to recommend the tool to others. ELSE The improvements you've suggested will be used to improve the tool.}}
 
 Your responses have not been recorded, because that's not what this tool does.`

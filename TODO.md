@@ -14,17 +14,11 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
   - The sample survey is broken by this: `COMPUTE: experienced_user = usage_time IS Several weeks or more AND surveys_created >= 3` (`lib/constants.ts:62`) splits on the " or " inside the option label, so `experienced_user` is always false and the "Overall Assessment" block never shows
   - Quoting the value only appears to work by accident: the split still cuts through quotes and the fail-open default rescues it
   - **Plan**: uppercase-only keywords + quote-aware tokenizer in the parser rewrite. Regression test: the exact sample-survey condition, quoted and unquoted, plus values containing " and "
-- [ ] Fix question-type detection rejecting options that start with "Q"
-  - Option-detection regex `/^-\s+[^Q]/` in `determineQuestionType` (`lib/parser.ts:445`)
-  - A question whose options all start with "Q" (`- Quality`, `- Quantity`) parses as a plain text question with no options
-  - **Plan**: replace with "any dash-prefixed line that is neither a subquestion (`/^-\s*Q\d*:/`) nor a known metadata keyword (`TEXT`, `EXCLUSIVE`, `SHOW_IF:`, `HINT:`, `REVEAL:`, `TOOLTIP:`, `"""`)" — mirroring the logic `parseOptions` already uses. Add parser tests: all-Q options, mixed options, and a question whose only dash-prefixed lines are metadata (should stay non-choice)
+- [x] Fix question-type detection rejecting options that start with "Q" — **done**: `determineQuestionType` now shares an `isOptionMetadataLine` helper with `parseOptions`, so option detection and option parsing agree; tests in `tests/parser-questions.test.ts`
 - [x] Handle parentheses in logical conditions — **done** via parser rewrite; truth-table regression tests added
   - `(a OR b) AND c` with `c` empty evaluates to true: the OR split produces fragments like `"(a"` that fail to parse and default to true
   - **Plan**: parentheses become grouping in the AST. Regression tests: `(a OR b) AND c`, `a AND (b OR c)`, nested groups, with truth tables
-- [ ] Pass section `reveal` through `getVisiblePageContent`
-  - `hooks/use-visible-pages.ts:45-57` rebuilds section objects without the `reveal` field, so section-level REVEAL never renders — contradicts RELEASES 0.5.0 which claims REVEAL works on sections
-  - Also: the section reveal button only renders when the section has a title (`components/section-renderer.tsx:112`)
-  - **Plan**: (1) spread the original section (`{ ...section, items: filteredItems }`) instead of listing fields, so future fields can't be silently dropped; (2) in `section-renderer.tsx`, move the reveal button/panel out of the `section.title &&` block so titleless sections show it above their content; (3) verify in the docs reveal example with a `## Section` + `REVEAL:`; (4) add a hook-level test asserting `reveal`/`tooltip` survive filtering
+- [x] Pass section `reveal` through `getVisiblePageContent` — **done**: `getVisiblePageContent` now spreads the original section instead of listing fields; `section-renderer.tsx` renders the reveal button/panel for titleless sections too; hook tests in `hooks/use-visible-pages.test.ts`
 - [x] Strip quotes from `STARTS_WITH` comparison values — **done**: STARTS_WITH is a parser construct now; quoted and unquoted values both tested
   - `STARTS_WITH crime == Yes` works but `STARTS_WITH crime == "Yes"` fails
   - `lib/conditions/expression-evaluator.ts:201` compares against the raw right side instead of using `extractComparisonValue` like normal comparisons
@@ -33,16 +27,11 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
   - `name1 == name2` returns true for "Alice" vs "Bob": `lib/conditions/condition-evaluator.ts:230-246` always compares variable-to-variable numerically, and non-numeric strings both become 0
   - Also means any unquoted right-hand value that happens to match a variable name silently changes meaning
   - **Plan**: in the AST evaluator, `==`/`!=` compare as strings unless both operands are numeric; ordered operators (`> < >= <=`) coerce numerically as today. Document in the conditionals docs that a bareword matching a variable name resolves to the variable (and quoting forces a literal). Tests: string-vs-string, string-vs-number, number-vs-number for every operator
-- [ ] Fix bare `REVEAL:` at page level swallowing NAVIGATION/COMPUTE lines
-  - The stop-condition at `lib/parser.ts:1222` exempts `NAVIGATION:`/`COMPUTE:` lines from ending collection, so they end up as reveal text and the nav level is lost
-  - **Plan**: in `parsePage`'s non-delimited metadata collection, treat all page-level keywords (`NAVIGATION:`, `COMPUTE:`, `SHOW_IF:`, `REVEAL:`, `TOOLTIP:`) as terminators that end collection *and* get processed normally (return to the keyword-handling state instead of `sections`). Align `parseSection`'s equivalent state machine while there (see parser dedup item). Parser tests: bare `REVEAL:` followed by each keyword
+- [x] Fix bare `REVEAL:` at page level swallowing NAVIGATION/COMPUTE lines — **done**: `parsePage`'s non-delimited metadata collection now treats all page-level keywords as terminators that return to keyword handling instead of `sections`; tests in `tests/parser-page-metadata.test.ts`. `parseSection`'s equivalent state machine still needs aligning — left for the parser dedup item
 - [x] Decide and document `NOT` precedence — **done**: conventional precedence (NOT > AND > OR), documented in the docs conditionals page and RELEASES; repo grep found no surveys relying on the old interpretation
   - `NOT a AND b` currently evaluates as `NOT(a AND b)` (NOT is checked before AND/OR in `lib/conditions/condition-evaluator.ts:72`), not the conventional `(NOT a) AND b`
   - **Plan**: parser rewrite adopts conventional precedence (`NOT` binds tighter than `AND`/`OR`). This is a behavior change: grep existing survey files/tests for `NOT .* (AND|OR)` before shipping and call it out in RELEASES. Document precedence + parentheses in the conditionals docs page
-- [ ] Fix sample survey in `lib/constants.ts`
-  - Broken compute (see AND/OR splitting bug above)
-  - Typo "suggesed" on line 97
-  - **Plan**: fix the typo now; quote the compute's comparison value (`IS "Several weeks or more"`) so it's correct both before and after the parser rewrite. Add a test that parses `SAMPLE_SURVEY` and asserts `experienced_user` evaluates true for a qualifying response set
+- [x] Fix sample survey in `lib/constants.ts` — **done**: compute's comparison value is quoted (`IS "Several weeks or more"`); "suggesed" typo fixed; covered by `tests/sample-survey.test.ts`
 
 ## Validation Gaps
 

@@ -43,10 +43,7 @@ export function useVisiblePages(
     return page.sections
       .filter((section) => evaluateCondition(section.showIf || "", variables, pageComputedVars))
       .map((section) => ({
-        id: section.id,
-        title: section.title,
-        tooltip: section.tooltip,
-        showIf: section.showIf,
+        ...section,
         items: section.items.filter((item) => {
           if (isText(item)) {
             return true

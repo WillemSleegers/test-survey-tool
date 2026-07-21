@@ -95,6 +95,54 @@ NUMBER`
     }
   })
 
+  it('should parse multiple choice question with options that all start with "Q"', () => {
+    const text = `Q: What matters most to you?
+
+- Quality
+- Quantity
+- Queue time`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('multiple_choice')
+    if (question.type === 'multiple_choice') {
+      expect(question.options).toHaveLength(3)
+      expect(question.options.map((o) => o.label)).toEqual([
+        'Quality',
+        'Quantity',
+        'Queue time',
+      ])
+    }
+  })
+
+  it('should parse checkbox question with a mix of "Q"-starting and other options', () => {
+    const text = `Q: Which of these matter to you?
+
+- Quality
+- Speed
+- Quantity
+CHECKBOX`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('checkbox')
+    if (question.type === 'checkbox') {
+      expect(question.options).toHaveLength(3)
+    }
+  })
+
+  it('should not classify a question with only metadata dash-lines as multiple choice', () => {
+    const text = `Q: Optional detail
+- SHOW_IF: show_details == yes`
+
+    const questions = getQuestions(text)
+    const question = questions[0]
+
+    expect(question.type).toBe('text')
+  })
+
   it('should parse matrix question without blank lines between subquestions and options', () => {
     const text = `Q: Rate these items
 

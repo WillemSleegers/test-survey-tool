@@ -109,21 +109,32 @@ export function SectionRenderer({
   return (
     <>
       {/* Section Title */}
-      {section.title && (
+      {(section.title || processedReveal) && (
         <div className="relative">
-          {processedReveal && (
-            <RevealButton
-              onClick={() => setIsRevealVisible(!isRevealVisible)}
-              className="absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2"
-              ariaLabel="Toggle section information"
-            />
+          {section.title ? (
+            <>
+              {processedReveal && (
+                <RevealButton
+                  onClick={() => setIsRevealVisible(!isRevealVisible)}
+                  className="absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2"
+                  ariaLabel="Toggle section information"
+                />
+              )}
+              <div>
+                <span className="[&_p]:inline">
+                  <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
+                </span>
+                {processedTooltip && <TooltipButton content={processedTooltip} />}
+              </div>
+            </>
+          ) : (
+            processedReveal && (
+              <RevealButton
+                onClick={() => setIsRevealVisible(!isRevealVisible)}
+                ariaLabel="Toggle section information"
+              />
+            )
           )}
-          <div>
-            <span className="[&_p]:inline">
-              <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{section.title}</Markdown>
-            </span>
-            {processedTooltip && <TooltipButton content={processedTooltip} />}
-          </div>
           {processedReveal && isRevealVisible && (
             <div className="text-base text-muted-foreground bg-muted/50 p-3 rounded-md mt-2">
               <Markdown remarkPlugins={remarkPlugins} components={markdownImageComponents}>{processedReveal}</Markdown>
