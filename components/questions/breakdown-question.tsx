@@ -9,7 +9,7 @@ import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useInstanceId } from "@/contexts/instance-id-context"
-import { getVisibleBreakdownOptions, sumBreakdownOptions } from "@/lib/breakdown-calculations"
+import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
 
 const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
 
@@ -117,7 +117,9 @@ export function BreakdownQuestion({
     ? responseValue as Record<string, string>
     : {}
 
-  const localVariables: Variables = { ...variables }
+  const visibleEntries = getVisibleBreakdownOptions(question, variables, computedVariables)
+  const subtotals = computeSubtotalValues(question, currentValues, variables, computedVariables)
+  const localVariables: Variables = { ...variables, ...subtotalVariables(question, subtotals) }
 
   const optionToKey = (index: number): string => `option_${index}`
 
@@ -131,8 +133,6 @@ export function BreakdownQuestion({
     }
     onResponse(question.id, newValues)
   }
-
-  const visibleEntries = getVisibleBreakdownOptions(question, variables, computedVariables)
 
   const total = sumBreakdownOptions(visibleEntries, currentValues, variables, computedVariables)
   const totalLabel = question.totalLabel
@@ -164,23 +164,6 @@ export function BreakdownQuestion({
       }
       return next
     })
-  }
-
-  const getSubtotalValue = (option: typeof question.options[0], index: number): number | null => {
-    if (option.custom) {
-      const customValue = replacePlaceholders(option.custom, localVariables, computedVariables)
-      const parsed = parseFloat(customValue)
-      return (isNaN(parsed) || customValue.includes('\\{')) ? null : parsed
-    }
-    let startIndex = 0
-    for (let i = index - 1; i >= 0; i--) {
-      if (question.options[i].subtotalLabel || question.options[i].header) {
-        startIndex = i + 1
-        break
-      }
-    }
-    const rangeEntries = visibleEntries.filter(entry => entry.index >= startIndex && entry.index < index)
-    return sumBreakdownOptions(rangeEntries, currentValues, variables, computedVariables)
   }
 
   const getOptionValue = (option: typeof question.options[0], index: number) => {
@@ -215,8 +198,7 @@ export function BreakdownQuestion({
     }
 
     if (option.subtotalLabel) {
-      const subtotal = getSubtotalValue(option, index)
-      if (option.variable && subtotal !== null) localVariables[option.variable] = subtotal
+      const subtotal = subtotals.get(index) ?? null
       const prefix = option.prefix ?? questionPrefix
       const suffix = option.suffix ?? questionSuffix
       return (
@@ -303,8 +285,7 @@ export function BreakdownQuestion({
               }
 
               if (option.subtotalLabel) {
-                const subtotal = getSubtotalValue(option, index)
-                if (option.variable && subtotal !== null) localVariables[option.variable] = subtotal
+                const subtotal = subtotals.get(index) ?? null
                 const subtotalCol = option.column ?? columnNumbers[columnNumbers.length - 1]
                 const prefix = option.prefix ?? questionPrefix
                 const suffix = option.suffix ?? questionSuffix

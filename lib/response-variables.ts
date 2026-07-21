@@ -1,6 +1,6 @@
 import { Page, Question, Variables, Responses, BreakdownQuestion, isQuestion } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
-import { getVisibleBreakdownOptions, sumBreakdownOptions } from "@/lib/breakdown-calculations"
+import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
 
 type QuestionMaps = {
   questionLookup: Map<string, Question>
@@ -118,35 +118,9 @@ export function deriveVariables(questionnaire: Page[], responses: Responses): Va
     const question = questionLookup.get(questionId)
     if (!isBreakdownResponse(question, responseValue)) return
 
-    const breakdownResponse = responseValue
     const breakdownQuestion = question as BreakdownQuestion
-    const visibleOptions = getVisibleBreakdownOptions(breakdownQuestion, variables, {})
-
-    breakdownQuestion.options.forEach((option, optionIndex) => {
-      if (!option.variable || !option.subtotalLabel) return
-
-      let subtotal: number
-      if (option.custom) {
-        const customValue = replacePlaceholders(option.custom, variables, {})
-        subtotal = parseFloat(customValue) || 0
-      } else {
-        let startIndex = 0
-        for (let i = optionIndex - 1; i >= 0; i--) {
-          if (breakdownQuestion.options[i].subtotalLabel || breakdownQuestion.options[i].header) {
-            startIndex = i + 1
-            break
-          }
-        }
-
-        const rangeEntries = visibleOptions.filter(
-          entry => entry.index >= startIndex && entry.index < optionIndex
-        )
-        subtotal = sumBreakdownOptions(rangeEntries, breakdownResponse, variables, {})
-      }
-
-      // Store immediately so a later CUSTOM subtotal can reference it
-      variables[option.variable] = subtotal
-    })
+    const subtotals = computeSubtotalValues(breakdownQuestion, responseValue, variables, {})
+    Object.assign(variables, subtotalVariables(breakdownQuestion, subtotals))
   })
 
   return variables

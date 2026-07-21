@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { getVisibleBreakdownOptions, sumBreakdownOptions } from "@/lib/breakdown-calculations"
+import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
 import { BreakdownQuestion } from "@/lib/types"
 
 function makeQuestion(options: BreakdownQuestion["options"]): BreakdownQuestion {
@@ -128,5 +128,64 @@ describe("sumBreakdownOptions", () => {
     const range = visible.filter(entry => entry.index >= 0 && entry.index < 3)
 
     expect(sumBreakdownOptions(range, values, {}, {})).toBe(120)
+  })
+})
+
+describe("computeSubtotalValues", () => {
+  it("resolves a CUSTOM subtotal that references a subtotal defined later in the option list", () => {
+    const question = makeQuestion([
+      { value: "Combined", label: "Combined", subtotalLabel: "Combined", custom: "{{rent_subtotal + food_subtotal}}", variable: "combined" },
+      { value: "Rent", label: "Rent" },
+      { value: "RentSubtotal", label: "Rent Subtotal", subtotalLabel: "Rent Subtotal", variable: "rent_subtotal" },
+      { value: "Food", label: "Food" },
+      { value: "FoodSubtotal", label: "Food Subtotal", subtotalLabel: "Food Subtotal", variable: "food_subtotal" },
+    ])
+    const values = { option_1: "100", option_3: "20" }
+
+    const subtotals = computeSubtotalValues(question, values, {}, {})
+
+    expect(subtotals.get(2)).toBe(100)
+    expect(subtotals.get(4)).toBe(20)
+    expect(subtotals.get(0)).toBe(120)
+  })
+
+  it("still resolves a CUSTOM subtotal that references an earlier subtotal", () => {
+    const question = makeQuestion([
+      { value: "Rent", label: "Rent" },
+      { value: "RentSubtotal", label: "Rent Subtotal", subtotalLabel: "Rent Subtotal", variable: "rent_subtotal" },
+      { value: "Double", label: "Double", subtotalLabel: "Double", custom: "{{rent_subtotal * 2}}", variable: "doubled" },
+    ])
+    const values = { option_0: "100" }
+
+    const subtotals = computeSubtotalValues(question, values, {}, {})
+
+    expect(subtotals.get(1)).toBe(100)
+    expect(subtotals.get(2)).toBe(200)
+  })
+
+  it("reports an unresolvable CUSTOM subtotal as null (unavailable) rather than throwing", () => {
+    const question = makeQuestion([
+      { value: "Bogus", label: "Bogus", subtotalLabel: "Bogus", custom: "{{does_not_exist}}", variable: "bogus" },
+    ])
+
+    const subtotals = computeSubtotalValues(question, {}, {}, {})
+
+    expect(subtotals.get(0)).toBeNull()
+  })
+})
+
+describe("subtotalVariables", () => {
+  it("maps subtotal variables to their values, defaulting unavailable CUSTOM values to 0", () => {
+    const question = makeQuestion([
+      { value: "Rent", label: "Rent" },
+      { value: "RentSubtotal", label: "Rent Subtotal", subtotalLabel: "Rent Subtotal", variable: "rent_subtotal" },
+      { value: "Bogus", label: "Bogus", subtotalLabel: "Bogus", custom: "{{does_not_exist}}", variable: "bogus" },
+    ])
+    const values = { option_0: "100" }
+
+    const subtotals = computeSubtotalValues(question, values, {}, {})
+    const result = subtotalVariables(question, subtotals)
+
+    expect(result).toEqual({ rent_subtotal: 100, bogus: 0 })
   })
 })

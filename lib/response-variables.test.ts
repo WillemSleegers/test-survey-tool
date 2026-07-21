@@ -80,6 +80,53 @@ describe("deriveVariables", () => {
     })
   })
 
+  it("resolves a CUSTOM subtotal that references a subtotal defined later in the option list", () => {
+    const questionnaire: Page[] = [
+      makePage(1, [
+        {
+          id: 1,
+          items: [
+            {
+              id: "bd1",
+              type: "breakdown",
+              text: "Expenses",
+              options: [
+                {
+                  value: "Combined",
+                  label: "Combined",
+                  subtotalLabel: "Combined",
+                  custom: "{{rent_subtotal + food_subtotal}}",
+                  variable: "combined",
+                },
+                { value: "Rent", label: "Rent" },
+                {
+                  value: "RentSubtotal",
+                  label: "Rent Subtotal",
+                  subtotalLabel: "Rent Subtotal",
+                  variable: "rent_subtotal",
+                },
+                { value: "Food", label: "Food" },
+                {
+                  value: "FoodSubtotal",
+                  label: "Food Subtotal",
+                  subtotalLabel: "Food Subtotal",
+                  variable: "food_subtotal",
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    ]
+    const responses: Responses = { bd1: { option_1: "100", option_3: "20" } }
+
+    expect(deriveVariables(questionnaire, responses)).toEqual({
+      rent_subtotal: 100,
+      food_subtotal: 20,
+      combined: 120,
+    })
+  })
+
   it("derives identical variables regardless of the order responses were inserted in", () => {
     // q_base defines `base`; q_bd's "Double" row prefills from {base} via VALUE
     const questionnaire: Page[] = [

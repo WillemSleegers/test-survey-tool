@@ -60,12 +60,16 @@
 
 - **Question-level `VARIABLE:` on a matrix question is now a parse error**: matrix responses are stored per row, so a bare `VARIABLE:` at the question level (as opposed to `- VARIABLE:` under a row) was silently accepted but never populated — any condition, placeholder, or computed variable depending on it just silently never resolved. This now fails to load with a message pointing to the per-row `- VARIABLE:` syntax
 
+- **Fixed forward-referencing `CUSTOM:` breakdown subtotals**: a `CUSTOM:` subtotal formula could only resolve another subtotal's variable if that subtotal appeared *above* it in the option list — the value was written into the lookup map row-by-row as the table rendered, so a reference to a subtotal defined further down silently failed. Subtotals are now precomputed as a single, order-independent pass before any `CUSTOM:` formula is evaluated, so a `CUSTOM:` row can reference any other subtotal's variable regardless of table position. This also fixes the same latent issue in variable derivation (`lib/response-variables.ts`), which shared the identical row-by-row logic
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
 - Consolidated variable-definition collection in `lib/validation.ts` into a single `collectVariableDefinitions` helper, reused by both the name-uniqueness and reference validators
 - Extracted a shared `BaseOption` type for the fields `Option` and `BreakdownOption` actually have in common (`value`, `label`, `hint`, `reveal`, `tooltip`, `showIf`), and fixed type-narrowing errors in `parser-option-exclusive.test.ts`/`parser-option-text.test.ts` surfaced by `tsc --noEmit`
 - Extracted breakdown row visibility/summing into `lib/breakdown-calculations.ts` and the two-pass variable derivation out of `use-questionnaire-responses.ts` into a pure, directly-testable `lib/response-variables.ts`; the hook is now a thin `useState` wrapper around it
+- Extracted breakdown subtotal computation (`computeSubtotalValues`/`subtotalVariables`) into `lib/breakdown-calculations.ts`, shared by `breakdown-question.tsx` and `lib/response-variables.ts` instead of being duplicated
+- Removed render-time mutation of shared parsed state: `evaluateComputedValues` no longer writes back onto `ComputedVariable.value` (the field is deleted from the type; nothing read it) — computed values are only ever returned, never stored on the parsed questionnaire
 
 ## Version 0.4.0
 

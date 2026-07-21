@@ -159,7 +159,6 @@ export type Responses = {
 export type ComputedVariable = {
   name: string
   expression: string
-  value?: boolean | string | number
 }
 
 export type ComputedValues = {

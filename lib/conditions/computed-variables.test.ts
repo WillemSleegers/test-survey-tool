@@ -223,4 +223,20 @@ describe('evaluateComputedValues', () => {
       expect(result.label).toBe('High')
     })
   })
+
+  describe('does not mutate shared parsed state', () => {
+    it('does not write a value back onto the ComputedVariable objects', () => {
+      const page = makePage([{ name: 'total', expression: 'rent + food' }])
+      evaluateComputedValues(page, { rent: 800, food: 300 })
+      expect(page.computedVariables[0]).not.toHaveProperty('value')
+    })
+
+    it('re-evaluating the same page object with different variables is independent (no leftover state)', () => {
+      const page = makePage([{ name: 'total', expression: 'rent + food' }])
+      const first = evaluateComputedValues(page, { rent: 800, food: 300 })
+      const second = evaluateComputedValues(page, { rent: 100, food: 50 })
+      expect(first.total).toBe(1100)
+      expect(second.total).toBe(150)
+    })
+  })
 })

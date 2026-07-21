@@ -56,7 +56,6 @@ export function evaluateComputedValues(
         if (parsed && evaluateCondition(parsed.condition, extendedVariables)) {
           const value = resolveBranchValue(parsed.trueExpr, extendedVariables)
           computedVars[computedVar.name] = value
-          computedVar.value = value
         }
         continue
       }
@@ -78,13 +77,11 @@ export function evaluateComputedValues(
       }
 
       computedVars[computedVar.name] = result
-      computedVar.value = result
     } catch (error) {
       console.warn(`Failed to evaluate computed variable "${computedVar.name}": ${error}`)
       const expr = computedVar.expression
       const defaultValue = isIfThenElseExpression(expr) || isIfThenExpression(expr) ? '' : isArithmeticExpression(expr) ? 0 : false
       computedVars[computedVar.name] = defaultValue
-      computedVar.value = defaultValue
     }
   }
 
