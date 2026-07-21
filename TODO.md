@@ -41,13 +41,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 ## Parsed-but-Ignored Features
 
-- [ ] Implement breakdown option `- SHOW_IF:` filtering *(decision: implement, not remove)*
-  - Parsed (`lib/parser.ts:911`) and validated, but `components/questions/breakdown-question.tsx` never filters options by it — every row always renders
-  - **Plan**:
-    1. Add a shared `getVisibleBreakdownOptions(question, variables, computedVariables)` helper in a new `lib/breakdown-calculations.ts` (seed for the existing "Extract shared calculation logic" idea) that returns options with their **original indices**, so `option_N` response keys stay stable when visibility changes
-    2. Component: render only visible options; totals/subtotals sum only visible rows (hidden rows keep their stored response but are excluded from calculations, consistent with how hidden questions keep data)
-    3. Hook: `calculateBreakdownTotal` and the subtotal pass in `use-questionnaire-responses.ts` use the same helper so derived variables match what's displayed (per the CLAUDE.md rule on coordinated data-format updates)
-    4. Tests: hidden row excluded from total; row re-appearing restores its value; subtotal ranges spanning a hidden row; docs example on the breakdown page
+- [x] Implement breakdown option `- SHOW_IF:` filtering *(decision: implement, not remove)* — **done**: `getVisibleBreakdownOptions`/`sumBreakdownOptions` added in `lib/breakdown-calculations.ts` and shared by `breakdown-question.tsx` (rendering + totals/subtotals) and `use-questionnaire-responses.ts` (`calculateBreakdownTotal` + subtotal pass); hidden rows keep their stored response but are excluded from sums; tests in `lib/breakdown-calculations.test.ts`; docs example added to the breakdown and conditionals pages; RELEASES updated
 - [ ] Reject question-level `VARIABLE:` on matrix questions *(decision: parse error)*
   - Matrix responses are stored per subquestion ID, so `responses[question.id]` never exists and the question-level variable is never populated (`hooks/use-questionnaire-responses.ts:33-34`)
   - **Plan**: in `parseMatrixQuestion`, if a top-level (non-dash) `VARIABLE:` line is present, throw a descriptive error pointing to the per-subquestion `- VARIABLE:` syntax. Remove the now-dead matrix branch registering `item.variable` in the responses hook. Parser test for the error; check docs/examples contain no offending usage

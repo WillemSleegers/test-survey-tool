@@ -9,6 +9,7 @@ import { QuestionWrapper } from "./shared/question-wrapper"
 import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, ComputedValues } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useInstanceId } from "@/contexts/instance-id-context"
+import { getVisibleBreakdownOptions, sumBreakdownOptions } from "@/lib/breakdown-calculations"
 
 const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
 
@@ -131,34 +132,18 @@ export function BreakdownQuestion({
     onResponse(question.id, newValues)
   }
 
-  const calculateSubtotal = (options: typeof question.options): number => {
-    let total = 0
-    for (const option of options) {
-      if (option.exclude) continue
-      const index = question.options.indexOf(option)
-      const key = optionToKey(index)
-      let valueStr = currentValues[key] || ""
-      if (!valueStr && option.prefillValue) {
-        valueStr = replacePlaceholders(option.prefillValue, variables, computedVariables)
-      }
-      const numValue = parseFloat(valueStr)
-      if (!isNaN(numValue)) {
-        if (option.subtract) { total -= numValue } else { total += numValue }
-      }
-    }
-    return total
-  }
+  const visibleEntries = getVisibleBreakdownOptions(question, variables, computedVariables)
 
-  const total = calculateSubtotal(question.options)
+  const total = sumBreakdownOptions(visibleEntries, currentValues, variables, computedVariables)
   const totalLabel = question.totalLabel
   const questionPrefix = question.prefix || ""
   const questionSuffix = question.suffix || ""
 
-  const hasColumns = question.options.some(opt => opt.column !== undefined)
+  const hasColumns = visibleEntries.some(({ option }) => option.column !== undefined)
 
   const optionsByColumn = new Map<number, typeof question.options>()
   if (hasColumns) {
-    question.options.forEach(option => {
+    visibleEntries.forEach(({ option }) => {
       const col = option.column ?? 1
       if (!optionsByColumn.has(col)) {
         optionsByColumn.set(col, [])
@@ -194,7 +179,8 @@ export function BreakdownQuestion({
         break
       }
     }
-    return calculateSubtotal(question.options.slice(startIndex, index))
+    const rangeEntries = visibleEntries.filter(entry => entry.index >= startIndex && entry.index < index)
+    return sumBreakdownOptions(rangeEntries, currentValues, variables, computedVariables)
   }
 
   const getOptionValue = (option: typeof question.options[0], index: number) => {
@@ -297,7 +283,7 @@ export function BreakdownQuestion({
       <div className="space-y-2">
         <Table>
           <TableBody>
-            {question.options.map((option, index) => {
+            {visibleEntries.map(({ option, index }) => {
               if (option.header) {
                 return (
                   <TableRow key={index}>
@@ -413,7 +399,7 @@ export function BreakdownQuestion({
         ) : (
           <Table>
             <TableBody>
-              {question.options.map((option, index) => renderOptionRows(option, index))}
+              {visibleEntries.map(({ option, index }) => renderOptionRows(option, index))}
 
               {totalLabel && (
                 <TableRow className="border-t border-border">

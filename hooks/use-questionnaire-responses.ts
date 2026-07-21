@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Variables, Responses, Page, Question, BreakdownQuestion, isQuestion } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
+import { getVisibleBreakdownOptions, sumBreakdownOptions } from "@/lib/breakdown-calculations"
 
 /**
  * Hook for managing questionnaire responses and variables
@@ -64,37 +65,8 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
     question: BreakdownQuestion,
     responseValue: Record<string, string>
   ): number => {
-    let total = 0
-
-    // Sum values from main options
-    for (let index = 0; index < question.options.length; index++) {
-      const option = question.options[index]
-
-      // Skip excluded options
-      if (option.exclude) {
-        continue
-      }
-
-      const key = `option_${index}`
-
-      // Get value - either from user input or from calculated prefillValue
-      let valueStr = responseValue[key] || ""
-      if (!valueStr && option.prefillValue) {
-        // For read-only options with VALUE, calculate the value
-        valueStr = replacePlaceholders(option.prefillValue, variables, {})
-      }
-
-      const numValue = parseFloat(valueStr)
-      if (!isNaN(numValue)) {
-        if (option.subtract) {
-          total -= numValue
-        } else {
-          total += numValue
-        }
-      }
-    }
-
-    return total
+    const visibleOptions = getVisibleBreakdownOptions(question, variables, {})
+    return sumBreakdownOptions(visibleOptions, responseValue, variables, {})
   }
 
   // Derive variables from responses - done in two passes to handle dependencies
@@ -149,6 +121,7 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
 
     if (question?.type === "breakdown" && typeof responseValue === "object" && responseValue !== null && !Array.isArray(responseValue)) {
       const breakdownResponse = responseValue as Record<string, string>
+      const visibleOptions = getVisibleBreakdownOptions(question, variables, {})
 
       question.options.forEach((option, optionIndex) => {
         if (option.variable && option.subtotalLabel) {
@@ -169,32 +142,11 @@ export function useQuestionnaireResponses(questionnaire: Page[]) {
               }
             }
 
-            const optionsToSum = question.options.slice(startIndex, optionIndex)
-            subtotal = 0
-
-            for (let i = 0; i < optionsToSum.length; i++) {
-              const opt = optionsToSum[i]
-              if (opt.exclude) continue
-
-              // Find the actual index of this option in the full question.options array
-              const actualIndex = startIndex + i
-              const key = `option_${actualIndex}`
-
-              // Get value - either from user input or from calculated prefillValue
-              let valueStr = breakdownResponse[key] || ""
-              if (!valueStr && opt.prefillValue) {
-                // For read-only options with VALUE, calculate the value
-                // Now variables from pass 1 are available
-                valueStr = replacePlaceholders(opt.prefillValue, variables, {})
-              }
-
-              if (valueStr !== undefined && valueStr !== "") {
-                const numValue = parseFloat(valueStr)
-                if (!isNaN(numValue)) {
-                  subtotal += opt.subtract ? -numValue : numValue
-                }
-              }
-            }
+            // Now variables from pass 1 are available for prefillValue resolution
+            const rangeEntries = visibleOptions.filter(
+              entry => entry.index >= startIndex && entry.index < optionIndex
+            )
+            subtotal = sumBreakdownOptions(rangeEntries, breakdownResponse, variables, {})
           }
 
           // Store the subtotal variable immediately so it's available for subsequent CUSTOM calculations

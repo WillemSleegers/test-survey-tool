@@ -54,6 +54,8 @@
 
 - **Fixed the bundled sample survey**: quoted the `experienced_user` COMPUTE comparison value and fixed a typo, so "Load Sample Survey" shows its intended conditional block
 
+- **Fixed breakdown option `SHOW_IF` being silently ignored**: `- SHOW_IF:` on a breakdown row was parsed and validated but never affected rendering — every row always showed regardless of the condition. Hidden rows are now excluded from the table and from totals/subtotals; their stored value is kept and restored if the row becomes visible again
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)

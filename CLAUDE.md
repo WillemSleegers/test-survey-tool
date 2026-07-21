@@ -37,6 +37,7 @@ Strong TypeScript usage throughout:
 - Components follow a consistent pattern with shared wrapper components
 - State management is deliberately kept simple with React hooks rather than external libraries
 - The app is designed to work entirely client-side with no backend requirements
+- `tests/examples/*.md` are scratch survey fixtures for manually exploring a feature (paste into the app) — they are not loaded by any automated test, so don't assume adding one adds regression coverage
 
 ## React Compiler Guidelines
 

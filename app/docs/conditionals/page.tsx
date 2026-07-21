@@ -108,7 +108,8 @@ SHOW_IF: has_pets == Yes`)}
               </li>
               <li>The option is hidden when the condition is false</li>
               <li>
-                Works with multiple choice, checkbox, and matrix questions
+                Works with multiple choice, checkbox, matrix, and breakdown
+                questions
               </li>
               <li>
                 Uses the same condition syntax as question-level{" "}

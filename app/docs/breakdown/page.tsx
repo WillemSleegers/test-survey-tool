@@ -147,6 +147,28 @@ BREAKDOWN`)}
       </div>
 
       <div className="space-y-3">
+        <h3 className="text-xl font-semibold">Conditional Rows</h3>
+        <p>
+          Use <code>- SHOW_IF:</code> to show or hide individual rows based on
+          previous responses, the same as options on other question types.
+          Hidden rows are excluded from totals and subtotals.
+        </p>
+        {renderExample(`Q: Do you receive a bonus?
+- Yes
+- No
+VARIABLE: has_bonus
+
+Q: Monthly income breakdown
+- Salary
+  - VARIABLE: salary
+- Bonus
+  - VARIABLE: bonus
+  - SHOW_IF: has_bonus == Yes
+TOTAL: **Total income**
+BREAKDOWN`)}
+      </div>
+
+      <div className="space-y-3">
         <h3 className="text-xl font-semibold">Advanced Keywords</h3>
         <ul className="list-disc list-outside ml-5 space-y-2">
           <li>
