@@ -104,40 +104,9 @@ Strong TypeScript usage throughout:
 
 ### Data Format Changes Require System-Wide Updates
 
-**CRITICAL**: When changing how data is stored or keyed (e.g., response keys, variable names, option identifiers), you MUST update ALL locations that read or write that data.
+**CRITICAL**: When changing how data is stored or keyed (e.g., response keys, variable names, option identifiers), search for every location that reads or writes the old format first, then update them all in one change: the component that renders the question, any hook/helper that derives variables from responses, and any calculation utilities (totals, subtotals). Test that variables and calculations still work afterward — don't update just the component and forget the derivation/calculation side.
 
-**Common patterns that require coordinated updates:**
-
-1. **Question response storage format changes**:
-   - Component that renders the question (e.g., `breakdown-question.tsx`)
-   - Hook that extracts variables from responses (e.g., `use-questionnaire-responses.ts`)
-   - Any utility functions that calculate values (e.g., `calculateBreakdownTotal`)
-
-2. **Option/subquestion identifier changes**:
-   - Where data is written (onChange handlers)
-   - Where data is read (display calculations, totals, subtotals)
-   - Where variables are extracted (variable derivation logic)
-   - Where data is accessed for conditional logic
-
-**Before changing a data format:**
-
-1. **Search** for all locations that reference the old format
-2. **Document** what needs to change in each location
-3. **Update** all locations together in a single logical change
-4. **Test** that variables and calculations still work correctly
-
-**Example**: Changing breakdown question storage from slugified keys (`option_label_text`) to index keys (`option_0`):
-
-- ✅ Update component: `optionToKey`, `handleRowChange`, `calculateTotal`, `calculateSubtotal`
-- ✅ Update hooks: `calculateBreakdownTotal`, option variable extraction, subtotal variable calculation
-- ✅ Test that question-level variables, option-level variables, and subtotal variables all work
-- ❌ Don't update just the component and forget the hooks
-
-**Red flags:**
-
-- "I updated the component but forgot the hook"
-- "Variables stopped working after my change"
-- "The calculation logic uses a different key format than the storage"
+**Red flags**: "I updated the component but forgot the hook", "variables stopped working after my change", "the calculation logic uses a different key format than storage".
 
 ### Communication Guidelines
 
@@ -149,177 +118,30 @@ Strong TypeScript usage throughout:
 
 ## Quality Assurance Guidelines
 
-### Use a Systematic Approach, Not Reactive Responses
+### Systematic Approach
 
-**CRITICAL**: Before making any changes, follow this systematic process:
+Before changing code: read the relevant files completely, plan the steps (TodoWrite for anything non-trivial), execute them together rather than piecemeal, then verify the result makes sense. Avoid "I'll just put this here for now" partial fixes and jumping reactively between unrelated parts of a task.
 
-1. **UNDERSTAND** - Read relevant files completely to understand the current state
-2. **PLAN** - Use TodoWrite to break down what needs to be done step by step
-3. **EXECUTE** - Make changes systematically according to your plan
-4. **VERIFY** - Check that the result makes sense and is complete
+### Sanity-Check Before Calling It Done
 
-**Avoid reactive patterns:**
-
-- ❌ Making immediate changes based on requests
-- ❌ Partial fixes that leave inconsistencies
-- ❌ Jumping between different parts of a task randomly
-- ❌ "I'll just put this here for now" thinking
-
-**Example**: If asked to move documentation, first read the entire file, plan what needs to move where, execute all moves together, then verify consistency.
-
-### Always Sanity-Check Your Work
-
-**CRITICAL**: Before completing any task, always pause and ask yourself: "Does this make sense?"
-
-This applies to:
-
-- **Code organization**: Is this component in the right place?
-- **Documentation placement**: Does this belong with similar-complexity features?
-- **API design**: Would this interface confuse users?
-- **File structure**: Is this logical for someone else to find?
-- **Feature behavior**: Would users expect this to work this way?
-
-**Red flags that should trigger re-evaluation:**
-
-- "I'll just put this here for now"
-- Rushing to complete without considering broader context
-- Focusing only on technical implementation without considering user experience
-- Making decisions based on convenience rather than logic
-
-**Example**: Matrix questions require understanding basic questions AND table layouts - putting them in "Basic" documentation doesn't make sense even if it's technically easier.
-
-### Documentation Guidelines
-
-When documenting new features, carefully consider the learning progression and prerequisite knowledge required.
+Ask whether the code organization, file placement, and behavior would make sense to someone encountering it fresh — not just whether it technically works. Example: matrix questions require both basic-question and table-layout knowledge, so they don't belong in "Basic" documentation even though implementing them there would be easier.
 
 ## Documentation System
 
-This application includes an integrated documentation page at `/docs` that teaches users the text format syntax through interactive examples.
+The `/docs` route teaches the text format through interactive examples: one route per topic at `app/docs/<section>/page.tsx` (e.g. `app/docs/matrix/page.tsx`), sharing rendering helpers from `components/docs/doc-helpers.tsx`:
 
-### Documentation Architecture
+- `renderCodeBlock(code)` — renders a static syntax snippet
+- `renderExample(code)` — parses `code` with `parseQuestionnaire()` and renders it live via `QuestionnaireViewer`, showing a parse error inline if it fails
 
-**File locations:**
+`app/docs/page.tsx` just redirects to `/docs/overview`. The sidebar (`components/app-sidebar.tsx`) lists topics in a `navMain` array of `{ title, items: [{ title, section }] }` groups; the active item is derived from the URL pathname, not local state.
 
-- Main documentation page: `app/docs/page.tsx`
-- Navigation sidebar: `components/app-sidebar.tsx`
-- Reusable examples: `lib/constants.ts` (for examples used in multiple places)
+**Adding a new topic:**
 
-**How it works:**
+1. Create `app/docs/<slug>/page.tsx`, following the shape of an existing simple page (e.g. `app/docs/overview/page.tsx`) — heading, description, `renderCodeBlock`/`renderExample` calls.
+2. Add `{ title: "...", section: "<slug>" }` to the appropriate group in `navMain`.
+3. Place it where its prerequisite concepts are already covered (see "Sanity-Check Before Calling It Done" above), and match the styling of neighboring pages rather than inventing new conventions.
 
-1. User selects a topic from the sidebar (`AppSidebar` component)
-2. `DocumentationContent` component renders the appropriate section based on `activeSection` state
-3. Examples are rendered using `renderExample()` which:
-   - Parses the text format using `parseQuestionnaire()`
-   - Displays the raw text in a code block
-   - Renders the live interactive result using `QuestionnaireViewer`
-   - Shows parse errors if the example is invalid
+**Docs-specific example rules** (see also "Documentation and Examples" under Code Style Guidelines):
 
-**Section types:**
-
-- Each documentation section is defined in the `Section` union type in `app/docs/page.tsx`
-- Sections are organized into groups in `navMain` array in `components/app-sidebar.tsx`
-- Each section case in the switch statement renders its own content
-
-### Adding New Documentation
-
-**To document a new feature:**
-
-1. **Add the section type** to the `Section` union in `app/docs/page.tsx`:
-
-   ```typescript
-   export type Section =
-     | "overview"
-     | "pages"
-     // ... existing sections
-     | "your-new-section" // Add here
-   ```
-
-2. **Add navigation item** in `components/app-sidebar.tsx`:
-
-   ```typescript
-   const navMain = [
-     {
-       title: "Appropriate Group",
-       items: [
-         // ... existing items
-         { title: "Your Feature Name", section: "your-new-section" as Section },
-       ],
-     },
-   ]
-   ```
-
-3. **Add section content** in the switch statement in `app/docs/page.tsx`:
-
-   ```typescript
-   case "your-new-section":
-     return (
-       <div className="space-y-6">
-         <div>
-           <h2 className="text-2xl font-semibold">Feature Name</h2>
-           <p className="text-muted-foreground mt-1">
-             Brief description of what this feature does.
-           </p>
-         </div>
-
-         <div className="space-y-3">
-           <h3 className="text-xl font-semibold">Usage</h3>
-           {renderCodeBlock(`Syntax example here`)}
-           <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-             <li>Key point about usage</li>
-             <li>Another important detail</li>
-           </ul>
-         </div>
-
-         <div className="space-y-3">
-           <h3 className="text-xl font-semibold">Example</h3>
-           {renderExample(`Complete working example here`)}
-         </div>
-       </div>
-     )
-   ```
-
-### Documentation Best Practices
-
-**Writing examples:**
-
-- Keep examples focused on demonstrating ONE feature clearly
-- Use realistic survey scenarios, not contrived demonstrations
-- Start with the simplest possible example, then show advanced usage
-- Every example must be valid text format that parses correctly
-- Test examples by viewing them in the docs page before committing
-
-**Section organization:**
-
-- Group related features together in the navigation sidebar
-- Order sections from basic to advanced within each group
-- Cross-reference related features when helpful (see "option-text" and "conditionals" sections)
-- Use consistent heading hierarchy: `h2` for page title, `h3` for major subsections, `h4` for minor subsections
-
-**Content guidelines:**
-
-- Start with a brief description of what the feature does
-- Show syntax in a code block using `renderCodeBlock()`
-- Provide bullet points explaining key behaviors
-- Include at least one complete working example using `renderExample()`
-- Use consistent terminology matching the parser keywords
-- Keep explanations concise - the live examples teach best
-
-**Styling patterns:**
-
-- Page titles: `h1` or `h2` with `text-2xl font-semibold`
-- Subsection titles: `h3` with `text-xl font-semibold`
-- Minor subsections: `h4` with `text-lg font-semibold`
-- Descriptions under page titles: `text-muted-foreground mt-1` (truly secondary context)
-- Instructional text and explanations: Use default text color (not muted - this is primary content)
-- Introductory paragraphs before examples: `text-sm` with default color
-- Cross-references and "see also" notes: `text-muted-foreground` (truly secondary)
-- Bullet points: `text-sm text-muted-foreground` (can be smaller as they're typically concise)
-- Use inline `<code>` tags for keywords and syntax references
-- Use `space-y-6` between major sections, `space-y-3` between subsections
-
-**Common pitfalls:**
-
-- Don't use `-` for bullet points in examples (conflicts with option syntax)
-- Don't forget to add the section to both the type union AND the switch statement
-- Don't create examples that depend on features not yet explained
-- Don't duplicate example text - use `lib/constants.ts` for reusable examples
+- Every `renderExample()` call must actually parse — check it in the running docs page before committing.
+- Don't start example text with `-` at the start of a line unless it's an intentional option — it's read as option syntax.
