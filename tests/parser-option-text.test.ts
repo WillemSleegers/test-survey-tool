@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { parseQuestionnaire } from "@/lib/parser"
+import { isQuestion } from "@/lib/types"
 
 describe("Parser - Option Text Input", () => {
   it("should parse - TEXT modifier on option", () => {
@@ -14,7 +15,7 @@ describe("Parser - Option Text Input", () => {
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "multiple_choice")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "multiple_choice") {
       expect(question.options).toHaveLength(4)
       expect(question.options[3].label).toBe("Other")
       expect(question.options[3].allowsOtherText).toBe(true)
@@ -33,7 +34,7 @@ CHECKBOX
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "checkbox")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "checkbox") {
       expect(question.options).toHaveLength(3)
       expect(question.options[2].label).toBe("Other")
       expect(question.options[2].allowsOtherText).toBe(true)
@@ -52,7 +53,7 @@ CHECKBOX
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "multiple_choice")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "multiple_choice") {
       expect(question.options).toHaveLength(4)
       expect(question.options[1].label).toBe("Gaming")
       expect(question.options[1].allowsOtherText).toBe(true)

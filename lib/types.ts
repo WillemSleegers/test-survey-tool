@@ -91,13 +91,17 @@ export type MatrixQuestion = QuestionBase & {
   inputType?: "checkbox" | "text" | "essay"
 }
 
-export type BreakdownOption = {
+// Base fields common to all option types
+type BaseOption = {
   value: string
   label: string
   hint?: string
   reveal?: string
   tooltip?: string
   showIf?: string
+}
+
+export type BreakdownOption = BaseOption & {
   subtract?: boolean
   prefillValue?: string
   variable?: string
@@ -139,13 +143,7 @@ export type Subquestion = {
 }
 
 
-export type Option = {
-  value: string
-  label: string
-  hint?: string
-  reveal?: string
-  tooltip?: string
-  showIf?: string
+export type Option = BaseOption & {
   allowsOtherText?: boolean
   exclusive?: boolean
 }

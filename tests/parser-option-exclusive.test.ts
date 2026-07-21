@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { parseQuestionnaire } from "@/lib/parser"
+import { isQuestion } from "@/lib/types"
 
 describe("Parser - Option Exclusive", () => {
   it("should parse - EXCLUSIVE modifier on checkbox option", () => {
@@ -14,7 +15,7 @@ CHECKBOX
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "checkbox")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "checkbox") {
       expect(question.options).toHaveLength(3)
       expect(question.options[2].label).toBe("None of the above")
       expect(question.options[2].exclusive).toBe(true)
@@ -37,7 +38,7 @@ CHECKBOX
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "checkbox")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "checkbox") {
       expect(question.options).toHaveLength(4)
       expect(question.options[2].exclusive).toBe(true)
       expect(question.options[3].exclusive).toBe(true)
@@ -56,7 +57,7 @@ CHECKBOX
     const question = result.blocks[0].pages[0].sections[0].items[0]
 
     expect(question).toHaveProperty("type", "checkbox")
-    if ("options" in question) {
+    if (isQuestion(question) && question.type === "checkbox") {
       expect(question.options).toHaveLength(3)
       expect(question.options[1].label).toBe("None of the above")
       expect(question.options[1].exclusive).toBe(true)
