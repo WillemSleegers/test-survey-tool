@@ -164,6 +164,54 @@ const parseDelimitedContent = (
 }
 
 /**
+ * Decides how to begin collecting a `KEYWORD: value` metadata field that
+ * supports three forms: single-line (`KEYWORD: value`, assigned immediately),
+ * bare multi-line (`KEYWORD:` alone, collected line-by-line until a
+ * terminator), and delimited multi-line (`KEYWORD: """` ... `"""`).
+ */
+type MetadataBegin = { immediate: string } | { useDelimiters: boolean }
+
+const beginMetadataCollection = (afterKeyword: string): MetadataBegin => {
+  if (afterKeyword === '"""') return { useDelimiters: true }
+  if (afterKeyword) return { immediate: afterKeyword }
+  return { useDelimiters: false }
+}
+
+/**
+ * Advances a bare/delimited multi-line metadata collector by one line.
+ * Delimited mode ends on a lone `"""` (that line is consumed, `consumedLine:
+ * true`). Bare mode ends the first time `isTerminator(trimmed)` is true;
+ * that line is NOT consumed, so the caller can reprocess it under whatever
+ * state follows collection.
+ */
+type MetadataStep =
+  | { done: false }
+  | { done: true; value: string | undefined; consumedLine: boolean }
+
+const stepMetadataCollection = (
+  line: string,
+  trimmed: string,
+  useDelimiters: boolean,
+  buffer: string[],
+  isTerminator: (trimmed: string) => boolean
+): MetadataStep => {
+  if (useDelimiters) {
+    if (trimmed === '"""') {
+      return { done: true, value: buffer.join('\n'), consumedLine: true }
+    }
+    buffer.push(removeIndentation(line))
+    return { done: false }
+  }
+
+  if (isTerminator(trimmed)) {
+    return { done: true, value: buffer.length > 0 ? buffer.join('\n') : undefined, consumedLine: false }
+  }
+
+  buffer.push(removeIndentation(line))
+  return { done: false }
+}
+
+/**
  * Remove lines that fall inside a top-level `KEYWORD: """ ... """` block
  * (HINT/REVEAL/TOOLTIP/VARIABLE/SHOW_IF/Q). Used before scanning a question
  * chunk for options, subquestions, or type markers, so list items or other
@@ -632,6 +680,22 @@ const applyHintRevealOrTooltip = (
 }
 
 /**
+ * Pushes the in-progress option onto the list, carrying over the fields
+ * collected on it so far. No-op if there's no option in progress.
+ */
+const pushCurrentOption = (options: Option[], currentOption: Partial<Option> | null): void => {
+  if (!currentOption) return
+  options.push(createOption(currentOption.label || '', {
+    hint: currentOption.hint,
+    reveal: currentOption.reveal,
+    tooltip: currentOption.tooltip,
+    showIf: currentOption.showIf,
+    allowsOtherText: currentOption.allowsOtherText,
+    exclusive: currentOption.exclusive,
+  }))
+}
+
+/**
  * Parse options for multiple choice and checkbox questions
  */
 const parseOptions = (lines: string[]): Option[] => {
@@ -648,17 +712,8 @@ const parseOptions = (lines: string[]): Option[] => {
     // Check for RANGE keyword
     if (startsWith(trimmed, "RANGE:")) {
       // Save current option if any
-      if (currentOption) {
-        options.push(createOption(currentOption.label || '', {
-          hint: currentOption.hint,
-          reveal: currentOption.reveal,
-          tooltip: currentOption.tooltip,
-          showIf: currentOption.showIf,
-          allowsOtherText: currentOption.allowsOtherText,
-          exclusive: currentOption.exclusive,
-        }))
-        currentOption = null
-      }
+      pushCurrentOption(options, currentOption)
+      currentOption = null
 
       // Generate and add range options
       const rangeStr = extractAfterKeyword(trimmed, "RANGE:")
@@ -697,16 +752,7 @@ const parseOptions = (lines: string[]): Option[] => {
         }
       } else {
         // This is a new option
-        if (currentOption) {
-          options.push(createOption(currentOption.label || '', {
-            hint: currentOption.hint,
-            reveal: currentOption.reveal,
-            tooltip: currentOption.tooltip,
-            showIf: currentOption.showIf,
-            allowsOtherText: currentOption.allowsOtherText,
-            exclusive: currentOption.exclusive,
-          }))
-        }
+        pushCurrentOption(options, currentOption)
 
         currentOption = { label: content }
         state.collectingHint = false
@@ -720,16 +766,7 @@ const parseOptions = (lines: string[]): Option[] => {
   }
 
   // Save final option
-  if (currentOption) {
-    options.push(createOption(currentOption.label || '', {
-      hint: currentOption.hint,
-      reveal: currentOption.reveal,
-      tooltip: currentOption.tooltip,
-      showIf: currentOption.showIf,
-      allowsOtherText: currentOption.allowsOtherText,
-      exclusive: currentOption.exclusive,
-    }))
-  }
+  pushCurrentOption(options, currentOption)
 
   return options
 }
@@ -1050,39 +1087,20 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
 
     // Handle metadata collection states
     if (state === 'reveal' || state === 'tooltip' || state === 'showif') {
-      if (useDelimiters && trimmed === '"""') {
-        // End of delimited metadata
-        if (state === 'reveal') {
-          reveal = metadataBuffer.join('\n')
-        } else if (state === 'tooltip') {
-          tooltip = metadataBuffer.join('\n')
-        } else {
-          showIf = metadataBuffer.join('\n')
-        }
-        state = 'content'
-        metadataBuffer = []
-        useDelimiters = false
-        continue
-      }
+      const step = stepMetadataCollection(line, trimmed, useDelimiters, metadataBuffer, (t) =>
+        t.startsWith('Q:') || matches(t, /^Q\d+:/) || matches(t, /^##/)
+      )
+      if (!step.done) continue
 
-      // Non-delimiter mode: stop collecting if we hit structural elements
-      if (!useDelimiters && (trimmed.startsWith('Q:') || matches(trimmed, /^Q\d+:/) || matches(trimmed, /^##/))) {
-        if (state === 'reveal') {
-          reveal = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
-        } else if (state === 'tooltip') {
-          tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
-        } else {
-          showIf = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
-        }
-        state = 'content'
-        metadataBuffer = []
-        useDelimiters = false
-        // Don't continue - let this line be processed normally
-      } else {
-        // Collect metadata content
-        metadataBuffer.push(removeIndentation(line))
-        continue
-      }
+      if (state === 'reveal') reveal = step.value
+      else if (state === 'tooltip') tooltip = step.value
+      else showIf = step.value
+
+      state = 'content'
+      metadataBuffer = []
+      useDelimiters = false
+      if (step.consumedLine) continue
+      // else: fall through, reprocess this line normally
     }
 
     // Skip section title marker (already extracted)
@@ -1093,15 +1111,12 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     // Check for REVEAL keyword
     if (trimmed.startsWith('REVEAL:')) {
       flushContent()
-      const afterKeyword = trimmed.substring('REVEAL:'.length).trim()
-      if (afterKeyword === '"""') {
-        state = 'reveal'
-        useDelimiters = true
-      } else if (afterKeyword) {
-        reveal = afterKeyword
+      const begin = beginMetadataCollection(trimmed.substring('REVEAL:'.length).trim())
+      if ('immediate' in begin) {
+        reveal = begin.immediate
       } else {
         state = 'reveal'
-        useDelimiters = false
+        useDelimiters = begin.useDelimiters
       }
       continue
     }
@@ -1109,15 +1124,12 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     // Check for TOOLTIP keyword
     if (trimmed.startsWith('TOOLTIP:')) {
       flushContent()
-      const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
-      if (afterKeyword === '"""') {
-        state = 'tooltip'
-        useDelimiters = true
-      } else if (afterKeyword) {
-        tooltip = afterKeyword
+      const begin = beginMetadataCollection(trimmed.substring('TOOLTIP:'.length).trim())
+      if ('immediate' in begin) {
+        tooltip = begin.immediate
       } else {
         state = 'tooltip'
-        useDelimiters = false
+        useDelimiters = begin.useDelimiters
       }
       continue
     }
@@ -1125,15 +1137,12 @@ const parseSection = (lines: string[], questionCounter: { count: number }, secti
     // Check for SHOW_IF keyword
     if (trimmed.startsWith('SHOW_IF:')) {
       flushContent()
-      const afterKeyword = trimmed.substring('SHOW_IF:'.length).trim()
-      if (afterKeyword === '"""') {
-        state = 'showif'
-        useDelimiters = true
-      } else if (afterKeyword) {
-        showIf = afterKeyword
+      const begin = beginMetadataCollection(trimmed.substring('SHOW_IF:'.length).trim())
+      if ('immediate' in begin) {
+        showIf = begin.immediate
       } else {
         state = 'showif'
-        useDelimiters = false
+        useDelimiters = begin.useDelimiters
       }
       continue
     }
@@ -1223,41 +1232,33 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
     // Handle reveal/tooltip metadata collection
     if (state === 'reveal' || state === 'tooltip') {
-      if (useDelimiters && trimmed === '"""') {
-        if (state === 'reveal') {
-          reveal = metadataBuffer.join('\n')
-        } else {
-          tooltip = metadataBuffer.join('\n')
-        }
+      // Bare mode ends at any non-blank line (not just a page keyword);
+      // which state that line resumes in is decided below.
+      const step = stepMetadataCollection(line, trimmed, useDelimiters, metadataBuffer, (t) => t.length > 0)
+      if (!step.done) continue
+
+      if (state === 'reveal') reveal = step.value
+      else tooltip = step.value
+      metadataBuffer = []
+      useDelimiters = false
+
+      if (step.consumedLine) {
+        // Delimited close: return to keyword scanning for the next line
         state = 'navigation'
-        metadataBuffer = []
-        useDelimiters = false
         continue
       }
 
-      // Non-delimiter mode: stop if we hit section content or another page-level keyword
-      if (!useDelimiters && trimmed) {
-        const isPageLevelKeyword =
-          trimmed.startsWith('NAVIGATION:') ||
-          trimmed.startsWith('COMPUTE:') ||
-          trimmed.startsWith('SHOW_IF:') ||
-          trimmed.startsWith('REVEAL:') ||
-          trimmed.startsWith('TOOLTIP:')
-
-        if (state === 'reveal') {
-          reveal = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
-        } else {
-          tooltip = metadataBuffer.length > 0 ? metadataBuffer.join('\n') : undefined
-        }
-        // A page-level keyword returns to keyword handling so it gets processed
-        // normally; anything else (Q:, ##, plain text) starts section content.
-        state = isPageLevelKeyword ? 'navigation' : 'sections'
-        metadataBuffer = []
-        // Don't continue - process this line in the new state
-      } else {
-        metadataBuffer.push(removeIndentation(line))
-        continue
-      }
+      // Bare-mode termination: a page-level keyword returns to keyword
+      // handling so it gets processed normally; anything else (Q:, ##,
+      // plain text) starts section content.
+      const isPageLevelKeyword =
+        trimmed.startsWith('NAVIGATION:') ||
+        trimmed.startsWith('COMPUTE:') ||
+        trimmed.startsWith('SHOW_IF:') ||
+        trimmed.startsWith('REVEAL:') ||
+        trimmed.startsWith('TOOLTIP:')
+      state = isPageLevelKeyword ? 'navigation' : 'sections'
+      // Don't continue - process this line in the new state
     }
 
     // Handle page-level keywords (before we reach section content)
@@ -1271,30 +1272,24 @@ const parsePage = (lines: string[], questionCounter: { count: number }, pageIdCo
 
       // Extract REVEAL
       if (trimmed.startsWith('REVEAL:')) {
-        const afterKeyword = trimmed.substring('REVEAL:'.length).trim()
-        if (afterKeyword === '"""') {
-          state = 'reveal'
-          useDelimiters = true
-        } else if (afterKeyword) {
-          reveal = afterKeyword
+        const begin = beginMetadataCollection(trimmed.substring('REVEAL:'.length).trim())
+        if ('immediate' in begin) {
+          reveal = begin.immediate
         } else {
           state = 'reveal'
-          useDelimiters = false
+          useDelimiters = begin.useDelimiters
         }
         continue
       }
 
       // Extract TOOLTIP
       if (trimmed.startsWith('TOOLTIP:')) {
-        const afterKeyword = trimmed.substring('TOOLTIP:'.length).trim()
-        if (afterKeyword === '"""') {
-          state = 'tooltip'
-          useDelimiters = true
-        } else if (afterKeyword) {
-          tooltip = afterKeyword
+        const begin = beginMetadataCollection(trimmed.substring('TOOLTIP:'.length).trim())
+        if ('immediate' in begin) {
+          tooltip = begin.immediate
         } else {
           state = 'tooltip'
-          useDelimiters = false
+          useDelimiters = begin.useDelimiters
         }
         continue
       }

@@ -57,11 +57,8 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 - [x] Replace `new Function` in expression evaluation — **done**: arithmetic evaluated by the parser; injection regression test asserts survey text cannot execute code
   - `lib/conditions/expression-evaluator.ts:42` evaluates survey-derived text as JS; low risk client-side, but arbitrary code execution if surveys are ever shared — a small arithmetic evaluator would close it
   - **Plan**: arithmetic is parsed and evaluated by the same AST as conditions (step 3 of the umbrella plan). Regression tests: nested parens, unary minus, division by zero, and inputs containing `;`, backticks, and `Math.` (must evaluate as plain tokens/0, never execute)
-- [ ] Deduplicate parser state machines
-  - The identical `createOption` push block appears three times in `parseOptions`
-  - The page/section metadata state machines in `lib/parser.ts` are near-copies of each other
-  - **Plan**: pure refactor PR, no format changes, behavior-locked by the existing test suite: (1) extract a `pushCurrentOption(options, currentOption)` helper; (2) extract a shared `collectMetadataValue(keyword, lines, terminators)` state machine (single-line / bare / `"""` modes) parameterized by terminator keywords, used by both `parsePage` and `parseSection` — do after the bare-`REVEAL:` bug fix so the fixed semantics are what gets shared
-- [ ] Sanity check with `npm run build` + full test suite after each of the above; add a `tests/` regression file per fixed bug
+- [x] Deduplicate parser state machines — **done**: `pushCurrentOption(options, currentOption)` replaces the triplicated `createOption` push block in `parseOptions`; `beginMetadataCollection(afterKeyword)` (decides single-line/bare/delimited entry) and `stepMetadataCollection(line, trimmed, useDelimiters, buffer, isTerminator)` (advances a bare/delimited collector by one line, parameterized by a terminator predicate) replace the near-duplicated REVEAL/TOOLTIP/SHOW_IF state machines in both `parsePage` and `parseSection`. `parsePage`'s asymmetric branch (a closed `"""` block always returns to `'navigation'`, while a bare-mode terminator is reclassified as `'navigation'` vs `'sections'`) is preserved exactly. No behavior change; full test suite + `npm run build` pass unchanged
+- [x] Sanity check with `npm run build` + full test suite after each of the above — **done**: ran after every step in this section; 228 tests passing, zero build warnings
 
 ## Documentation Accuracy
 

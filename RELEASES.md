@@ -70,6 +70,7 @@
 - Extracted breakdown row visibility/summing into `lib/breakdown-calculations.ts` and the two-pass variable derivation out of `use-questionnaire-responses.ts` into a pure, directly-testable `lib/response-variables.ts`; the hook is now a thin `useState` wrapper around it
 - Extracted breakdown subtotal computation (`computeSubtotalValues`/`subtotalVariables`) into `lib/breakdown-calculations.ts`, shared by `breakdown-question.tsx` and `lib/response-variables.ts` instead of being duplicated
 - Removed render-time mutation of shared parsed state: `evaluateComputedValues` no longer writes back onto `ComputedVariable.value` (the field is deleted from the type; nothing read it) — computed values are only ever returned, never stored on the parsed questionnaire
+- Deduplicated parser state machines in `lib/parser.ts`: a `pushCurrentOption` helper replaces the triplicated option-push block in `parseOptions`; shared `beginMetadataCollection`/`stepMetadataCollection` helpers (single-line/bare/`"""`-delimited, parameterized by a terminator predicate) replace the near-identical `REVEAL`/`TOOLTIP`/`SHOW_IF` state machines duplicated across `parsePage` and `parseSection`
 
 ## Version 0.4.0
 
