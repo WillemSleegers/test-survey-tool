@@ -815,6 +815,12 @@ const parseSubquestions = (lines: string[], baseId: string): Subquestion[] => {
 const parseMatrixQuestion = (lines: string[], questionCounter: { count: number }): MatrixQuestion => {
   const base = parseQuestionBase(lines, questionCounter)
 
+  if (base.variable) {
+    throw new Error(
+      `Question "${base.id}" is a matrix question with a question-level VARIABLE: "${base.variable}" — matrix responses are stored per row, so this variable would never be populated. Use "- VARIABLE: name" under each row instead.`
+    )
+  }
+
   // Determine input type (TEXT, ESSAY, CHECKBOX, or default radio)
   let inputType: "checkbox" | "text" | "essay" | undefined
   for (const line of lines) {

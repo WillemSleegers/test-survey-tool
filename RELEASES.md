@@ -58,6 +58,8 @@
 
 - **Fixed order-dependent variable derivation**: variables were derived by walking responses in the order the respondent answered them, not the order questions appear in the survey. A breakdown row's `VALUE:` placeholder referencing another question's variable could resolve differently (or not at all) depending on the order the two questions were answered, e.g. via back-navigation. Variables are now derived by walking the questionnaire's own page/section/question order, so identical answers always produce identical variables
 
+- **Question-level `VARIABLE:` on a matrix question is now a parse error**: matrix responses are stored per row, so a bare `VARIABLE:` at the question level (as opposed to `- VARIABLE:` under a row) was silently accepted but never populated — any condition, placeholder, or computed variable depending on it just silently never resolved. This now fails to load with a message pointing to the per-row `- VARIABLE:` syntax
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)

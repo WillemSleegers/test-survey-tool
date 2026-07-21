@@ -42,9 +42,7 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 ## Parsed-but-Ignored Features
 
 - [x] Implement breakdown option `- SHOW_IF:` filtering *(decision: implement, not remove)* — **done**: `getVisibleBreakdownOptions`/`sumBreakdownOptions` added in `lib/breakdown-calculations.ts` and shared by `breakdown-question.tsx` (rendering + totals/subtotals) and `use-questionnaire-responses.ts` (`calculateBreakdownTotal` + subtotal pass); hidden rows keep their stored response but are excluded from sums; tests in `lib/breakdown-calculations.test.ts`; docs example added to the breakdown and conditionals pages; RELEASES updated
-- [ ] Reject question-level `VARIABLE:` on matrix questions *(decision: parse error)*
-  - Matrix responses are stored per subquestion ID, so `responses[question.id]` never exists and the question-level variable is never populated (`hooks/use-questionnaire-responses.ts:33-34`)
-  - **Plan**: in `parseMatrixQuestion`, if a top-level (non-dash) `VARIABLE:` line is present, throw a descriptive error pointing to the per-subquestion `- VARIABLE:` syntax. Remove the now-dead matrix branch registering `item.variable` in the responses hook. Parser test for the error; check docs/examples contain no offending usage
+- [x] Reject question-level `VARIABLE:` on matrix questions *(decision: parse error)* — **done**: `parseMatrixQuestion` (`lib/parser.ts`) throws a descriptive error when `parseQuestionBase` finds a top-level `VARIABLE:` on a matrix question, pointing to the per-row `- VARIABLE:` syntax; the generic `item.variable` registration in `lib/response-variables.ts` is now guaranteed dead for matrix (never reached, since matrix's own id is never pushed to `orderedResponseIds`) rather than requiring separate removal. Tests in `tests/parser-matrix.test.ts`; no docs/examples used the offending pattern
 
 ## Architecture / Code Quality
 

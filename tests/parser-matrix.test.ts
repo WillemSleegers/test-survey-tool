@@ -71,4 +71,29 @@ Q: How satisfied are you with these aspects?
       expect(question.options).toHaveLength(3)
     }
   })
+
+  it('should reject a question-level VARIABLE: on a matrix question', () => {
+    const text = `Q: Rate the following
+- Q: Product quality
+- Q: Customer service
+- Poor
+- Fair
+- Good
+VARIABLE: overall_rating`
+
+    expect(() => parseQuestionnaire(text)).toThrow(/question-level VARIABLE/)
+  })
+
+  it('should still allow per-row VARIABLE: on a matrix question', () => {
+    const text = `Q: Rate the following
+- Q: Product quality
+  - VARIABLE: quality_rating
+- Q: Customer service
+  - VARIABLE: service_rating
+- Poor
+- Fair
+- Good`
+
+    expect(() => parseQuestionnaire(text)).not.toThrow()
+  })
 })

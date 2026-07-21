@@ -76,6 +76,11 @@ export default function MatrixPage() {
             Each subquestion variable stores the selected option text (e.g.,
             &quot;Good&quot;)
           </li>
+          <li>
+            A question-level <code>VARIABLE:</code> (no <code>- </code>{" "}
+            prefix) is a parse error on matrix questions — matrix responses
+            are stored per row, so there is no single value to store
+          </li>
         </ul>
       </div>
     </div>
