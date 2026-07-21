@@ -35,12 +35,8 @@ Several verified bugs (AND/OR splitting, parentheses, NOT precedence, quote hand
 
 ## Validation Gaps
 
-- [ ] Validate duplicate variable names on matrix subquestions and breakdown options
-  - `validateVariableNames` (`lib/validation.ts:40-70`) only dedupes question-level variables; `addSectionVariables` already collects the other two kinds for reference checks
-  - **Plan**: extract a `collectVariableDefinitions(blocks): Map<name, location[]>` helper (question, subquestion, breakdown-option, computed) and rewrite `validateVariableNames` on top of it, reporting every name with >1 location including where each is defined. Reuse the same helper in the reference validators to remove their duplicated collection loops. Tests: dupe across subquestions, dupe between question and breakdown option, dupe between variable and computed name
-- [ ] Validate section-level and matrix-subquestion `SHOW_IF` references
-  - `validateConditionReferences` covers blocks, pages, questions, and options only — undefined variables in section or subquestion conditions pass silently
-  - **Plan**: add two loops in `validateConditionReferences`: `section.showIf` per section, and `subquestion.showIf` per matrix question, with error messages naming the section title / subquestion text. Tests mirror the existing question-level ones
+- [x] Validate duplicate variable names on matrix subquestions and breakdown options — **done**: `collectVariableDefinitions` in `lib/validation.ts` collects question, subquestion, breakdown-option, and computed (block/page, per-scope deduped) variable definitions into one `Map<name, location[]>`; `validateVariableNames` rewritten on top of it; `validateConditionReferences`/`validateComputedVariableReferences` reuse it instead of the old `addSectionVariables` duplication. Tests in `tests/validation.test.ts`
+- [x] Validate section-level and matrix-subquestion `SHOW_IF` references — **done**: `validateConditionReferences` now checks `section.showIf` per section and `subquestion.showIf` per matrix question; tests in `tests/validation.test.ts`
 - [x] Reconsider fail-open condition evaluation — **done**: malformed conditions are rejected at parse time with located errors; the runtime keeps a fail-safe default (visible + console warning) as a last resort; docs conditionals page updated
 
 ## Parsed-but-Ignored Features

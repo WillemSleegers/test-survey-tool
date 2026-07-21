@@ -1,4 +1,4 @@
-import { Block, Page, Section, ComputedVariable, isQuestion } from "@/lib/types"
+import { Block, Page, ComputedVariable, isQuestion } from "@/lib/types"
 import {
   getConditionSyntaxError,
   getComparisonSumSyntaxError,
@@ -17,65 +17,90 @@ function getAllPages(blocks: Block[]): Page[] {
   return blocks.flatMap(block => block.pages)
 }
 
-function addSectionVariables(sections: Section[], definedVariables: Set<string>): void {
-  for (const section of sections) {
-    for (const item of section.items) {
-      if (isQuestion(item)) {
-        if (item.variable) {
-          definedVariables.add(item.variable)
-        }
-        if (item.type === 'matrix' && item.subquestions) {
-          for (const subquestion of item.subquestions) {
-            if (subquestion.variable) {
-              definedVariables.add(subquestion.variable)
+/**
+ * Collects every variable definition in the questionnaire (question,
+ * subquestion, breakdown option, and computed variables), keyed by name,
+ * with one location string per place that name is defined. Multiple
+ * COMPUTE lines for the same name within a single block or page count as
+ * one definition (the default-then-override pattern), matching
+ * validateBlockComputedNameUniqueness's per-block dedup.
+ */
+function collectVariableDefinitions(blocks: Block[]): Map<string, string[]> {
+  const definitions = new Map<string, string[]>()
+  const addDefinition = (name: string, location: string): void => {
+    const existing = definitions.get(name)
+    if (existing) {
+      existing.push(location)
+    } else {
+      definitions.set(name, [location])
+    }
+  }
+
+  for (const block of blocks) {
+    const blockLabel = `Block "${block.name || '(unnamed block)'}"`
+    for (const name of new Set(block.computedVariables.map(cv => cv.name))) {
+      addDefinition(name, `${blockLabel} COMPUTE`)
+    }
+
+    for (const page of block.pages) {
+      const pageLabel = `Page "${page.title}"`
+      for (const name of new Set(page.computedVariables.map(cv => cv.name))) {
+        addDefinition(name, `${pageLabel} COMPUTE`)
+      }
+
+      for (const section of page.sections) {
+        for (const item of section.items) {
+          if (!isQuestion(item)) continue
+          const questionLabel = `Question "${item.id}"`
+
+          if (item.variable) {
+            addDefinition(item.variable, questionLabel)
+          }
+          if (item.type === 'matrix') {
+            for (const subquestion of item.subquestions) {
+              if (subquestion.variable) {
+                addDefinition(
+                  subquestion.variable,
+                  `${questionLabel} subquestion "${subquestion.text}"`
+                )
+              }
             }
           }
-        }
-        if (item.type === 'breakdown') {
-          for (const option of item.options) {
-            if (option.variable) {
-              definedVariables.add(option.variable)
+          if (item.type === 'breakdown') {
+            for (const option of item.options) {
+              if (option.variable) {
+                addDefinition(option.variable, `${questionLabel} option "${option.label}"`)
+              }
             }
           }
         }
       }
     }
   }
+
+  return definitions
 }
 
 /**
- * Validates that all variable names are unique across the questionnaire
- * Throws an error if duplicate variable names are found
+ * Validates that all variable names (question, subquestion, breakdown
+ * option, and computed) are unique across the questionnaire.
+ * Throws an error if any name is defined in more than one place.
  *
  * @param blocks - All parsed blocks to validate
  */
 export function validateVariableNames(blocks: Block[]): void {
-  const variableNames = new Set<string>()
+  const definitions = collectVariableDefinitions(blocks)
   const duplicates: string[] = []
 
-  // Get all pages from all blocks
-  const allPages = getAllPages(blocks)
-
-  for (const page of allPages) {
-    for (const section of page.sections) {
-      for (const item of section.items) {
-        if (isQuestion(item)) {
-          if (item.variable) {
-            if (variableNames.has(item.variable)) {
-              duplicates.push(item.variable)
-            } else {
-              variableNames.add(item.variable)
-            }
-          }
-        }
-      }
+  for (const [name, locations] of definitions) {
+    if (locations.length > 1) {
+      duplicates.push(`"${name}" defined in: ${locations.join(', ')}`)
     }
   }
 
   if (duplicates.length > 0) {
-    const uniqueDuplicates = [...new Set(duplicates)]
     throw new Error(
-      `Duplicate variable names found: ${uniqueDuplicates.join(', ')}. ` +
+      `Duplicate variable names found:\n${duplicates.join('\n')}\n` +
       'Each variable name must be unique across the entire questionnaire.'
     )
   }
@@ -88,24 +113,8 @@ export function validateVariableNames(blocks: Block[]): void {
  * @param blocks - All parsed blocks to validate
  */
 export function validateConditionReferences(blocks: Block[]): void {
-  // Collect all defined variable names
-  const definedVariables = new Set<string>()
+  const definedVariables = new Set(collectVariableDefinitions(blocks).keys())
   const allPages = getAllPages(blocks)
-
-  // Collect variables from all pages
-  for (const page of allPages) {
-    for (const computedVar of page.computedVariables) {
-      definedVariables.add(computedVar.name)
-    }
-    addSectionVariables(page.sections, definedVariables)
-  }
-
-  // Add block-level computed variables
-  for (const block of blocks) {
-    for (const computedVar of block.computedVariables) {
-      definedVariables.add(computedVar.name)
-    }
-  }
 
   // Check all condition references
   const errors: string[] = []
@@ -131,6 +140,16 @@ export function validateConditionReferences(blocks: Block[]): void {
 
     // Check section questions
     for (const section of page.sections) {
+      if (section.showIf) {
+        const missingVars = findUndefinedVariables(section.showIf, definedVariables)
+        if (missingVars.length > 0) {
+          const sectionLabel = section.title
+            ? `Section "${section.title}"`
+            : `Section on page "${page.title}"`
+          errors.push(`${sectionLabel} SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+        }
+      }
+
       for (const item of section.items) {
         if (isQuestion(item)) {
           if (item.showIf) {
@@ -147,6 +166,17 @@ export function validateConditionReferences(blocks: Block[]): void {
                 const missingVars = findUndefinedVariables(option.showIf, definedVariables)
                 if (missingVars.length > 0) {
                   errors.push(`Question "${item.id}" option "${option.label}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
+                }
+              }
+            }
+          }
+
+          if (item.type === 'matrix') {
+            for (const subquestion of item.subquestions) {
+              if (subquestion.showIf) {
+                const missingVars = findUndefinedVariables(subquestion.showIf, definedVariables)
+                if (missingVars.length > 0) {
+                  errors.push(`Question "${item.id}" subquestion "${subquestion.text}" SHOW_IF references undefined variables: ${missingVars.join(', ')}`)
                 }
               }
             }
@@ -205,23 +235,8 @@ export function validateBlockComputedNameUniqueness(blocks: Block[]): void {
  * @param blocks - All parsed blocks to validate
  */
 export function validateComputedVariableReferences(blocks: Block[]): void {
-  // Collect all defined variable names (both question variables and computed variables)
-  const definedVariables = new Set<string>()
+  const definedVariables = new Set(collectVariableDefinitions(blocks).keys())
   const allPages = getAllPages(blocks)
-
-  for (const page of allPages) {
-    addSectionVariables(page.sections, definedVariables)
-    for (const computedVar of page.computedVariables) {
-      definedVariables.add(computedVar.name)
-    }
-  }
-
-  // Finally add block-level computed variables
-  for (const block of blocks) {
-    for (const computedVar of block.computedVariables) {
-      definedVariables.add(computedVar.name)
-    }
-  }
 
   // Check computed variable expressions
   const errors: string[] = []

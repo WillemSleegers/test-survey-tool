@@ -1,6 +1,6 @@
 # Release Notes
 
-## Unreleased
+## Version 0.5.0
 
 ### Changes
 
@@ -12,11 +12,7 @@
   - **`STARTS_WITH` accepts quoted values**: `STARTS_WITH crime == "Yes"` now works the same as the unquoted form
   - **No more JavaScript evaluation**: arithmetic is evaluated by the parser itself instead of generated JavaScript code, so survey text can never execute code
 - **Malformed conditions are now rejected when a survey is loaded**: every `SHOW_IF` and `COMPUTE` expression — on blocks, pages, sections, questions, options, and matrix subquestions — is syntax-checked at parse time, and errors name the exact location (e.g. `Question "Q3" option "Sometimes" SHOW_IF "mode == (": Unbalanced parentheses`). Previously a broken condition silently kept its content visible; surveys that relied on that will now fail to load until the condition is fixed. The runtime evaluator keeps a fail-safe default (content stays visible plus a console warning) as a last resort for conditions that slip past validation
-
-## Version 0.5.0
-
-### Changes
-
+- **Variable validation is more thorough**: duplicate variable names are now caught across *all* variable-defining locations — question, matrix subquestion, breakdown option, and computed variables — not just question-level `VARIABLE:`. `SHOW_IF` undefined-variable checks now also cover sections and matrix subquestions, matching the coverage questions and options already had
 - **`EXCLUSIVE` checkbox options**: A checkbox option can now be marked `- EXCLUSIVE` (indented under the option, like `- TEXT`) so selecting it deselects every other selected option, and selecting any other option deselects it. Useful for options like "None of the above". A question can have more than one exclusive option; selecting one always deselects the others. Exclusive options render with a circular, radio-style indicator to signal this to respondents
 
 - **Multi-line `Q:` text**: Question text can now span multiple lines using `"""` delimiters, the same convention already used by `HINT:`, `REVEAL:`, and `TOOLTIP:`. This lets a question reference a bulleted or numbered list of examples as part of its own text (e.g. "has your employer provided any of the following measures: ...") without those list items being mistaken for answer options
@@ -50,9 +46,18 @@
 
 - **Fixed matrix tables being too wide with few response options**: The row-label column had a fixed 25% width, so with `table-fixed` layout the remaining 75% was split evenly across however many response-option columns existed — a 2-option matrix (e.g. Yes/No) ended up with very wide, mostly-empty columns. Response-option columns now use a fixed width instead, and the row-label column takes up the remaining space
 
+- **Fixed question type detection rejecting options starting with "Q"**: A question whose options all began with the letter "Q" (e.g. "Quality", "Quantity") was parsed as a plain text question with no options — the option-detection check excluded any dash line starting with "Q" in an attempt to skip matrix subquestion markers (`- Q1: ...`). Option detection now shares the same logic used to actually build the option list, so only real subquestion markers and metadata lines are excluded
+
+- **Fixed section `REVEAL:` content being silently dropped**: Section-level `REVEAL:` text was parsed correctly but never reached the page — the visibility-filtering step rebuilt each section object without copying the `reveal` field over. The reveal button and panel are also no longer restricted to sections that have a title
+
+- **Fixed bare page-level `REVEAL:`/`TOOLTIP:` swallowing later keywords**: When a page used `REVEAL:` or `TOOLTIP:` with no text on the same line, any `NAVIGATION:`, `COMPUTE:`, or `SHOW_IF:` line that immediately followed was absorbed into the reveal/tooltip text instead of being processed — silently losing the page's nav level, computed variable, or visibility condition
+
+- **Fixed the bundled sample survey**: quoted the `experienced_user` COMPUTE comparison value and fixed a typo, so "Load Sample Survey" shows its intended conditional block
+
 ### Internal
 
 - Reduced code duplication across `lib/parser.ts`, `lib/validation.ts`, and `components/questions/breakdown-question.tsx` (~245 lines removed)
+- Consolidated variable-definition collection in `lib/validation.ts` into a single `collectVariableDefinitions` helper, reused by both the name-uniqueness and reference validators
 
 ## Version 0.4.0
 

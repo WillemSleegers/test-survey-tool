@@ -37,7 +37,17 @@ describe('Parser - Matrix Question Features', () => {
   })
 
   it('should parse matrix question with SHOW_IF on subquestions', () => {
-    const text = `Q: How satisfied are you with these aspects?
+    const text = `Q: Do you meet condition one?
+- yes
+- no
+VARIABLE: some_condition
+
+Q: Do you meet condition two?
+- true
+- false
+VARIABLE: another_condition
+
+Q: How satisfied are you with these aspects?
 
 - Q: Aspect one
   - SHOW_IF: some_condition == "yes"
@@ -50,7 +60,7 @@ describe('Parser - Matrix Question Features', () => {
 - Neutral`
 
     const questions = getQuestions(text)
-    const question = questions[0]
+    const question = questions[2]
 
     expect(question.type).toBe('matrix')
     if (question.type === 'matrix') {
