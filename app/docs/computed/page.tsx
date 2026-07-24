@@ -24,6 +24,19 @@ export default function ComputedPage() {
             (all blocks share one namespace), or at page-level for variables
             scoped to a single page
           </li>
+          <li>
+            Block-level names must be unique across the whole survey —
+            defining the same name in two different blocks fails validation
+            when the survey loads
+          </li>
+          <li>
+            A <code>SHOW_IF:</code> on any block, page, section, or question
+            can reference a computed variable from any block, not just its own
+          </li>
+          <li>
+            Page-level computed variables can also reference any block-level
+            variable, in addition to other page-level ones
+          </li>
           <li>Supports arithmetic expressions, conditions, and conditional string values</li>
           <li>Evaluated dynamically as user answers questions</li>
         </ul>

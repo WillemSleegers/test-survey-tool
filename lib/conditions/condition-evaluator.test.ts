@@ -123,6 +123,29 @@ describe("logical operators", () => {
   })
 })
 
+describe("quoting requirements (regression: operator characters and keywords in values)", () => {
+  it("an unquoted '+' is read as addition, silently matching the wrong value", () => {
+    expect(evaluateCondition("code == A+B", { code: "C+D" })).toBe(true)
+    expect(evaluateCondition('code == "A+B"', { code: "C+D" })).toBe(false)
+    expect(evaluateCondition('code == "A+B"', { code: "A+B" })).toBe(true)
+  })
+
+  it("an unquoted uppercase keyword splits the condition, silently changing its meaning", () => {
+    expect(evaluateCondition("status == Yes AND No", { status: "Yes AND No" })).toBe(false)
+    expect(evaluateCondition('status == "Yes AND No"', { status: "Yes AND No" })).toBe(true)
+    expect(evaluateCondition('status == "Yes AND No"', { status: "Something else" })).toBe(false)
+  })
+
+  it("an unquoted '>' is read as a second comparison and fails safe (visible) regardless of match", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    expect(evaluateCondition("plan == Level > Basic", { plan: "Level > Basic" })).toBe(true)
+    expect(evaluateCondition("plan == Level > Basic", { plan: "totally different" })).toBe(true)
+    expect(warn).toHaveBeenCalled()
+    expect(evaluateCondition('plan == "Level > Basic"', { plan: "Level > Basic" })).toBe(true)
+    expect(evaluateCondition('plan == "Level > Basic"', { plan: "totally different" })).toBe(false)
+  })
+})
+
 describe("bare variable tests", () => {
   it("tests truthiness of a bare variable", () => {
     expect(evaluateCondition("answered", { answered: "Yes" })).toBe(true)

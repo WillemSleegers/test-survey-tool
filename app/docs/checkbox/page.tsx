@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { renderExample } from "@/components/docs/doc-helpers"
 
 export default function CheckboxPage() {
@@ -18,6 +19,45 @@ export default function CheckboxPage() {
           <li>Creates checkbox options where multiple can be selected</li>
           <li>Add CHECKBOX after the last option</li>
           <li>Each option starts with a dash (-) and space</li>
+          <li>
+            Individual options also support their own{" "}
+            <Link href="/docs/hints" className="text-primary hover:underline">
+              hint
+            </Link>
+            ,{" "}
+            <Link
+              href="/docs/tooltip"
+              className="text-primary hover:underline"
+            >
+              tooltip
+            </Link>
+            ,{" "}
+            <Link href="/docs/reveal" className="text-primary hover:underline">
+              reveal
+            </Link>
+            , and{" "}
+            <Link
+              href="/docs/conditionals"
+              className="text-primary hover:underline"
+            >
+              conditional visibility
+            </Link>
+            , plus a{" "}
+            <Link
+              href="/docs/option-text"
+              className="text-primary hover:underline"
+            >
+              text input
+            </Link>{" "}
+            when selected, or an{" "}
+            <Link
+              href="/docs/option-exclusive"
+              className="text-primary hover:underline"
+            >
+              exclusive
+            </Link>{" "}
+            &quot;none of the above&quot;-style option
+          </li>
         </ul>
       </div>
 

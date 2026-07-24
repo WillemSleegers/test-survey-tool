@@ -64,14 +64,51 @@ export default function ConditionalsPage() {
               </li>
               <li>
                 Values may be quoted: <code>usage == &quot;Several weeks or
-                more&quot;</code>. Quotes are required when a value contains an
-                operator character (<code>+</code>, <code>-</code>,{" "}
-                <code>&gt;</code>, ...) or an UPPERCASE keyword
+                more&quot;</code>
               </li>
               <li>
                 Malformed conditions are rejected when the survey is loaded,
                 with an error naming the block, page, section, question, or
                 option they belong to
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-lg font-semibold">Quoting Values</h4>
+            <p>
+              Quote a value whenever it contains an operator character (
+              <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>,{" "}
+              <code>&gt;</code>, <code>&lt;</code>, <code>=</code>) or an
+              UPPERCASE keyword (<code>AND</code>, <code>OR</code>,{" "}
+              <code>NOT</code>, <code>IS</code>, <code>IS_NOT</code>, ...).
+              Otherwise the parser applies it as an operator instead of
+              treating it as part of the text.
+            </p>
+            <p className="font-medium">Plain text needs no quotes:</p>
+            <ul className="list-disc list-outside ml-5 space-y-1">
+              <li>
+                <code>usage == Several weeks or more</code>
+              </li>
+              <li>
+                <code>status == Employed</code>
+              </li>
+            </ul>
+            <p className="font-medium">
+              A value containing an operator does:
+            </p>
+            <ul className="list-disc list-outside ml-5 space-y-1">
+              <li>
+                <code>code == &quot;A+B&quot;</code> — not{" "}
+                <code>code == A+B</code>
+              </li>
+              <li>
+                <code>status == &quot;Yes AND No&quot;</code> — not{" "}
+                <code>status == Yes AND No</code>
+              </li>
+              <li>
+                <code>plan == &quot;Level &gt; Basic&quot;</code> — not{" "}
+                <code>plan == Level &gt; Basic</code>
               </li>
             </ul>
           </div>

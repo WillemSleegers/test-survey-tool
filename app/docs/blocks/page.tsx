@@ -45,6 +45,24 @@ export default function BlocksPage() {
       </div>
 
       <div className="space-y-3">
+        <h3 className="text-xl font-semibold">Computed Variables</h3>
+        <p>
+          A <code>COMPUTE:</code> defined at block level is global — visible
+          to every block, page, section, and question in the survey, not just
+          its own block. Names must be unique across blocks; defining the
+          same computed variable in two different blocks fails validation
+          when the survey loads. See{" "}
+          <Link
+            href="/docs/computed"
+            className="text-primary hover:underline"
+          >
+            Computed Variables
+          </Link>{" "}
+          for the full syntax.
+        </p>
+      </div>
+
+      <div className="space-y-3">
         <h3 className="text-xl font-semibold">Example</h3>
         {renderExample(`# **Screening**
 Q: Would you like to participate in our survey?
