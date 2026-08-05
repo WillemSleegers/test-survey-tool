@@ -16,7 +16,10 @@ const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
 interface BreakdownQuestionProps {
   question: BreakdownQuestionType
   responses: Responses
+  /** User variables, used for showIf/condition evaluation and arithmetic */
   variables: Variables
+  /** User variables with `- TEXT` values composed in, used for text rendering */
+  displayVariables: Variables
   onResponse: (questionId: string, value: Record<string, string>) => void
   startTabIndex: number
   computedVariables?: ComputedValues
@@ -61,6 +64,7 @@ export function BreakdownQuestion({
   question,
   responses,
   variables,
+  displayVariables,
   onResponse,
   startTabIndex,
   computedVariables
@@ -129,7 +133,7 @@ export function BreakdownQuestion({
     let value = currentValues[key] || ""
     let hasUnresolvedPlaceholders = false
     if (isReadOnly) {
-      value = replacePlaceholders(option.prefillValue!, variables, computedVariables, listFormat)
+      value = replacePlaceholders(option.prefillValue!, displayVariables, computedVariables, listFormat)
       hasUnresolvedPlaceholders = value.includes('\\{')
     }
     return { key, isReadOnly, value, hasUnresolvedPlaceholders }
@@ -140,7 +144,7 @@ export function BreakdownQuestion({
       return (
         <TableRow key={index}>
           <TableCell className="text-base pl-0 whitespace-normal" colSpan={2}>
-            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables, listFormat)}</Markdown>
+            <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, displayVariables, computedVariables, listFormat)}</Markdown>
           </TableCell>
         </TableRow>
       )
@@ -169,7 +173,7 @@ export function BreakdownQuestion({
               optionValue={option.value}
               isRevealVisible={visibleReveals.has(option.value)}
               onToggleReveal={toggleReveal}
-              variables={variables}
+              variables={displayVariables}
               computedVariables={computedVariables}
             />
           </TableCell>
@@ -194,7 +198,7 @@ export function BreakdownQuestion({
             optionValue={option.value}
             isRevealVisible={visibleReveals.has(option.value)}
             onToggleReveal={toggleReveal}
-            variables={variables}
+            variables={displayVariables}
             computedVariables={computedVariables}
           />
         </TableCell>
@@ -227,7 +231,7 @@ export function BreakdownQuestion({
                 return (
                   <TableRow key={index}>
                     <TableCell className="text-base pl-0 whitespace-normal" colSpan={numColumns + 1}>
-                      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, variables, computedVariables, listFormat)}</Markdown>
+                      <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(option.label, displayVariables, computedVariables, listFormat)}</Markdown>
                     </TableCell>
                   </TableRow>
                 )
@@ -257,7 +261,7 @@ export function BreakdownQuestion({
                         optionValue={option.value}
                         isRevealVisible={visibleReveals.has(option.value)}
                         onToggleReveal={toggleReveal}
-                        variables={variables}
+                        variables={displayVariables}
                         computedVariables={computedVariables}
                       />
                     </TableCell>
@@ -285,7 +289,7 @@ export function BreakdownQuestion({
                       optionValue={option.value}
                       isRevealVisible={visibleReveals.has(option.value)}
                       onToggleReveal={toggleReveal}
-                      variables={variables}
+                      variables={displayVariables}
                       computedVariables={computedVariables}
                     />
                   </TableCell>
@@ -312,7 +316,7 @@ export function BreakdownQuestion({
             {totalLabel && (
               <TableRow className="border-t border-border">
                 <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables, listFormat)}</Markdown>
+                  <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, displayVariables, computedVariables, listFormat)}</Markdown>
                 </TableCell>
                 {columnNumbers.map((colNum, idx) => (
                   <TableCell key={colNum} className="text-right pt-4 py-2">
@@ -330,7 +334,7 @@ export function BreakdownQuestion({
   }
 
   return (
-    <QuestionWrapper question={question} variables={variables} computedVariables={computedVariables}>
+    <QuestionWrapper question={question} variables={displayVariables} computedVariables={computedVariables}>
       <div className="space-y-2">
         {hasColumns ? (
           renderColumnLayout()
@@ -342,7 +346,7 @@ export function BreakdownQuestion({
               {totalLabel && (
                 <TableRow className="border-t border-border">
                   <TableCell className="text-base pt-4 pl-0 whitespace-normal">
-                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, variables, computedVariables, listFormat)}</Markdown>
+                    <Markdown remarkPlugins={remarkPlugins}>{replacePlaceholders(totalLabel, displayVariables, computedVariables, listFormat)}</Markdown>
                   </TableCell>
                   <TableCell className="text-right pt-4 py-2">
                     {questionPrefix}{total}{questionSuffix}

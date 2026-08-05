@@ -1,5 +1,16 @@
 # Release Notes
 
+## Version 0.5.1
+
+### Bug Fixes
+
+- **Fixed checkbox/radio `- TEXT` options corrupting their stored value and breaking `SHOW_IF`**: typed text was encoded directly into the response string (e.g. `"Other, namely:" + ": " + "painting"`), which produced a doubled separator whenever the option's own label already ended in punctuation (`"Other, namely:: painting"`), and made `SHOW_IF`/`==` comparisons against the bare option value silently stop matching as soon as any text was typed. Typed text is now stored separately from the selected value, so `responses`/`{variable}` always hold the plain option value(s) selected — conditions keep matching regardless of typed text — while `{variable AS LIST}`/`{variable AS INLINE_LIST}` and other text placeholders join the option's label with its typed text using a single space (`"Other, namely: painting"`), so the label's own punctuation controls how they read together instead of the app inventing a separator
+- **Fixed checkbox response order following click order instead of option order**: a checkbox question's stored array (and therefore `{variable AS LIST}`) reflected the order options were checked in, not the order they're declared in the survey. Selections are now always ordered to match the question's option list
+
+### Internal
+
+- `- TEXT` other-text is now lifted into `useQuestionnaireResponses` (an `otherTexts` map alongside `responses`) instead of living in local `useState` inside `checkbox-question.tsx`/`radio-question.tsx`. A new pure `applyOtherText` (`lib/response-variables.ts`) composes it into a separate `displayVariables` object for text rendering, while `variables` (used for `SHOW_IF`/expressions) stays plain. `displayVariables`/`otherTexts` are threaded alongside the existing `variables`/`responses` props through `page-content.tsx` → `section-renderer.tsx` → `question-renderer.tsx` → the question components; removed the now-redundant colon-parsing duplicated in `checkbox-question.tsx`, `radio-question.tsx`, and `lib/utils/tab-index-calculator.ts`
+
 ## Version 0.5.0
 
 ### Changes

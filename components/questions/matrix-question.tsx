@@ -25,8 +25,10 @@ interface MatrixQuestionProps {
   question: MatrixQuestionType
   /** User responses */
   responses: Responses
-  /** User variables */
+  /** User variables, used for showIf/condition evaluation */
   variables: Variables
+  /** User variables with `- TEXT` values composed in, used for text rendering */
+  displayVariables: Variables
   /** Callback when user selects an option */
   onResponse: (
     questionId: string,
@@ -64,6 +66,7 @@ export function MatrixQuestion({
   question,
   responses,
   variables,
+  displayVariables,
   onResponse,
   startTabIndex,
   computedVariables,
@@ -172,7 +175,7 @@ export function MatrixQuestion({
   return (
     <QuestionWrapper
       question={question}
-      variables={variables}
+      variables={displayVariables}
       computedVariables={computedVariables}
     >
       <div className="overflow-x-auto">
@@ -189,7 +192,7 @@ export function MatrixQuestion({
                     <Markdown remarkPlugins={remarkPlugins}>
                       {replacePlaceholders(
                         option.label,
-                        variables,
+                        displayVariables,
                         computedVariables,
                         listFormat
                       )}
@@ -223,7 +226,7 @@ export function MatrixQuestion({
                           <Markdown>
                             {replacePlaceholders(
                               subquestion.text,
-                              variables,
+                              displayVariables,
                               computedVariables,
                               listFormat
                             )}
@@ -233,7 +236,7 @@ export function MatrixQuestion({
                           <TooltipButton
                             content={replacePlaceholders(
                               subquestion.tooltip,
-                              variables,
+                              displayVariables,
                               computedVariables,
                               listFormat
                             )}
@@ -248,7 +251,7 @@ export function MatrixQuestion({
                           <Markdown>
                             {replacePlaceholders(
                               subquestion.subtext,
-                              variables,
+                              displayVariables,
                               computedVariables,
                               listFormat
                             )}
@@ -261,7 +264,7 @@ export function MatrixQuestion({
                             <Markdown>
                               {replacePlaceholders(
                                 subquestion.reveal,
-                                variables,
+                                displayVariables,
                                 computedVariables,
                                 listFormat
                               )}

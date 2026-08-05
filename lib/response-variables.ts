@@ -1,4 +1,4 @@
-import { Page, Question, Variables, Responses, BreakdownQuestion, isQuestion } from "@/lib/types"
+import { Page, Question, Variables, Responses, OtherTexts, BreakdownQuestion, isQuestion } from "@/lib/types"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
 
@@ -124,4 +124,58 @@ export function deriveVariables(questionnaire: Page[], responses: Responses): Va
   })
 
   return variables
+}
+
+/**
+ * Builds a display-only copy of `variables` where checkbox/radio values backed
+ * by a `- TEXT` option are combined with their typed text for rendering in
+ * question/page text (e.g. `{variable AS LIST}`).
+ *
+ * `variables` itself must stay as plain selected option value(s) — `showIf`
+ * conditions and expressions match against it, and appending free text there
+ * would silently break `interests == "Other"`-style comparisons. The returned
+ * object is safe to use anywhere text is rendered instead of `variables`: it's
+ * identical except for the composed entries.
+ *
+ * Composition never invents punctuation — it joins the option's own label
+ * with the typed text using a single space, so the label controls how the
+ * two read together (e.g. label "Other, namely:" + text "painting" produces
+ * "Other, namely: painting", not a doubled-up separator).
+ */
+export function applyOtherText(
+  variables: Variables,
+  questionnaire: Page[],
+  otherTexts: OtherTexts
+): Variables {
+  const { questionLookup, questionVariableMap } = buildQuestionMaps(questionnaire)
+  const displayVariables: Variables = { ...variables }
+
+  questionLookup.forEach((question, questionId) => {
+    if (question.type !== "checkbox" && question.type !== "multiple_choice") return
+
+    const textsForQuestion = otherTexts[questionId]
+    if (!textsForQuestion) return
+
+    const variableName = questionVariableMap.get(questionId)
+    if (!variableName) return
+
+    const composeValue = (value: string): string => {
+      const text = textsForQuestion[value]?.trim()
+      if (!text) return value
+
+      const option = question.options.find(opt => opt.value === value)
+      if (!option?.allowsOtherText) return value
+
+      return `${value.trimEnd()} ${text}`
+    }
+
+    const value = displayVariables[variableName]
+    if (Array.isArray(value)) {
+      displayVariables[variableName] = value.map(composeValue)
+    } else if (typeof value === "string") {
+      displayVariables[variableName] = composeValue(value)
+    }
+  })
+
+  return displayVariables
 }

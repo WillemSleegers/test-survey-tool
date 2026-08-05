@@ -41,7 +41,7 @@ export function QuestionnaireViewer({
 
   // Response management - get all pages first for response tracking
   const allPages = questionnaire.flatMap(block => block.pages)
-  const { responses, variables, handleResponse } = useQuestionnaireResponses(allPages)
+  const { responses, variables, displayVariables, otherTexts, handleResponse, handleOtherTextChange } = useQuestionnaireResponses(allPages)
 
   // Global block-level computed variables, shared across the whole survey
   const globalComputedVars = computeGlobalValues(questionnaire, variables)
@@ -144,7 +144,7 @@ export function QuestionnaireViewer({
           <div className="w-full max-w-4xl space-y-6">
             <PageHeader
               page={currentPage}
-              variables={variables}
+              variables={displayVariables}
               computedVariables={currentComputedVars}
             />
 
@@ -152,7 +152,10 @@ export function QuestionnaireViewer({
               content={pageContent}
               responses={responses}
               variables={variables}
+              displayVariables={displayVariables}
               onResponse={handleResponse}
+              otherTexts={otherTexts}
+              onOtherTextChange={handleOtherTextChange}
               computedVariables={currentComputedVars}
             />
 

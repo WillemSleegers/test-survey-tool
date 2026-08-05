@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { deriveVariables } from "@/lib/response-variables"
-import { Page, Responses } from "@/lib/types"
+import { deriveVariables, applyOtherText } from "@/lib/response-variables"
+import { Page, Responses, OtherTexts } from "@/lib/types"
 
 function makePage(id: number, sections: Page["sections"]): Page {
   return { id, title: `Page ${id}`, sections, computedVariables: [] }
@@ -170,5 +170,108 @@ describe("deriveVariables", () => {
     expect(varsInOrder).toEqual(varsOutOfOrder)
     expect(varsInOrder.base).toBe(10)
     expect(varsInOrder.doubled).toBe(10)
+  })
+})
+
+describe("applyOtherText", () => {
+  const checkboxQuestionnaire: Page[] = [
+    makePage(1, [
+      {
+        id: 1,
+        items: [
+          {
+            id: "q1",
+            type: "checkbox",
+            text: "Interests",
+            variable: "interests",
+            options: [
+              { value: "Sports", label: "Sports" },
+              { value: "Other, namely:", label: "Other, namely:", allowsOtherText: true },
+            ],
+          },
+        ],
+      },
+    ]),
+  ]
+
+  const radioQuestionnaire: Page[] = [
+    makePage(1, [
+      {
+        id: 1,
+        items: [
+          {
+            id: "q1",
+            type: "multiple_choice",
+            text: "Preferred contact",
+            variable: "contact",
+            options: [
+              { value: "Email", label: "Email" },
+              { value: "Other:", label: "Other:", allowsOtherText: true },
+            ],
+          },
+        ],
+      },
+    ]),
+  ]
+
+  it("joins a checkbox array item with typed text using a single space, however the label is punctuated", () => {
+    const responses: Responses = { q1: ["Sports", "Other, namely:"] }
+    const variables = deriveVariables(checkboxQuestionnaire, responses)
+    const otherTexts: OtherTexts = { q1: { "Other, namely:": "painting" } }
+
+    const displayVariables = applyOtherText(variables, checkboxQuestionnaire, otherTexts)
+
+    expect(displayVariables.interests).toEqual(["Sports", "Other, namely: painting"])
+    // No double punctuation, unlike naively appending ": " after a label that already ends in ":"
+    expect(displayVariables.interests).not.toContain("Other, namely:: painting")
+  })
+
+  it("composes a radio (single string) variable the same way", () => {
+    const responses: Responses = { q1: "Other:" }
+    const variables = deriveVariables(radioQuestionnaire, responses)
+    const otherTexts: OtherTexts = { q1: { "Other:": "carrier pigeon" } }
+
+    const displayVariables = applyOtherText(variables, radioQuestionnaire, otherTexts)
+
+    expect(displayVariables.contact).toBe("Other: carrier pigeon")
+  })
+
+  it("leaves the base variable untouched for conditions/matching (does not mutate the input)", () => {
+    const responses: Responses = { q1: ["Sports", "Other, namely:"] }
+    const variables = deriveVariables(checkboxQuestionnaire, responses)
+    const otherTexts: OtherTexts = { q1: { "Other, namely:": "painting" } }
+
+    applyOtherText(variables, checkboxQuestionnaire, otherTexts)
+
+    expect(variables.interests).toEqual(["Sports", "Other, namely:"])
+  })
+
+  it("falls back to the plain label when no text has been typed", () => {
+    const responses: Responses = { q1: ["Sports", "Other, namely:"] }
+    const variables = deriveVariables(checkboxQuestionnaire, responses)
+    const otherTexts: OtherTexts = { q1: { "Other, namely:": "   " } }
+
+    const displayVariables = applyOtherText(variables, checkboxQuestionnaire, otherTexts)
+
+    expect(displayVariables.interests).toEqual(["Sports", "Other, namely:"])
+  })
+
+  it("ignores other-text entries for options that don't allow it", () => {
+    const responses: Responses = { q1: ["Sports"] }
+    const variables = deriveVariables(checkboxQuestionnaire, responses)
+    const otherTexts: OtherTexts = { q1: { Sports: "should be ignored" } }
+
+    const displayVariables = applyOtherText(variables, checkboxQuestionnaire, otherTexts)
+
+    expect(displayVariables.interests).toEqual(["Sports"])
+  })
+
+  it("is a no-op when there is no other-text for the question", () => {
+    const responses: Responses = { q1: ["Sports"] }
+    const variables = deriveVariables(checkboxQuestionnaire, responses)
+
+    const displayVariables = applyOtherText(variables, checkboxQuestionnaire, {})
+
+    expect(displayVariables).toEqual(variables)
   })
 })
