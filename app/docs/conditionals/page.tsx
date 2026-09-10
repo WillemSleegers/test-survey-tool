@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { renderExample } from "@/components/docs/doc-helpers"
 
 export default function ConditionalsPage() {

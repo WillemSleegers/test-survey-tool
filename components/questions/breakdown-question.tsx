@@ -9,7 +9,7 @@ import { BreakdownQuestion as BreakdownQuestionType, Responses, Variables, Compu
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 import { useInstanceId } from "@/contexts/instance-id-context"
 import { useLanguage } from "@/contexts/language-context"
-import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues, subtotalVariables } from "@/lib/breakdown-calculations"
+import { getVisibleBreakdownOptions, sumBreakdownOptions, computeSubtotalValues } from "@/lib/breakdown-calculations"
 
 const UNAVAILABLE_VALUE_PLACEHOLDER = '–'
 
@@ -80,7 +80,6 @@ export function BreakdownQuestion({
 
   const visibleEntries = getVisibleBreakdownOptions(question, variables, computedVariables)
   const subtotals = computeSubtotalValues(question, currentValues, variables, computedVariables)
-  const localVariables: Variables = { ...variables, ...subtotalVariables(question, subtotals) }
 
   const optionToKey = (index: number): string => `option_${index}`
 
