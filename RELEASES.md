@@ -2,6 +2,10 @@
 
 ## Version 0.5.1
 
+### Changes
+
+- **Added a GitHub link to the navbar**: an icon-only button linking to the project repository, shown on the home, documentation, and releases pages
+
 ### Bug Fixes
 
 - **Fixed checkbox/radio `- TEXT` options corrupting their stored value and breaking `SHOW_IF`**: typed text was encoded directly into the response string (e.g. `"Other, namely:" + ": " + "painting"`), which produced a doubled separator whenever the option's own label already ended in punctuation (`"Other, namely:: painting"`), and made `SHOW_IF`/`==` comparisons against the bare option value silently stop matching as soon as any text was typed. Typed text is now stored separately from the selected value, so `responses`/`{variable}` always hold the plain option value(s) selected — conditions keep matching regardless of typed text — while `{variable AS LIST}`/`{variable AS INLINE_LIST}` and other text placeholders join the option's label with its typed text using a single space (`"Other, namely: painting"`), so the label's own punctuation controls how they read together instead of the app inventing a separator
