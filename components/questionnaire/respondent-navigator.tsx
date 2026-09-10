@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { NavItem, Page } from "@/lib/types"
@@ -14,9 +14,19 @@ interface RespondentNavigatorProps {
   visiblePages: Page[]
   /** Current visible page index */
   currentVisiblePageIndex: number
+  /** Ids of pages the respondent has reached */
+  visitedPages: Set<number>
   /** Function to jump to a specific nav item */
   onJumpToNavItem: (navItem: NavItem) => void
 }
+
+/** Manual expand/collapse choices, scoped to the page they were made on */
+type ExpansionOverrides = {
+  atPageIndex: number
+  values: Map<number, boolean>
+}
+
+const NO_OVERRIDES: ExpansionOverrides = { atPageIndex: -1, values: new Map() }
 
 /**
  * Respondent-friendly navigation sidebar
@@ -32,14 +42,20 @@ export function RespondentNavigator({
   navItems,
   visiblePages,
   currentVisiblePageIndex,
+  visitedPages,
   onJumpToNavItem,
 }: RespondentNavigatorProps) {
   const { t } = useLanguage()
   const { allowUnvisitedNavigation } = useNavigation()
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
-  const [visitedNavItems, setVisitedNavItems] = useState<Set<NavItem>>(
-    new Set()
+  // Groups the respondent opened or closed by hand, remembered only until the
+  // next navigation so moving pages re-expands whichever group is current
+  const [expansionOverrides, setExpansionOverrides] = useState<ExpansionOverrides>(
+    NO_OVERRIDES
   )
+
+  // A nav item counts as visited once the respondent has reached any of its pages
+  const isNavItemVisited = (navItem: NavItem): boolean =>
+    navItem.pages.some((page) => visitedPages.has(page.id))
 
   // A nav item is visible if the respondent could currently reach at least
   // one of its pages (i.e. it isn't excluded by SHOW_IF given current answers)
@@ -69,53 +85,28 @@ export function RespondentNavigator({
     }
   }
 
-  // Track visited nav items
-  useEffect(() => {
-    const currentPage = visiblePages[currentVisiblePageIndex]
-    if (!currentPage) return
+  const activeOverrides =
+    expansionOverrides.atPageIndex === currentVisiblePageIndex
+      ? expansionOverrides.values
+      : NO_OVERRIDES.values
 
-    // Find which nav item contains the current page
-    const currentNavItem = navItems.find((item) =>
-      item.pages.some((page) => page === currentPage)
-    )
+  // A group opens once the respondent reaches one of its children and stays
+  // open afterwards, unless they closed it themselves
+  const isGroupExpanded = (itemIndex: number): boolean => {
+    const override = activeOverrides.get(itemIndex)
+    if (override !== undefined) return override
 
-    if (currentNavItem) {
-      setVisitedNavItems((prev) => {
-        if (prev.has(currentNavItem)) {
-          return prev
-        }
-        const newSet = new Set(prev)
-        newSet.add(currentNavItem)
-        return newSet
-      })
-    }
-  }, [currentVisiblePageIndex, visiblePages, navItems])
-
-  // Auto-expand the group containing the current page (if it's a level 2 child)
-  useEffect(() => {
-    const currentPage = visiblePages[currentVisiblePageIndex]
-    if (!currentPage) return
-
-    const groupIndex = navGroups.findIndex((group) =>
-      group.children.some((child) =>
-        child.pages.some((page) => page === currentPage)
-      )
-    )
-
-    if (groupIndex !== -1) {
-      setExpandedItems((prev) => new Set([...prev, groupIndex]))
-    }
-  }, [currentVisiblePageIndex, visiblePages, navGroups])
+    const group = navGroups[itemIndex]
+    return group ? group.children.some(isNavItemVisited) : false
+  }
 
   // Toggle item expansion
   const toggleItemExpansion = (itemIndex: number) => {
-    const newExpanded = new Set(expandedItems)
-    if (newExpanded.has(itemIndex)) {
-      newExpanded.delete(itemIndex)
-    } else {
-      newExpanded.add(itemIndex)
-    }
-    setExpandedItems(newExpanded)
+    const expanded = isGroupExpanded(itemIndex)
+    setExpansionOverrides({
+      atPageIndex: currentVisiblePageIndex,
+      values: new Map(activeOverrides).set(itemIndex, !expanded),
+    })
   }
 
   // Helper to check if a nav item is current
@@ -130,7 +121,7 @@ export function RespondentNavigator({
   // Helper to check if a nav item can be clicked (visited or current, or if setting allows)
   const isNavItemClickable = (navItem: NavItem): boolean => {
     if (allowUnvisitedNavigation) return true
-    return visitedNavItems.has(navItem) || isNavItemCurrent(navItem)
+    return isNavItemVisited(navItem) || isNavItemCurrent(navItem)
   }
 
   // Clean markdown from titles
@@ -152,13 +143,13 @@ export function RespondentNavigator({
           <CardContent className="px-4 py-0">
             {navGroups.map(({ header: item, children }, index) => {
               const isCurrent = isNavItemCurrent(item)
-              const isVisited = visitedNavItems.has(item)
+              const isVisited = isNavItemVisited(item)
               const itemHasChildren = children.length > 0
-              const isExpanded = expandedItems.has(index)
+              const isExpanded = isGroupExpanded(index)
 
               // Check if any child is visited (for parent status)
               const anyChildVisited = children.some((child) =>
-                visitedNavItems.has(child)
+                isNavItemVisited(child)
               )
               const firstChild = children[0]
               const firstChildCurrent =
@@ -226,7 +217,7 @@ export function RespondentNavigator({
                     <div className="ml-4 space-y-0.5 border-l-2 border-muted pl-2">
                       {children.map((child, childIdx) => {
                         const isChildCurrent = isNavItemCurrent(child)
-                        const isChildVisited = visitedNavItems.has(child)
+                        const isChildVisited = isNavItemVisited(child)
                         const isChildClickable = isNavItemClickable(child)
 
                         return (

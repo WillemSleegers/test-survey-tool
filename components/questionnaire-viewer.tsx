@@ -70,10 +70,11 @@ export function QuestionnaireViewer({
   // Navigation state and actions
   const {
     currentVisiblePageIndex,
+    visitedPages,
     nextPage,
     prevPage,
     jumpToPage,
-  } = useQuestionnaireNavigation(visiblePages.length, disableAutoScroll)
+  } = useQuestionnaireNavigation(visiblePages, disableAutoScroll)
 
   // Navigation: jump to first visible page of a nav item
   const handleJumpToNavItem = (navItem: NavItem): void => {
@@ -136,6 +137,7 @@ export function QuestionnaireViewer({
               navItems={navItems}
               visiblePages={visiblePages}
               currentVisiblePageIndex={currentVisiblePageIndex}
+              visitedPages={visitedPages}
               onJumpToNavItem={handleJumpToNavItem}
             />
           )}
@@ -176,6 +178,7 @@ export function QuestionnaireViewer({
               navItems={navItems}
               visiblePages={visiblePages}
               currentVisiblePageIndex={currentVisiblePageIndex}
+              visitedPages={visitedPages}
               onJumpToNavItem={handleJumpToNavItem}
             />
           )}
