@@ -1,5 +1,28 @@
 # Release Notes
 
+## Version 0.5.1
+
+### Changes
+
+- **Added a GitHub link to the navbar**: an icon-only button linking to the project repository, shown on the home, documentation, and releases pages
+
+### Bug Fixes
+
+- **Fixed checkbox/radio `- TEXT` options corrupting their stored value and breaking `SHOW_IF`**: typed text was encoded directly into the response string (e.g. `"Other, namely:" + ": " + "painting"`), which produced a doubled separator whenever the option's own label already ended in punctuation (`"Other, namely:: painting"`), and made `SHOW_IF`/`==` comparisons against the bare option value silently stop matching as soon as any text was typed. Typed text is now stored separately from the selected value, so `responses`/`{variable}` always hold the plain option value(s) selected — conditions keep matching regardless of typed text — while `{variable AS LIST}`/`{variable AS INLINE_LIST}` and other text placeholders join the option's label with its typed text using a single space (`"Other, namely: painting"`), so the label's own punctuation controls how they read together instead of the app inventing a separator
+- **Fixed checkbox response order following click order instead of option order**: a checkbox question's stored array (and therefore `{variable AS LIST}`) reflected the order options were checked in, not the order they're declared in the survey. Selections are now always ordered to match the question's option list
+
+### Internal
+
+- **Linting works again**: `pnpm lint` ran `next lint`, a command Next 16 removed, and `eslint-config-next` had been dropped from `devDependencies` by an earlier dead-code pass (it is referenced by the ESLint config rather than imported, so the tool could not see the reference). The script now runs `eslint .`, `eslint-config-next` is back, and `eslint.config.mjs` uses its native flat configs directly instead of the `FlatCompat` shim (`@eslint/eslintrc` is no longer needed). `eslint-plugin-react`'s React-version autodetection calls an API removed in ESLint 10, so the config pins `settings.react.version`; `@next/next/no-img-element` is off because markdown images come from arbitrary survey text
+- **Removed `setState`-in-effect patterns flagged by the React Compiler lint rules**: eight effects that synchronised state React can derive or read directly were rewritten, so no component renders once with a placeholder value and then again with the real one
+  - Page index bounds are clamped during render (`clampPageIndex`) instead of corrected afterwards, so an out-of-range index is never rendered when answers hide pages. A respondent whose current page becomes hidden is moved to the last visible page and returns to where they were if those pages become reachable again
+  - Visited-page tracking moved from `RespondentNavigator` into `useQuestionnaireNavigation`, which now takes the visible pages and returns the set of page ids reached. The navigator derives visited nav items from it rather than accumulating them in an effect
+  - Expansion state in both navigators is now derived — the page navigator expands the block holding the current page, the respondent navigator expands groups whose pages have been reached — with manual open/close choices remembered until the next navigation, matching the previous reset-on-navigate behaviour
+  - `localStorage` preferences (language, navigation settings) are read through `useSyncExternalStore` (`hooks/use-local-storage.ts`) so the stored value is applied as part of hydration, and the survey draft editor reads its draft in a lazy `useState` initialiser since it only mounts after the user opens it
+  - Mac detection for the keyboard-shortcut hint reads `navigator` through the same store pattern instead of a mount effect
+- **Switched the package manager to pnpm**: `package-lock.json` is replaced by `pnpm-lock.yaml`, `package.json` pins `packageManager`, and the npm-only `overrides` field moved to `overrides` in a new `pnpm-workspace.yaml` (pnpm 11 no longer reads settings from `package.json`). Re-resolving the dependency tree from the version ranges also picked up newer patch/minor releases (Next 16.2.9 → 16.3.4, React 19.2.7 → 19.2.8, lucide-react 1.17 → 1.43, TypeScript 6.0.3, ESLint 10.10, Vitest 4.1.11)
+- `- TEXT` other-text is now lifted into `useQuestionnaireResponses` (an `otherTexts` map alongside `responses`) instead of living in local `useState` inside `checkbox-question.tsx`/`radio-question.tsx`. A new pure `applyOtherText` (`lib/response-variables.ts`) composes it into a separate `displayVariables` object for text rendering, while `variables` (used for `SHOW_IF`/expressions) stays plain. `displayVariables`/`otherTexts` are threaded alongside the existing `variables`/`responses` props through `page-content.tsx` → `section-renderer.tsx` → `question-renderer.tsx` → the question components; removed the now-redundant colon-parsing duplicated in `checkbox-question.tsx`, `radio-question.tsx`, and `lib/utils/tab-index-calculator.ts`
+
 ## Version 0.5.0
 
 ### Changes

@@ -51,26 +51,7 @@ function calculateQuestionInputCount(
     const isAnswered = responseString !== ""
     
     if (isAnswered) {
-      // Parse response properly - only treat as "other text" if the base option actually allows it
-      const parseResponse = (response: string) => {
-        const colonIndex = response.indexOf(': ')
-        if (colonIndex === -1) {
-          return response
-        }
-
-        const potentialBaseValue = response.substring(0, colonIndex)
-        const matchingOption = question.options.find(opt => opt.value === potentialBaseValue)
-
-        if (matchingOption?.allowsOtherText) {
-          return potentialBaseValue
-        }
-
-        // Otherwise, treat the entire response as the selected value
-        return response
-      }
-
-      const selectedValue = parseResponse(responseString)
-      const selectedOption = question.options.find(opt => opt.value === selectedValue)
+      const selectedOption = question.options.find(opt => opt.value === responseString)
 
       // Radio: 1 for selection + 1 for text input if option allows it
       return selectedOption?.allowsOtherText ? 2 : 1

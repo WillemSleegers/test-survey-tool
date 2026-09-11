@@ -156,6 +156,12 @@ export type Responses = {
   [questionId: string]: string | string[] | number | boolean | Record<string, string>
 }
 
+// Free text typed into an option's `- TEXT` input, kept separate from the
+// selected value(s) so responses never encode text into the stored value.
+export type OtherTexts = {
+  [questionId: string]: { [optionValue: string]: string }
+}
+
 export type ComputedVariable = {
   name: string
   expression: string

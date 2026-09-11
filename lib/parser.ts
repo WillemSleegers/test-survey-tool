@@ -12,7 +12,6 @@ import {
   NavItem,
   Section,
   SectionItem,
-  Text,
   Option,
   BreakdownOption,
   Subquestion,
@@ -93,19 +92,6 @@ const findKeyword = (lines: string[], keyword: string): string | undefined => {
 }
 
 /**
- * Find all occurrences of a keyword in chunk
- */
-const findAllKeywords = (lines: string[], keyword: string): string[] => {
-  const results: string[] = []
-  for (const line of lines) {
-    if (startsWith(line, keyword)) {
-      results.push(extractAfterKeyword(line, keyword))
-    }
-  }
-  return results
-}
-
-/**
  * Parse multi-line content with delimiter support
  * Supports both single-line and delimited multi-line content
  */
@@ -113,7 +99,7 @@ const parseDelimitedContent = (
   lines: string[],
   keyword: string
 ): string | undefined => {
-  let buffer: string[] = []
+  const buffer: string[] = []
   let isCollecting = false
   let useDelimiters = false
 

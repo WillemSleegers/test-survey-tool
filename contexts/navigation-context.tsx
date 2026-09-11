@@ -1,6 +1,7 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext } from 'react'
+import { useStoredFlag, useStoredValue, writeStoredValue } from '@/hooks/use-local-storage'
 
 type NavigationPosition = 'left' | 'right'
 
@@ -15,44 +16,26 @@ interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
 
+const VISIBLE_KEY = 'survey-nav-visible'
+const POSITION_KEY = 'survey-nav-position'
+const ALLOW_UNVISITED_KEY = 'survey-nav-allow-unvisited'
+
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
-  const [isVisible, setIsVisibleState] = useState<boolean>(true)
-  const [position, setPositionState] = useState<NavigationPosition>('left')
-  const [allowUnvisitedNavigation, setAllowUnvisitedNavigationState] = useState<boolean>(false)
+  const isVisible = useStoredFlag(VISIBLE_KEY, true)
+  const allowUnvisitedNavigation = useStoredFlag(ALLOW_UNVISITED_KEY, false)
+  const storedPosition = useStoredValue(POSITION_KEY)
+  const position: NavigationPosition = storedPosition === 'right' ? 'right' : 'left'
 
-  // Load navigation preferences from localStorage on mount
-  useEffect(() => {
-    const savedVisible = localStorage.getItem('survey-nav-visible')
-    const savedPosition = localStorage.getItem('survey-nav-position') as NavigationPosition
-    const savedAllowUnvisited = localStorage.getItem('survey-nav-allow-unvisited')
-
-    if (savedVisible !== null) {
-      setIsVisibleState(savedVisible === 'true')
-    }
-    if (savedPosition && (savedPosition === 'left' || savedPosition === 'right')) {
-      setPositionState(savedPosition)
-    }
-    if (savedAllowUnvisited !== null) {
-      setAllowUnvisitedNavigationState(savedAllowUnvisited === 'true')
-    }
-  }, [])
-
-  // Save navigation visibility to localStorage when changed
   const setIsVisible = (visible: boolean) => {
-    setIsVisibleState(visible)
-    localStorage.setItem('survey-nav-visible', String(visible))
+    writeStoredValue(VISIBLE_KEY, String(visible))
   }
 
-  // Save navigation position to localStorage when changed
   const setPosition = (newPosition: NavigationPosition) => {
-    setPositionState(newPosition)
-    localStorage.setItem('survey-nav-position', newPosition)
+    writeStoredValue(POSITION_KEY, newPosition)
   }
 
-  // Save unvisited navigation setting to localStorage when changed
   const setAllowUnvisitedNavigation = (allow: boolean) => {
-    setAllowUnvisitedNavigationState(allow)
-    localStorage.setItem('survey-nav-allow-unvisited', String(allow))
+    writeStoredValue(ALLOW_UNVISITED_KEY, String(allow))
   }
 
   return (

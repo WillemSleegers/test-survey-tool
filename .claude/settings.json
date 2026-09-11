@@ -1,14 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx fallow *)",
-      "Bash(npm audit *)",
-      "Bash(npm test *)",
+      "Bash(pnpm exec fallow *)",
+      "Bash(pnpm audit *)",
+      "Bash(pnpm test *)",
       "Bash(npx @tailwindcss/cli -i .tmp-probe/probe.css -o .tmp-probe/probe.out.css)",
       "Bash(node inspect2.mjs)",
       "Bash(node inspect3.mjs)",
-      "Bash(npx vitest *)",
-      "Bash(npx tsx *)"
+      "Bash(pnpm exec vitest *)",
+      "Bash(pnpm exec tsx *)",
+      "Bash(pnpm install)",
+      "Bash(pnpm build)",
+      "Bash(pnpm why *)"
     ]
   }
 }

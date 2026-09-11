@@ -1,5 +1,5 @@
 import React from "react"
-import { Question, Responses, Variables, ComputedValues } from "@/lib/types"
+import { Question, Responses, Variables, OtherTexts, ComputedValues } from "@/lib/types"
 import { RadioQuestion } from "./radio-question"
 import { CheckboxQuestion } from "./checkbox-question"
 import { TextQuestion } from "./text-question"
@@ -12,10 +12,16 @@ interface QuestionRendererProps {
   question: Question
   /** All user responses */
   responses: Responses
-  /** All user variables */
+  /** All user variables, used for showIf/condition evaluation */
   variables: Variables
+  /** User variables with `- TEXT` values composed in, used for text rendering */
+  displayVariables: Variables
   /** Callback when user provides a response */
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
+  /** Free text typed into `- TEXT` options, keyed by question ID */
+  otherTexts: OtherTexts
+  /** Callback when user types into a `- TEXT` option's input */
+  onOtherTextChange: (questionId: string, optionValue: string, text: string) => void
   /** Starting tab index for this question */
   startTabIndex: number
   /** Computed variables from the current section */
@@ -48,7 +54,10 @@ export function QuestionRenderer({
   question,
   responses,
   variables,
+  displayVariables,
   onResponse,
+  otherTexts,
+  onOtherTextChange,
   startTabIndex,
   computedVariables,
 }: QuestionRendererProps) {
@@ -59,7 +68,10 @@ export function QuestionRenderer({
           question={question}
           responses={responses}
           variables={variables}
+          displayVariables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
+          otherTexts={otherTexts[question.id] ?? {}}
+          onOtherTextChange={(optionValue, text) => onOtherTextChange(question.id, optionValue, text)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}
         />
@@ -71,7 +83,10 @@ export function QuestionRenderer({
           question={question}
           responses={responses}
           variables={variables}
+          displayVariables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
+          otherTexts={otherTexts[question.id] ?? {}}
+          onOtherTextChange={(optionValue, text) => onOtherTextChange(question.id, optionValue, text)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}
         />
@@ -83,7 +98,7 @@ export function QuestionRenderer({
         <TextQuestion
           question={question}
           responses={responses}
-          variables={variables}
+          variables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -95,7 +110,7 @@ export function QuestionRenderer({
         <NumberQuestion
           question={question}
           responses={responses}
-          variables={variables}
+          variables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           tabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -108,6 +123,7 @@ export function QuestionRenderer({
           question={question}
           responses={responses}
           variables={variables}
+          displayVariables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}
@@ -120,6 +136,7 @@ export function QuestionRenderer({
           question={question}
           responses={responses}
           variables={variables}
+          displayVariables={displayVariables}
           onResponse={(questionId, value) => onResponse(questionId, value)}
           startTabIndex={startTabIndex}
           computedVariables={computedVariables}

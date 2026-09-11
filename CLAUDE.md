@@ -96,7 +96,8 @@ Strong TypeScript usage throughout:
 
 ### Development Workflow
 
-- Always build (`npm run build`) after significant changes to catch TypeScript errors
+- Always build (`pnpm build`) after significant changes to catch TypeScript errors
+- This project uses **pnpm** — use `pnpm install` / `pnpm build` / `pnpm test`, never npm
 - Check TODO.md for prioritized development items
 - Test core functionality after parser or component changes
 - Commit frequently with descriptive messages explaining the "why" not just the "what"

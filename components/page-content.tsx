@@ -4,13 +4,16 @@ import React from "react"
 
 import { SectionRenderer } from "@/components/section-renderer"
 
-import { Section, Responses, Variables, ComputedValues, isQuestion } from "@/lib/types"
+import { Section, Responses, Variables, OtherTexts, ComputedValues, isQuestion } from "@/lib/types"
 
 interface PageContentProps {
   content: Section[]
   responses: Responses
   variables: Variables
+  displayVariables: Variables
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
+  otherTexts: OtherTexts
+  onOtherTextChange: (questionId: string, optionValue: string, text: string) => void
   computedVariables?: ComputedValues
 }
 
@@ -18,7 +21,10 @@ export function PageContent({
   content,
   responses,
   variables,
+  displayVariables,
   onResponse,
+  otherTexts,
+  onOtherTextChange,
   computedVariables,
 }: PageContentProps) {
   // Calculate the tab index for each question based on total inputs needed by previous questions
@@ -61,7 +67,10 @@ export function PageContent({
             section={section}
             responses={responses}
             variables={variables}
+            displayVariables={displayVariables}
             onResponse={onResponse}
+            otherTexts={otherTexts}
+            onOtherTextChange={onOtherTextChange}
             startTabIndex={sectionStartTabIndex}
             computedVariables={computedVariables}
           />

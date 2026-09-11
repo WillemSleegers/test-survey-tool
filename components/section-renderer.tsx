@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { replacePlaceholders } from "@/lib/text-processing/replacer"
 
-import { Section, Responses, Variables, ComputedValues, isText, isQuestion } from "@/lib/types"
+import { Section, Responses, Variables, OtherTexts, ComputedValues, isText, isQuestion } from "@/lib/types"
 import { QuestionRenderer } from "./questions/question-renderer"
 import Markdown from "react-markdown"
 import { markdownImageComponents, remarkPlugins } from "@/lib/markdown-components"
@@ -15,7 +15,10 @@ interface SectionRendererProps {
   section: Section
   responses: Responses
   variables: Variables
+  displayVariables: Variables
   onResponse: (questionId: string, value: string | string[] | number | boolean | Record<string, string>) => void
+  otherTexts: OtherTexts
+  onOtherTextChange: (questionId: string, optionValue: string, text: string) => void
   startTabIndex: number
   computedVariables?: ComputedValues
 }
@@ -24,7 +27,10 @@ export function SectionRenderer({
   section,
   responses,
   variables,
+  displayVariables,
   onResponse,
+  otherTexts,
+  onOtherTextChange,
   startTabIndex,
   computedVariables,
 }: SectionRendererProps) {
@@ -33,11 +39,11 @@ export function SectionRenderer({
   const listFormat = { empty: t('lists.none'), conjunction: t('lists.and') }
 
   const processedReveal = section.reveal
-    ? replacePlaceholders(section.reveal, variables, computedVariables, listFormat)
+    ? replacePlaceholders(section.reveal, displayVariables, computedVariables, listFormat)
     : null
 
   const processedTooltip = section.tooltip
-    ? replacePlaceholders(section.tooltip, variables, computedVariables, listFormat)
+    ? replacePlaceholders(section.tooltip, displayVariables, computedVariables, listFormat)
     : null
 
   const renderContentItem = (content: string) => (
@@ -147,7 +153,7 @@ export function SectionRenderer({
       {/* Interleaved Section Items (text and questions) */}
       {section.items.map((item, index) => {
         if (isText(item)) {
-          const processedText = replacePlaceholders(item.value, variables, computedVariables, listFormat).trim()
+          const processedText = replacePlaceholders(item.value, displayVariables, computedVariables, listFormat).trim()
           return processedText ? (
             <React.Fragment key={`content-${index}`}>
               {renderContentItem(processedText)}
@@ -163,7 +169,10 @@ export function SectionRenderer({
               question={item}
               responses={responses}
               variables={variables}
+              displayVariables={displayVariables}
               onResponse={onResponse}
+              otherTexts={otherTexts}
+              onOtherTextChange={onOtherTextChange}
               startTabIndex={questionStartTabIndex}
               computedVariables={computedVariables}
             />

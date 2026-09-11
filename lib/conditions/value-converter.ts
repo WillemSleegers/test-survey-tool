@@ -1,4 +1,3 @@
-import { Variables } from "@/lib/types"
 import type { ResponseValue } from "./value-comparators"
 
 /**

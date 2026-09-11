@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { removeStoredValue, writeStoredValue } from "@/hooks/use-local-storage"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Trash2 } from "lucide-react"
@@ -13,22 +14,18 @@ interface TextEditorProps {
 const STORAGE_KEY = "tst-survey-draft"
 
 export function TextEditor({ onLoadContent, onCancel }: TextEditorProps) {
-  const [content, setContent] = useState<string>("")
+  // The editor only mounts after the user opens it, so the draft can be read
+  // during the first render instead of in a mount effect
+  const [content, setContent] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEY) ?? ""
+  )
 
-  // Load saved content from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      setContent(saved)
+  const updateContent = (value: string) => {
+    setContent(value)
+    if (value) {
+      writeStoredValue(STORAGE_KEY, value)
     }
-  }, [])
-
-  // Save to localStorage whenever content changes
-  useEffect(() => {
-    if (content) {
-      localStorage.setItem(STORAGE_KEY, content)
-    }
-  }, [content])
+  }
 
   const handleLoad = () => {
     if (content.trim()) {
@@ -39,7 +36,7 @@ export function TextEditor({ onLoadContent, onCancel }: TextEditorProps) {
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete your draft?")) {
       setContent("")
-      localStorage.removeItem(STORAGE_KEY)
+      removeStoredValue(STORAGE_KEY)
     }
   }
 
@@ -52,7 +49,7 @@ export function TextEditor({ onLoadContent, onCancel }: TextEditorProps) {
         <Textarea
           id="survey-editor"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => updateContent(e.target.value)}
           placeholder="# Page Title&#10;&#10;Q: Your first question?&#10;- Option 1&#10;- Option 2"
           className="min-h-[300px] font-mono text-sm"
         />

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useSyncExternalStore } from "react"
 import { Menu, X, ChevronDown, ChevronRight, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Block, Page, Variables, ComputedValues } from "@/lib/types"
@@ -26,6 +26,28 @@ interface PageNavigatorProps {
   onResetToUpload: () => void
 }
 
+/** Manual expand/collapse choices, scoped to the page they were made on */
+type ExpansionOverrides = {
+  atPageIndex: number
+  values: Map<number, boolean>
+}
+
+const NO_OVERRIDES: ExpansionOverrides = { atPageIndex: -1, values: new Map() }
+
+/**
+ * Platform detection for the keyboard-shortcut hint, read on the client only
+ * so the server and the first client render agree
+ */
+const subscribeToNothing = () => () => {}
+
+function useIsMac(): boolean {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => navigator.userAgent?.includes("Mac") ?? false,
+    () => false
+  )
+}
+
 /**
  * Minimal page navigator for researchers
  *
@@ -48,45 +70,37 @@ export function PageNavigator({
   onResetToUpload,
 }: PageNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set())
-  const [isMac, setIsMac] = useState(false)
+  // Blocks the researcher opened or closed by hand, remembered only until the
+  // next navigation so moving pages re-expands whichever block is current
+  const [expansionOverrides, setExpansionOverrides] = useState<ExpansionOverrides>(
+    NO_OVERRIDES
+  )
+  const isMac = useIsMac()
 
-  // Detect if user is on Mac for keyboard shortcuts
-  useEffect(() => {
-    setIsMac(navigator.userAgent?.includes("Mac") ?? false)
-  }, [])
+  // Only the block containing the current page is expanded by default
+  const currentPage = visiblePages[currentVisiblePageIndex]
+  const currentBlockIndex = currentPage
+    ? questionnaire.findLastIndex((block) => block.pages.includes(currentPage))
+    : -1
 
-  // Auto-expand only the current block, collapse others
-  useEffect(() => {
-    const currentPage = visiblePages[currentVisiblePageIndex]
-    if (!currentPage) return
+  const activeOverrides =
+    expansionOverrides.atPageIndex === currentVisiblePageIndex
+      ? expansionOverrides.values
+      : NO_OVERRIDES.values
 
-    // Find which block contains the current page
-    let currentBlockIndex = -1
-    questionnaire.forEach((block, blockIndex) => {
-      if (block.pages.includes(currentPage)) {
-        currentBlockIndex = blockIndex
-      }
-    })
-
-    // Only expand the current block
-    if (currentBlockIndex !== -1) {
-      setExpandedBlocks(new Set([currentBlockIndex]))
-    }
-  }, [currentVisiblePageIndex, visiblePages, questionnaire])
+  const isBlockExpanded = (blockIndex: number): boolean =>
+    activeOverrides.get(blockIndex) ?? blockIndex === currentBlockIndex
 
   const isBlockVisible = (block: Block): boolean =>
     block.pages.some(p => visibleBlockPages.includes(p))
 
   // Toggle block expansion
   const toggleBlockExpansion = (blockIndex: number) => {
-    const newExpanded = new Set(expandedBlocks)
-    if (newExpanded.has(blockIndex)) {
-      newExpanded.delete(blockIndex)
-    } else {
-      newExpanded.add(blockIndex)
-    }
-    setExpandedBlocks(newExpanded)
+    const expanded = isBlockExpanded(blockIndex)
+    setExpansionOverrides({
+      atPageIndex: currentVisiblePageIndex,
+      values: new Map(activeOverrides).set(blockIndex, !expanded),
+    })
   }
 
   // Helper function to clean markdown from titles for navigation display
@@ -178,7 +192,7 @@ export function PageNavigator({
               <div className="space-y-1">
                 {questionnaire.map((block, blockIndex) => {
                   const blockVisible = isBlockVisible(block)
-                  const isExpanded = expandedBlocks.has(blockIndex)
+                  const isExpanded = isBlockExpanded(blockIndex)
 
                   return (
                     <div key={blockIndex} className="space-y-1">
